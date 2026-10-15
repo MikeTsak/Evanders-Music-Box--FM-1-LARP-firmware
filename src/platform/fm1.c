@@ -44,7 +44,7 @@
 #include "../emb.c"                                  /* the core */
 
 /* ------------------------------------------------------------------ boot state that survives resets */
-#define BOOTGUARD_MAGIC 0x42475244u
+#define BOOTGUARD_MAGIC 0x454D4231u                  /* "EMB1": unique to Evander so stock/Felucca state is ignored */
 static struct { uint32_t magic, failed, pending; } bootguard __attribute__((section(".noinit")));
 static uint8_t flash_ok;
 
@@ -352,6 +352,29 @@ static void uboot_now(void)
     fm1_enter_uboot();
 }
 
+static inline void halt_core1(void)
+{
+    /* Halt second core (Core 1) if left running by stock V15 / Felucca firmware.
+     * Mask bus-invalid traps so Core 1's bus disconnect does not fault Core 0. */
+    volatile uint32_t *c1_con = (volatile uint32_t *)0x1EEE004u;
+    volatile uint32_t *dbg_wr_en = (volatile uint32_t *)0x1EEE240u;
+    volatile uint32_t *dbg_msg_clr = (volatile uint32_t *)0x1EEE248u;
+    volatile uint32_t *dbg_en = (volatile uint32_t *)0x1EEE340u;
+    uint32_t locked = !(*dbg_wr_en & 1u), en, bus = 0x003F0030u;
+    volatile uint32_t n;
+    if (locked)
+        *dbg_wr_en = 0xE7u;
+    en = *dbg_en;
+    *dbg_en = en & ~bus;
+    *c1_con = (*c1_con | (1u << 1)) & ~(1u << 3);  /* bit 1 hold, bit 3 disable */
+    for (n = 0; n < 64u; n++)
+        ;
+    *dbg_msg_clr = bus;
+    *dbg_en = en;
+    if (locked)
+        *dbg_wr_en = 0xE7u;
+}
+
 static void fm1_main(void)
 {
     uint32_t f = irq_save(), last_frame = 0, oct_t0 = 0;
@@ -360,6 +383,7 @@ static void fm1_main(void)
     if (flash_ok)
         ota_boot_cleanup();                         /* the staging area an update left */
     lcd_init();
+    lcd_fill(0, 0, 240, 240, COL_NAVY);             /* immediate feedback: panel is alive */
     fm1_input_init();
     fm1_adc_init();
     leds_init();
@@ -373,6 +397,8 @@ static void fm1_main(void)
     fm1_timer5_start(isr_timer5, 4);                /* above ALNK0: the scan nests into the render */
     fm1_guard_lock_top();
     fm1_irq_enable_all();
+    leds_write();                                   /* render first frame immediately */
+    screen_frame();
     for (;;) {
         uint32_t now = fm1_ms;
         fm1_wdt_feed();
@@ -418,6 +444,7 @@ void fm1_cstart(void)
     extern uint32_t _data_start[], _data_end[], _data_load[], _bss_start[], _bss_end[];
     extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[];
     uint32_t *s, *d, p3, src, wdt;
+    halt_core1();                                   /* halt Core 1 before clearing RAM */
     fm1_time_init();
     fm1_reset_reason();
     p3 = fm1_boot.p3_rst;
@@ -432,7 +459,7 @@ void fm1_cstart(void)
     if (bootguard.pending)
         bootguard.failed++;
     bootguard.pending = 1;
-    if (bootguard.failed >= 2u) {                   /* two boots died young: the chip's own update mode */
+    if (bootguard.failed >= 5u) {                   /* five boots died young: enter UBOOT mode */
         bootguard.failed = 0;
         bootguard.pending = 0;
         fm1_enter_uboot();
@@ -447,7 +474,7 @@ void fm1_cstart(void)
     for (s = _rt_load, d = _rt_start; d < _rt_end; s++, d++)
         *d = *s;                                    /* the flash driver: it runs from RAM */
     fm1_mailbox_clear();
-    fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS | FM1_GUARD_PC);
+    fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE);  /* stack and write guards */
     fm1_boot.p3_rst = (uint8_t)p3;
     fm1_boot.rst_src = src;
     fm1_boot.wdt_con = (uint8_t)wdt;
@@ -455,3 +482,4 @@ void fm1_cstart(void)
     for (;;)
         ;
 }
+
