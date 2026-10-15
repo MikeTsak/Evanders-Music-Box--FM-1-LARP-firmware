@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -38,9 +41,6 @@ jobs:
           python3 tools/build.py check
 
       - name: Build Firmware and Web Bundle
-        env:
-          JIELI_TOOLCHAIN: ${{ runner.workspace }}/../.jieli/toolchain
-          AC79_SDK: ${{ runner.workspace }}/../fw-AC79_AIoT_SDK
         run: |
           export JIELI_TOOLCHAIN="$HOME/.jieli/toolchain"
           export AC79_SDK="$HOME/fw-AC79_AIoT_SDK"
@@ -54,3 +54,14 @@ jobs:
             build/fw/emb.fwsc
             build/fw/emb.json
             build/web/
+
+      - name: Publish Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0
+          name: "Evander's Music Box v1.0"
+          files: |
+            build/fw/emb.fwsc
+            build/fw/emb.json
+            build/web/firmware/firmware.json
+
