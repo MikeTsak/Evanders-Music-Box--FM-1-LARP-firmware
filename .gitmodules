@@ -1,0 +1,3 @@
+[submodule "upstream/felucca"]
+	path = upstream/felucca
+	url = https://github.com/hugelton/Felucca.git
