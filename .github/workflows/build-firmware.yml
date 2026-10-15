@@ -1,0 +1,56 @@
+name: Build Firmware and Web
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install ziglang
+
+      - name: Download JieLi pi32v2 Toolchain
+        run: |
+          sh upstream/felucca/tools/get_toolchain.sh "$HOME/.jieli"
+
+      - name: Clone JieLi AC79 SDK
+        run: |
+          git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$HOME/fw-AC79_AIoT_SDK"
+
+      - name: Run Self-Tests & Compile Checks
+        run: |
+          python3 tools/build.py test
+          python3 tools/build.py check
+
+      - name: Build Firmware and Web Bundle
+        env:
+          JIELI_TOOLCHAIN: ${{ runner.workspace }}/../.jieli/toolchain
+          AC79_SDK: ${{ runner.workspace }}/../fw-AC79_AIoT_SDK
+        run: |
+          export JIELI_TOOLCHAIN="$HOME/.jieli/toolchain"
+          export AC79_SDK="$HOME/fw-AC79_AIoT_SDK"
+          python3 tools/build.py all --version 1.0
+
+      - name: Upload Firmware and Web Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: evanders-music-box-release
+          path: |
+            build/fw/emb.fwsc
+            build/fw/emb.json
+            build/web/
