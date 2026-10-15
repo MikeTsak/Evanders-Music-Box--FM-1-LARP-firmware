@@ -1,0 +1,98 @@
+/* SPDX-License-Identifier: GPL-3.0-only
+ * Evander's Music Box: the shared look. Deep navy, ice-cyan light, parchment and wood. */
+:root {
+  --navy: #0A1128;
+  --navy-2: #162248;
+  --navy-3: #1F2E5C;
+  --cyan: #00E5FF;
+  --cyan-dim: #00596E;
+  --parch: #E8D9B0;
+  --parch-dim: #B9A97F;
+  --wood: #6B4423;
+  --wood-dark: #3E2612;
+  --rose: #1E4FD8;
+  --ember: #FF7A2E;
+  --red: #E0405F;
+  --ink: #05080F;
+  --text: #E8E6DF;
+  --muted: #8E9AB8;
+  --display: "Cinzel Decorative", "Cinzel", Georgia, serif;
+  --body: "EB Garamond", Georgia, "Times New Roman", serif;
+  --head: "Cinzel", Georgia, serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: radial-gradient(ellipse at top, #13204a 0%, var(--navy) 55%, #050913 100%) fixed;
+  color: var(--text);
+  font: 18px/1.5 var(--body);
+  min-height: 100vh;
+}
+a { color: var(--cyan); }
+a:hover { color: var(--parch); }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+header.crest { display: flex; align-items: center; gap: 18px; margin-bottom: 24px; }
+header.crest img { width: 72px; height: 72px; filter: drop-shadow(0 0 12px rgba(0, 229, 255, .35)); }
+header.crest h1 { font: 700 clamp(22px, 4vw, 34px)/1.1 var(--display); margin: 0; color: var(--parch); letter-spacing: .02em; }
+header.crest p { margin: 4px 0 0; color: var(--cyan); letter-spacing: .18em; font-size: 12px; text-transform: uppercase; }
+nav.top { display: flex; gap: 8px; flex-wrap: wrap; margin: -8px 0 24px; }
+nav.top a { font-family: var(--head); text-decoration: none; padding: 6px 14px; border: 1px solid var(--wood); border-radius: 999px; color: var(--parch); font-size: 13px; letter-spacing: .08em; }
+nav.top a[aria-current="page"], nav.top a:hover { border-color: var(--cyan); color: var(--cyan); }
+.card {
+  background: linear-gradient(180deg, rgba(31, 46, 92, .55), rgba(10, 17, 40, .75));
+  border: 1px solid var(--wood);
+  outline: 1px solid rgba(232, 217, 176, .25);
+  outline-offset: -5px;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 18px;
+}
+.card h2 { font: 700 20px/1.2 var(--head); color: var(--parch); margin: 0 0 10px; }
+.card p { margin: 0 0 10px; }
+.muted { color: var(--muted); }
+.warn { border-color: var(--ember); }
+.warn h2 { color: var(--ember); }
+button, .btn {
+  font: 600 13px/1 var(--head);
+  letter-spacing: .06em;
+  color: var(--navy);
+  background: linear-gradient(180deg, var(--parch), var(--parch-dim));
+  border: 1px solid var(--wood);
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { box-shadow: 0 0 0 2px var(--cyan); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.ghost { background: transparent; color: var(--parch); }
+button.danger { background: linear-gradient(180deg, #f0a080, var(--ember)); }
+input, select {
+  font: 14px var(--mono);
+  background: var(--navy);
+  color: var(--text);
+  border: 1px solid var(--wood);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+progress { width: 100%; height: 14px; accent-color: var(--cyan); }
+pre.log {
+  background: var(--ink);
+  border: 1px solid var(--navy-3);
+  color: var(--muted);
+  font: 12px/1.45 var(--mono);
+  padding: 10px;
+  border-radius: 6px;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.status { font: 600 15px/1.4 var(--body); color: var(--cyan); min-height: 1.4em; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--navy-3); font-size: 14px; }
+th { color: var(--parch); font-weight: 600; }
+footer { color: var(--muted); font-size: 12px; margin-top: 40px; text-align: center; }
+@media (max-width: 560px) { .wrap { padding: 16px 16px 48px; } }

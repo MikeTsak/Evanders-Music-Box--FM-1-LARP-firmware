@@ -1,0 +1,56 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evander's Music Box</title>
+<meta name="description" content="Evander's Music Box: LARP firmware for the M-VAVE FM-1. Emulator, installer and preset console.">
+<link rel="icon" href="rose.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .hero { text-align: center; padding: 28px 0 8px; }
+  .hero img { width: min(220px, 50vw); filter: drop-shadow(0 0 30px rgba(0, 229, 255, .35)); }
+  .hero h1 { font: 700 clamp(28px, 6vw, 52px)/1.05 var(--display); color: var(--parch); margin: 14px 0 6px; }
+  .hero p.proc { color: var(--cyan); letter-spacing: .3em; font-size: clamp(11px, 2.2vw, 14px); margin: 0 0 24px; }
+  .card a.go { display: inline-block; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <img src="rose.png" alt="The Blue Rose of Mother Melody">
+    <h1>Evander's Music Box</h1>
+    <p class="proc">MOTHER MELODY HEARS THY SONG</p>
+  </section>
+  <p style="max-width:720px;margin:0 auto 28px;text-align:center" class="muted">
+    A firmware for the M-VAVE FM-1 that turns it into the relic of Evander, Elven Bard: a four-track medieval
+    workshop by night, and a forearm-strapped soundtrack for live roleplay by day.
+  </p>
+  <div class="grid-3">
+    <section class="card">
+      <h2>The Emulator</h2>
+      <p>The firmware itself, compiled to WebAssembly, on a drawn FM-1. Play it before thou flashest anything.</p>
+      <a class="go" href="emu/">Open the emulator &rarr;</a>
+    </section>
+    <section class="card">
+      <h2>The Installer</h2>
+      <p>Write the Music Box to thy FM-1 over USB from Chrome or Edge. Return to the official V15 any time.</p>
+      <a class="go" href="installer.html">Open the installer &rarr;</a>
+    </section>
+    <section class="card">
+      <h2>The Preset Console</h2>
+      <p>Back up thy scenes, share songs as <code>.emb</code> files, and cue scenes from a game master's laptop.</p>
+      <a class="go" href="console.html">Open the console &rarr;</a>
+    </section>
+  </div>
+  <section class="card">
+    <h2>The field manual</h2>
+    <p>Every shortcut, every light: <a href="MANUAL.md">MANUAL.md</a>. Building it thyself: <a href="BUILDING.md">BUILDING.md</a>.</p>
+  </section>
+  <footer>GPL-3.0-only. Built on Felucca's FM-1 hardware layer by Hügelton Instruments. Not affiliated with M-VAVE / Cuvave.</footer>
+</div>
+</body>
+</html>

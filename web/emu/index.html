@@ -1,0 +1,151 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Music Box Emulator</title>
+<meta name="description" content="Evander's Music Box: the FM-1 LARP firmware running in your browser, built from the same C source as the hardware.">
+<link rel="icon" href="../rose.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<style>
+  .fm1 {
+    --u: min(1px, calc((100vw - 32px) / 1040));     /* one panel unit: the panel is 1040 units wide */
+    position: relative;
+    width: calc(1040 * var(--u));
+    margin: 0 auto 18px;
+    padding: calc(22 * var(--u));
+    border-radius: calc(28 * var(--u));
+    background: linear-gradient(160deg, #24305a, #101833 60%, #0a1024);
+    border: calc(6 * var(--u)) solid var(--wood);
+    box-shadow: 0 0 0 calc(2 * var(--u)) var(--parch-dim), 0 30px 60px rgba(0, 0, 0, .55), inset 0 0 40px rgba(0, 0, 0, .5);
+    user-select: none;
+    touch-action: none;
+  }
+  .fm1 .top { display: grid; grid-template-columns: calc(250 * var(--u)) calc(300 * var(--u)) 1fr; gap: calc(24 * var(--u)); align-items: start; }
+  .lab { font: 600 calc(11 * var(--u))/1 var(--mono); color: var(--parch-dim); letter-spacing: .08em; text-align: center; margin-top: calc(6 * var(--u)); }
+  .enc, .pot {
+    width: calc(64 * var(--u)); height: calc(64 * var(--u)); border-radius: 50%; margin: 0 auto; position: relative; cursor: ns-resize;
+    background: radial-gradient(circle at 35% 30%, #4b5781, #1a2346 60%, #0c1229);
+    border: calc(3 * var(--u)) solid #050913; box-shadow: 0 0 0 calc(2 * var(--u)) var(--wood), 0 6px 10px rgba(0, 0, 0, .5);
+  }
+  .enc::after, .pot::after {
+    content: ""; position: absolute; left: 50%; top: 8%; width: calc(4 * var(--u)); height: 32%;
+    background: var(--parch); border-radius: 2px; transform-origin: 50% 131%; transform: translateX(-50%) rotate(var(--rot, 0deg));
+  }
+  .enc:focus-visible, .btn-fm:focus-visible, .key:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .left { display: grid; grid-template-columns: 1fr 1fr; gap: calc(18 * var(--u)) calc(10 * var(--u)); }
+  .octs { grid-column: 1 / 3; display: flex; gap: calc(12 * var(--u)); justify-content: center; }
+  .screen { background: #000; padding: calc(10 * var(--u)); border-radius: calc(10 * var(--u)); border: calc(3 * var(--u)) solid var(--wood-dark); box-shadow: 0 0 0 calc(2 * var(--u)) var(--parch-dim); }
+  .screen canvas { width: 100%; aspect-ratio: 1; display: block; image-rendering: pixelated; background: var(--navy); }
+  .knobs { display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: calc(14 * var(--u)); }
+  .btns { display: grid; grid-template-columns: repeat(6, 1fr); gap: calc(10 * var(--u)); padding: calc(12 * var(--u)); border-radius: calc(14 * var(--u)); border: calc(2 * var(--u)) solid #050913; background: rgba(0, 0, 0, .25); }
+  .btn-fm {
+    height: calc(52 * var(--u)); border-radius: calc(9 * var(--u)); border: calc(2 * var(--u)) solid #050913; cursor: pointer;
+    background: linear-gradient(180deg, #d9d6cc, #a9a59a); color: #111; font: 700 calc(13 * var(--u))/1.05 var(--mono);
+    display: flex; align-items: center; justify-content: center; text-align: center; padding: 0;
+    transition: box-shadow 60ms, background 60ms;
+  }
+  .btn-fm.small { height: calc(40 * var(--u)); width: calc(78 * var(--u)); }
+  .btn-fm.down { transform: translateY(1px); filter: brightness(.85); }
+  /* the LEDs: 0 off, 1 glow, 2 half, 3 lit */
+  .l1 { box-shadow: 0 0 calc(6 * var(--u)) rgba(0, 229, 255, .35), inset 0 0 0 calc(2 * var(--u)) rgba(0, 229, 255, .35); }
+  .l2 { box-shadow: 0 0 calc(10 * var(--u)) rgba(0, 229, 255, .6), inset 0 0 0 calc(2 * var(--u)) rgba(0, 229, 255, .7); }
+  .l3 { box-shadow: 0 0 calc(18 * var(--u)) var(--cyan), inset 0 0 0 calc(3 * var(--u)) var(--cyan); background: linear-gradient(180deg, #e9fdff, #9be9f5); }
+  .keys { position: relative; margin-top: calc(22 * var(--u)); padding: calc(10 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u)); border-radius: calc(18 * var(--u)); border: calc(2 * var(--u)) solid #050913; background: rgba(0, 0, 0, .25); }
+  .blacks { position: relative; height: calc(66 * var(--u)); }
+  .whites { display: grid; grid-template-columns: repeat(16, 1fr); gap: calc(8 * var(--u)); }
+  .key { cursor: pointer; border-radius: calc(16 * var(--u)); border: calc(2 * var(--u)) solid #050913; background: linear-gradient(180deg, #e6e3d8, #b8b3a5); }
+  .whites .key { height: calc(96 * var(--u)); }
+  .blacks .key { position: absolute; top: 0; width: calc(38 * var(--u)); height: calc(54 * var(--u)); transform: translateX(-50%); }
+  .key span { position: absolute; bottom: calc(-14 * var(--u)); left: 50%; transform: translateX(-50%); font: 600 calc(9 * var(--u))/1 var(--mono); color: var(--parch-dim); white-space: nowrap; }
+  .key.down { filter: brightness(.82); }
+  .wnum { display: block; margin-top: calc(70 * var(--u)); text-align: center; font: 600 calc(10 * var(--u))/1 var(--mono); color: #555; }
+  .sigil { position: absolute; right: calc(26 * var(--u)); bottom: calc(6 * var(--u)); font: 700 calc(10 * var(--u))/1 var(--display); color: var(--parch-dim); letter-spacing: .2em; }
+  #wake {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    background: rgba(5, 9, 19, .82); border-radius: inherit; z-index: 5; text-align: center; padding: 16px;
+  }
+  #wake img { width: 110px; filter: drop-shadow(0 0 18px rgba(0, 229, 255, .5)); }
+  #wake p { margin: 0; color: var(--parch); font: 600 15px/1.4 var(--body); }
+  .meters { font: 12px var(--mono); color: var(--muted); }
+  kbd { font: 12px var(--mono); border: 1px solid var(--wood); border-radius: 4px; padding: 0 5px; color: var(--parch); }
+  .help td:first-child { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="crest">
+    <img src="../rose.png" alt="">
+    <div>
+      <h1>Evander's Music Box</h1>
+      <p>The emulator: the firmware, unchanged, in thy browser</p>
+    </div>
+  </header>
+  <nav class="top">
+    <a href="../">Home</a><a href="./" aria-current="page">Emulator</a><a href="../installer.html">Installer</a><a href="../console.html">Preset Console</a>
+  </nav>
+
+  <div class="fm1" id="fm1">
+    <div id="wake">
+      <img src="../rose.png" alt="The Blue Rose">
+      <p>The Music Box sleeps.</p>
+      <button id="wakeBtn">Wake the Music Box</button>
+      <p class="muted" style="font-size:12px">Sound starts on this click (browsers need a gesture).</p>
+    </div>
+    <div class="top">
+      <div class="left" id="left"></div>
+      <div class="screen"><canvas id="lcd" width="240" height="240" aria-label="The FM-1 screen"></canvas></div>
+      <div>
+        <div class="knobs" id="knobs"></div>
+        <div class="btns" id="btns"></div>
+      </div>
+    </div>
+    <div class="keys">
+      <div class="blacks" id="blacks"></div>
+      <div class="whites" id="whites"></div>
+    </div>
+    <div class="sigil">MOTHER MELODY HEARS THY SONG</div>
+  </div>
+
+  <div class="row" style="justify-content:space-between;margin-bottom:18px">
+    <span class="meters" id="meters">asleep</span>
+    <span class="row">
+      <label class="meters" for="slotSel">Scene file</label>
+      <select id="slotSel"></select>
+      <button class="ghost" id="exportBtn">Export .emb</button>
+      <button class="ghost" id="importBtn">Import .emb</button>
+      <input type="file" id="importFile" accept=".emb" hidden>
+    </span>
+  </div>
+
+  <div class="grid-3">
+    <section class="card help">
+      <h2>Thy hands on the box</h2>
+      <table>
+        <tr><td>Mouse</td><td>press buttons and keys; turn encoders with the wheel or by dragging up / down</td></tr>
+        <tr><td>White keys</td><td><kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> <kbd>V</kbd> <kbd>B</kbd> <kbd>N</kbd> <kbd>M</kbd> <kbd>,</kbd> <kbd>.</kbd> <kbd>/</kbd> <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> <kbd>Y</kbd></td></tr>
+        <tr><td>Black keys</td><td><kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>H</kbd> <kbd>J</kbd> <kbd>L</kbd> <kbd>;</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> <kbd>6</kbd></td></tr>
+        <tr><td>Buttons</td><td><kbd>F1</kbd>..<kbd>F12</kbd> in panel order (FX .. REC); <kbd>Esc</kbd> HOME, <kbd>Space</kbd> PLAY, <kbd>-</kbd> <kbd>=</kbd> OCT</td></tr>
+        <tr><td>Encoders</td><td><kbd>&larr;</kbd><kbd>&rarr;</kbd> SELECT, <kbd>&uarr;</kbd><kbd>&darr;</kbd> PRESETS</td></tr>
+      </table>
+    </section>
+    <section class="card">
+      <h2>The two modes</h2>
+      <p><b>HOME + PLAY</b> switches between <b>Bardic Crafting</b> (compose, four tracks) and <b>Encounter</b> (white keys cue scenes on the next bar, black keys bend the battle).</p>
+      <p><b>HOME + REC</b>, held: purge a loop (Bardic) or fall silent (Encounter).</p>
+      <p class="muted">The full field manual: <a href="../MANUAL.md">MANUAL.md</a>.</p>
+    </section>
+    <section class="card">
+      <h2>A MIDI keyboard?</h2>
+      <p>Plug one in and press <button class="ghost" id="midiBtn">Listen to MIDI</button>. Program change 1-16 cues a scene; notes play the selected track.</p>
+      <p class="muted" id="midiState"></p>
+    </section>
+  </div>
+  <footer>GPL-3.0-only. Built on Felucca's FM-1 hardware layer (Hügelton Instruments). Not affiliated with M-VAVE / Cuvave.</footer>
+</div>
+<script type="module" src="emu.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Music Box Preset Console</title>
+<meta name="description" content="Back up, restore, share and cue the scenes of an FM-1 running Evander's Music Box.">
+<link rel="icon" href="rose.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  td.actions { white-space: nowrap; }
+  td.actions button { padding: 6px 10px; font-size: 12px; margin-right: 4px; }
+  .fam { font-size: 11px; letter-spacing: .12em; }
+  .table-wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="crest">
+    <img src="rose.png" alt="">
+    <div>
+      <h1>The Preset Console</h1>
+      <p>Thy scenes and thy workbench, kept and shared</p>
+    </div>
+  </header>
+  <nav class="top">
+    <a href="./">Home</a><a href="emu/">Emulator</a><a href="installer.html">Installer</a><a href="console.html" aria-current="page">Preset Console</a>
+  </nav>
+
+  <section class="card">
+    <h2>Connect</h2>
+    <p class="muted">Chrome or Edge, the FM-1 on USB, running Evander's Music Box. Only the device that answers the Music Box's own SysEx is ever written to.</p>
+    <div class="row">
+      <button id="connect">Find the Music Box</button>
+      <button class="ghost" id="backup" disabled>Backup all (.embk)</button>
+      <button class="ghost" id="restore" disabled>Restore all</button>
+      <input type="file" id="restoreFile" accept=".embk" hidden>
+      <input type="file" id="uploadFile" accept=".emb" hidden>
+    </div>
+    <p class="status" id="status"></p>
+    <progress id="bar" max="100" value="0" hidden></progress>
+  </section>
+
+  <section class="card">
+    <h2>The sixteen keys and the workbench</h2>
+    <p class="muted"><b>Cue</b> starts a scene on the box at its next bar: a game master's remote. <b>Upload</b> takes a <code>.emb</code> file (the emulator exports them).</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Key</th><th>Song</th><th>Tempo</th><th>Mode</th><th>Tuning</th><th></th></tr></thead>
+        <tbody id="slots"><tr><td colspan="6" class="muted">Not connected.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+  <footer>GPL-3.0-only. The protocol is in <code>src/emb_ui.c</code> (emb_sysex) and <code>web/embmidi.js</code>.</footer>
+</div>
+<script type="module">
+import { connectMidi, songHead, download, fileName, WORKBENCH } from "./embmidi.js";
+
+const $ = (id) => document.getElementById(id);
+const say = (s) => { $("status").textContent = s; };
+const FAMILY = ["REST", "EXPLORE", "COMBAT", "CLIMAX"];
+let dev = null, uploadSlot = 0, busy = false;
+
+function lock(on) {
+  busy = on;
+  for (const b of document.querySelectorAll("button")) if (b.id !== "connect") b.disabled = on || !dev;
+}
+
+async function refresh() {
+  const tb = $("slots");
+  tb.innerHTML = "";
+  for (let s = 0; s <= WORKBENCH; s++) {
+    const h = songHead(await dev.io.read(s, true));
+    const tr = document.createElement("tr");
+    const key = s === WORKBENCH ? "Workbench" : `${s + 1} <span class="fam muted">${FAMILY[s >> 2]}</span>`;
+    tr.innerHTML = `<td>${key}</td><td>${h.name}</td><td>${h.bpm}</td><td>${h.key}</td><td>${h.tuning}</td><td class="actions"></td>`;
+    const act = tr.lastChild;
+    const btn = (label, fn, cls = "ghost") => { const b = document.createElement("button"); b.className = cls; b.textContent = label; b.onclick = fn; act.append(b); };
+    btn("Download", () => task(`Reading ${h.name}`, async () => { const b = await dev.io.read(s); download(b, fileName(songHead(b).name, "emb")); }));
+    btn("Upload", () => { uploadSlot = s; $("uploadFile").click(); });
+    if (s !== WORKBENCH) {
+      btn("Factory", () => confirm(`Return key ${s + 1} to its factory scene?`) && task("Restoring", () => dev.io.factory(s), true));
+      btn("Cue", () => task(`Cued ${h.name}`, () => dev.io.cue(s)), "");
+    }
+    tb.append(tr);
+  }
+}
+
+async function task(label, fn, reload = false) {
+  if (busy) return;
+  lock(true);
+  say(label + "...");
+  try { await fn(); say(label + ": done."); if (reload) await refresh(); }
+  catch (e) { say(label + ": " + e.message); }
+  lock(false);
+}
+
+$("connect").onclick = async () => {
+  if (!navigator.requestMIDIAccess) { say("No WebMIDI here: use Chrome or Edge."); return; }
+  say("Searching...");
+  try {
+    dev?.close();
+    dev = await connectMidi((s) => say(s));
+    if (!dev) { say("No Music Box answered. Is it plugged in and running the Music Box firmware? Close other MIDI apps."); return; }
+    lock(false);
+    await task(`Connected to ${dev.name}`, refresh);
+  } catch (e) { say("MIDI access refused: " + e.message); }
+};
+$("backup").onclick = () => task("Backing up", async () => {
+  $("bar").hidden = false;
+  const b = await dev.io.backup((n, t) => { $("bar").value = (n / t) * 100; });
+  download(b, `music-box-backup-${new Date().toISOString().slice(0, 10)}.embk`);
+  $("bar").hidden = true;
+});
+$("restore").onclick = () => $("restoreFile").click();
+$("restoreFile").onchange = async () => {
+  const f = $("restoreFile").files[0];
+  $("restoreFile").value = "";
+  if (!f || !confirm("Overwrite every scene and the workbench with this backup?")) return;
+  const bytes = new Uint8Array(await f.arrayBuffer());
+  await task("Restoring", async () => {
+    $("bar").hidden = false;
+    await dev.io.restore(bytes, (n, t) => { $("bar").value = (n / t) * 100; });
+    $("bar").hidden = true;
+  }, true);
+};
+$("uploadFile").onchange = async () => {
+  const f = $("uploadFile").files[0];
+  $("uploadFile").value = "";
+  if (!f) return;
+  const bytes = new Uint8Array(await f.arrayBuffer());
+  await task(`Uploading ${f.name}`, () => dev.io.write(uploadSlot, bytes), true);
+};
+</script>
+</body>
+</html>

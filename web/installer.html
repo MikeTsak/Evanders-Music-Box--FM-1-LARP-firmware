@@ -1,0 +1,175 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Music Box Installer</title>
+<meta name="description" content="Install Evander's Music Box firmware on an M-VAVE FM-1 over USB from Chrome or Edge.">
+<link rel="icon" href="rose.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="crest">
+    <img src="rose.png" alt="">
+    <div>
+      <h1>The Installer</h1>
+      <p>Bind the Music Box to thy FM-1, over a USB cable</p>
+    </div>
+  </header>
+  <nav class="top">
+    <a href="./">Home</a><a href="emu/">Emulator</a><a href="installer.html" aria-current="page">Installer</a><a href="console.html">Preset Console</a>
+  </nav>
+
+  <section class="card warn">
+    <h2>Before thou beginnest</h2>
+    <ul>
+      <li>Use <b>Chrome or Edge</b> on a desktop (WebMIDI with SysEx). Firefox and Safari cannot do this.</li>
+      <li>A <b>data</b> USB-C cable, plugged straight into the computer. Close every other music app (DAWs, M-UPGRADE, other tabs that use MIDI).</li>
+      <li>Charge the FM-1. Do not unplug it while it writes; if it is interrupted it waits in update mode and this page <b>resumes</b>.</li>
+      <li>Coming from another custom firmware? The community advice is to <b>return to official V15 first</b> (below), then install.</li>
+      <li>Already running the Music Box? Save thy scenes with the <a href="console.html">Preset Console</a> (Backup all) first.</li>
+      <li>This is hobby firmware, <b>installed at thine own risk</b>. Recovery paths are in the README.</li>
+    </ul>
+    <label class="row"><input type="checkbox" id="agree"> I understand, and the FM-1 is plugged in.</label>
+  </section>
+
+  <div class="grid-3">
+    <section class="card">
+      <h2>Install the Music Box</h2>
+      <p id="relInfo" class="muted">Looking for the release package&hellip;</p>
+      <div class="row">
+        <button id="goRelease" disabled>Install</button>
+      </div>
+      <p class="muted" style="margin-top:12px">Or a package of thine own (a local build: <code>build/emb.fwsc</code>):</p>
+      <div class="row"><input type="file" id="pkgFile" accept=".fwsc"> <button id="goFile" disabled>Install file</button></div>
+    </section>
+    <section class="card">
+      <h2>Return to official V15</h2>
+      <p class="muted">Choose M-VAVE's unmodified <code>FM-1.fwsc</code> (V15). Its SHA-256 is checked before anything is sent.</p>
+      <div class="row"><input type="file" id="stockFile" accept=".fwsc"> <button class="ghost" id="goStock" disabled>Restore V15</button></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Progress</h2>
+    <p class="status" id="status">Waiting.</p>
+    <progress id="bar" max="100" value="0"></progress>
+    <details style="margin-top:10px"><summary class="muted">Log</summary><pre class="log" id="log"></pre></details>
+  </section>
+  <footer>The update protocol and package format come from Felucca (Hügelton Instruments, GPL-3.0-only): <code>vendor/fm1ota.js</code>, <code>vendor/fm1pkg.js</code>.</footer>
+</div>
+<script type="module">
+import { Updater } from "./vendor/fm1ota.js";
+import { productOf, logicalImage, validateStockPackage, sha256hex } from "./vendor/fm1pkg.js";
+
+const $ = (id) => document.getElementById(id);
+const log = (s) => { $("log").textContent += s + "\n"; $("log").scrollTop = 1e9; };
+const say = (s) => { $("status").textContent = s; log("# " + s); };
+const STEP = {
+  start: "Found the FM-1. It is checking the package...",
+  verify: "The FM-1 verifies the package (nothing written yet)...",
+  loader: "The FM-1 restarts into update mode...",
+  write: "Writing. Do not unplug.",
+  reboot: "Written. The FM-1 restarts...",
+  done: "Done. Mother Melody hears thy song.",
+};
+const ERR = {
+  notfound: "No FM-1 answered. Check the cable, close other MIDI apps, and press Install again.",
+  model: "That device is not an FM-1.",
+  stopped: "The FM-1 stopped answering. Press Install again: it resumes.",
+  lost: "The FM-1 disconnected. Replug it and press Install again: it resumes.",
+  noloader: "Update mode did not appear. Replug the cable and press Install again.",
+  noreturn: "Written, but the FM-1 did not come back. Power-cycle it.",
+  mismatch: "Installed, but the FM-1 reports a different firmware",
+  badreq: "The FM-1 asked for something outside the package. Nothing more was sent.",
+};
+let release = null, local = null, stock = null, busy = false;
+
+function ready() {
+  const ok = $("agree").checked && !busy;
+  $("goRelease").disabled = !ok || !release;
+  $("goFile").disabled = !ok || !local;
+  $("goStock").disabled = !ok || !stock;
+}
+$("agree").addEventListener("change", ready);
+window.addEventListener("beforeunload", (e) => { if (busy) { e.preventDefault(); e.returnValue = ""; } });
+
+async function readPackage(bytes) {
+  const product = productOf(bytes);
+  if (!/^FM-1_\d+$/.test(product)) throw new Error(`not an FM-1 package (identity "${product}")`);
+  return { product, image: logicalImage(bytes), sha: await sha256hex(bytes) };
+}
+
+(async () => {
+  if (!navigator.requestMIDIAccess) { say("This browser has no WebMIDI: use Chrome or Edge."); return; }
+  try {
+    const r = await fetch("firmware/firmware.json");
+    if (!r.ok) throw new Error("this site was built without one");
+    const meta = await r.json();
+    const bytes = new Uint8Array(await (await fetch("firmware/" + meta.file)).arrayBuffer());
+    const p = await readPackage(bytes);
+    if (p.sha !== meta.sha256) throw new Error("the package does not match its checksum");
+    release = { ...p, version: meta.version };
+    $("relInfo").textContent = `Evander's Music Box ${meta.version} (${p.product}), SHA-256 ${p.sha.slice(0, 16)}...`;
+  } catch (e) {
+    $("relInfo").textContent = "No release package on this site (" + e.message + "). Choose a .fwsc file instead.";
+  }
+  ready();
+})();
+
+$("pkgFile").addEventListener("change", async () => {
+  local = null;
+  const f = $("pkgFile").files[0];
+  if (f) try { local = await readPackage(new Uint8Array(await f.arrayBuffer())); say(`${f.name}: ${local.product}`); }
+  catch (e) { say(e.message); }
+  ready();
+});
+$("stockFile").addEventListener("change", async () => {
+  stock = null;
+  const f = $("stockFile").files[0];
+  if (f) try { stock = await validateStockPackage(new Uint8Array(await f.arrayBuffer())); say("Official V15 verified."); }
+  catch (e) { say(e.message); }
+  ready();
+});
+
+async function run(pkg) {
+  if (busy) return;
+  busy = true; ready();
+  $("bar").value = 0;
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); }
+  catch (_) { say("MIDI access was refused. Allow it (the padlock in the address bar) and try again."); busy = false; ready(); return; }
+  const total = 74 + 1167;                        // read requests: step 1, step 2 (a typical package)
+  const step = (k, a) => {
+    log(`${k} ${a ?? ""}`);
+    if (STEP[k] && k !== "verify" && k !== "write") say(STEP[k]);
+    if (k === "verify") { $("status").textContent = STEP.verify; $("bar").value = Math.min(100, (a / total) * 100); }
+    if (k === "write") { $("status").textContent = STEP.write; $("bar").value = Math.min(99, ((74 + a) / total) * 100); }
+    if (k === "done") $("bar").value = 100;
+  };
+  try {
+    const up = new Updater(midi, log);
+    const waiting = await up.find((id) => /^ota-/i.test(id.model));
+    if (waiting) {                                  // a write was interrupted: finish it
+      waiting.link.close();
+      say("The FM-1 is waiting in update mode: resuming.");
+      say((await up.resume(pkg.image, step, pkg.product)) ? STEP.done : ERR.stopped);
+    } else {
+      await up.install(pkg.image, pkg.product, step);
+    }
+  } catch (e) {
+    say((e && ERR[e.code] ? ERR[e.code] + (e.detail ? ` (${e.detail})` : "") : "Error: " + (e && e.message)));
+    log(String(e && e.stack || e));
+  }
+  busy = false; ready();
+}
+$("goRelease").addEventListener("click", () => run(release));
+$("goFile").addEventListener("click", () => run(local));
+$("goStock").addEventListener("click", () => run(stock));
+</script>
+</body>
+</html>

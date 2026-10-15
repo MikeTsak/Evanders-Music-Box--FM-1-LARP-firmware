@@ -1,0 +1,49 @@
+# everything the build makes (tools/build.py): firmware, site, host test, wav, screenshots
+/build/
+
+# JieLi pi32v2 / AC79 SDK toolchain artifacts (if a tool is ever run outside build/)
+*.o
+*.elf
+*.ll
+*.dis
+*.map
+*.lst
+*.bin
+*.fwsc
+!assets/**/*.bin
+*.ufw
+isd_config.ini
+isd_download*.exe
+/tools/.jieli/
+jl_isd.*
+cpu/wl82/tools/download/
+
+# WebAssembly objects and emulator outputs
+*.wasm
+*.wat
+*.wasm.map
+*.ppm
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Node (web tooling, if added)
+node_modules/
+
+# editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# personal backups and stock firmware: never commit M-VAVE's or a user's images
+*.embk
+FM-1.fwsc
+backup*.bin
