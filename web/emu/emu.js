@@ -85,12 +85,8 @@ function buildPanel() {
     octs.append(b);
   }
   left.append(octs);
-  const KNOB_COL = ["#2E5BFF", "#19C37D", "#DCDCD8", "#FF5A1F"];   // K1..K4: the colours on the box's screen
   for (let i = 0; i < 4; i++) {
     encoder($("knobs"), 3 + i, ENC[3 + i]);
-    const cap = $("knobs").lastChild.querySelector(".enc");
-    cap.style.setProperty("--kc", KNOB_COL[i]);
-    cap.classList.remove("dark");
   }
   for (let id = 0; id < 12; id++) {
     const b = el("button", "btn-fm", BTN[id]);
@@ -229,8 +225,14 @@ async function wake() {
   $("wakeBtn").disabled = true;
   try {
     ctx = new AudioContext({ sampleRate: 44100, latencyHint: "interactive" });
-    const [wasm] = await Promise.all([fetch("emb.wasm").then((r) => { if (!r.ok) throw new Error("emb.wasm: HTTP " + r.status); return r.arrayBuffer(); }),
-                                      ctx.audioWorklet.addModule("worklet.js")]);
+    const bust = "v=1.4.1&t=" + Date.now();
+    const [wasm] = await Promise.all([
+      fetch("emb.wasm?" + bust, { cache: "no-store" }).then((r) => {
+        if (!r.ok) throw new Error("emb.wasm: HTTP " + r.status);
+        return r.arrayBuffer();
+      }),
+      ctx.audioWorklet.addModule("worklet.js?" + bust)
+    ]);
     node = new AudioWorkletNode(ctx, "music-box", { numberOfInputs: 0, outputChannelCount: [2], processorOptions: { wasm, stored: loadStored() } });
     node.connect(ctx.destination);
     node.port.onmessage = (ev) => {
@@ -238,7 +240,7 @@ async function wake() {
       if (m.type === "frame") {
         if (m.fb) showFrame(m.fb);
         showLeds(m.leds);
-        $("meters").textContent = `voices ${m.voices}   peak ${(20 * Math.log10(Math.max(1, m.peak) / 32768)).toFixed(1)} dBFS   ${ctx.sampleRate} Hz`;
+        $("meters").textContent = `v1.4.1   voices ${m.voices}   peak ${(20 * Math.log10(Math.max(1, m.peak) / 32768)).toFixed(1)} dBFS   ${ctx.sampleRate} Hz`;
       } else if (m.type === "store") {
         store(m.slot, m.bytes);
       } else if (m.type === "sysex") {

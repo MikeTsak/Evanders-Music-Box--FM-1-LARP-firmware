@@ -27,58 +27,86 @@
     position: relative;
     width: calc(1040 * var(--u));
     margin: 0 auto 22px;
-    padding: calc(24 * var(--u));
-    border-radius: calc(30 * var(--u));
-    background: #D9D6CE;
-    border: calc(5 * var(--u)) solid #101010;
-    box-shadow: calc(10 * var(--u)) calc(10 * var(--u)) 0 #101010;
+    padding: calc(26 * var(--u));
+    border-radius: calc(34 * var(--u));
+    background: #F3EFE6;                            /* warm ivory cream chassis */
+    border: calc(4.5 * var(--u)) solid #14181B;
+    box-shadow: calc(8 * var(--u)) calc(8 * var(--u)) 0 #121518;
     user-select: none;
     touch-action: none;
-    color: #101010;
+    color: #14181B;
   }
   .fm1 .top { display: grid; grid-template-columns: calc(250 * var(--u)) calc(300 * var(--u)) 1fr; gap: calc(24 * var(--u)); align-items: start; }
-  .lab { font: 700 calc(11 * var(--u))/1 var(--mono); letter-spacing: .06em; text-align: center; margin-top: calc(7 * var(--u)); }
+  .lab { font: 700 calc(11 * var(--u))/1 var(--mono); letter-spacing: .08em; text-align: center; margin-top: calc(7 * var(--u)); color: #355060; }
   .enc, .pot {
     width: calc(64 * var(--u)); height: calc(64 * var(--u)); border-radius: 50%; margin: 0 auto; position: relative; cursor: ns-resize;
-    background: var(--kc, #2A2A2A); border: calc(4 * var(--u)) solid #101010; box-shadow: calc(4 * var(--u)) calc(4 * var(--u)) 0 #101010;
+    background: radial-gradient(circle at 35% 35%, #2C2C2C, #141414); border: calc(3.5 * var(--u)) solid #0A0A0A;
+    box-shadow: calc(3 * var(--u)) calc(3 * var(--u)) 0 rgba(10, 10, 10, .45);
   }
   .enc::after, .pot::after {
     content: ""; position: absolute; left: 50%; top: 6%; width: calc(6 * var(--u)); height: 34%;
-    background: #101010; border-radius: 3px; transform-origin: 50% 132%; transform: translateX(-50%) rotate(var(--rot, 0deg));
+    background: #F3EFE6; border-radius: 3px; transform-origin: 50% 132%; transform: translateX(-50%) rotate(var(--rot, 0deg));
   }
-  .enc.dark::after, .pot::after { background: #F2EEE4; }
   .enc:focus-visible, .pot:focus-visible, .btn-fm:focus-visible, .key:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
   .left { display: grid; grid-template-columns: 1fr 1fr; gap: calc(18 * var(--u)) calc(10 * var(--u)); }
-  .octs { grid-column: 1 / 3; display: flex; gap: calc(12 * var(--u)); justify-content: center; }
-  .screen { background: #101010; padding: calc(12 * var(--u)); border-radius: calc(14 * var(--u)); box-shadow: calc(5 * var(--u)) calc(5 * var(--u)) 0 rgba(16, 16, 16, .35); }
-  .screen canvas { width: 100%; aspect-ratio: 1; display: block; image-rendering: pixelated; background: #101010; }
-  .knobs { display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: calc(16 * var(--u)); }
-  .btns { display: grid; grid-template-columns: repeat(6, 1fr); gap: calc(10 * var(--u)); }
-  .btn-fm {
-    height: calc(52 * var(--u)); border-radius: calc(10 * var(--u)); border: calc(3 * var(--u)) solid #101010; cursor: pointer;
-    background: #FFFFFF; color: #101010; font: 700 calc(13 * var(--u))/1.05 var(--mono); text-transform: none; letter-spacing: 0;
-    display: flex; align-items: center; justify-content: center; text-align: center; padding: 0;
-    box-shadow: calc(3 * var(--u)) calc(3 * var(--u)) 0 #101010; transition: background 60ms;
+  .octs {
+    grid-column: 1 / 3; display: flex; gap: calc(12 * var(--u)); justify-content: center;
+    background: #3B5466; border: calc(2.5 * var(--u)) solid #2A3C4A; border-radius: calc(12 * var(--u));
+    padding: calc(6 * var(--u)); box-shadow: inset 1px 1px 3px rgba(0,0,0,0.35);
   }
-  .btn-fm:hover:not(:disabled) { transform: none; box-shadow: calc(3 * var(--u)) calc(3 * var(--u)) 0 #101010; }
-  .btn-fm.small { height: calc(40 * var(--u)); width: calc(78 * var(--u)); }
-  .btn-fm.down, .key.down { transform: translate(calc(2 * var(--u)), calc(2 * var(--u))); box-shadow: calc(1 * var(--u)) calc(1 * var(--u)) 0 #101010; }
-  /* the LEDs, flat: 0 off, 1 a ring, 2 half, 3 lit */
-  .l1 { box-shadow: inset 0 0 0 calc(4 * var(--u)) #FFB18F, calc(3 * var(--u)) calc(3 * var(--u)) 0 #101010; }
-  .l2 { background: #FFB18F !important; }
-  .l3 { background: #FF5A1F !important; color: #101010; }
-  .keys { position: relative; margin-top: calc(24 * var(--u)); }
+  .screen { background: #121212; padding: calc(10 * var(--u)); border-radius: calc(18 * var(--u)); border: calc(3 * var(--u)) solid #0A0A0A; box-shadow: calc(4 * var(--u)) calc(4 * var(--u)) 0 rgba(16, 16, 16, .35); }
+  .screen canvas { width: 100%; aspect-ratio: 1; display: block; image-rendering: pixelated; background: #101010; border-radius: calc(8 * var(--u)); }
+  .knobs { display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: calc(16 * var(--u)); }
+  .btns {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: calc(10 * var(--u));
+    background: #3B5466; border: calc(2.5 * var(--u)) solid #2A3C4A; border-radius: calc(14 * var(--u));
+    padding: calc(8 * var(--u)); box-shadow: inset 1px 1px 3px rgba(0,0,0,0.35);
+  }
+  .btn-fm {
+    height: calc(50 * var(--u)); border-radius: calc(8 * var(--u)); border: calc(2 * var(--u)) solid #253644; cursor: pointer;
+    background: #4F6C82; color: #121F28; font: 700 calc(12.5 * var(--u))/1.05 var(--mono); text-transform: none; letter-spacing: 0;
+    display: flex; align-items: center; justify-content: center; text-align: center; padding: 0;
+    box-shadow: calc(2 * var(--u)) calc(2 * var(--u)) 0 #18232B; transition: background 60ms, transform 60ms;
+  }
+  .btn-fm:hover:not(:disabled) { background: #587890; transform: none; }
+  .btn-fm.small { height: calc(38 * var(--u)); width: calc(76 * var(--u)); }
+  .btn-fm.down, .key.down { transform: translate(calc(2 * var(--u)), calc(2 * var(--u))); box-shadow: none; background: #435E72; }
+  /* the amber/gold LEDs */
+  .l1 { box-shadow: inset 0 0 0 calc(3 * var(--u)) #FFA647, 0 0 calc(6 * var(--u)) #FFA647 !important; }
+  .l2 { background: #FFB35C !important; color: #101010 !important; }
+  .l3 { background: #FF781A !important; color: #101010 !important; box-shadow: 0 0 calc(10 * var(--u)) #FF781A !important; }
+  .keys {
+    position: relative; margin-top: calc(22 * var(--u));
+    background: #3B5466; border: calc(3 * var(--u)) solid #2A3C4A; border-radius: calc(18 * var(--u));
+    padding: calc(10 * var(--u)) calc(12 * var(--u)) calc(14 * var(--u)); box-shadow: inset 2px 2px 4px rgba(0,0,0,0.35);
+  }
   .blacks { position: relative; height: calc(66 * var(--u)); }
   .whites { display: grid; grid-template-columns: repeat(16, 1fr); gap: calc(8 * var(--u)); }
-  .key { position: relative; cursor: pointer; border-radius: calc(14 * var(--u)); border: calc(3 * var(--u)) solid #101010; background: #FFFFFF;
-         box-shadow: calc(3 * var(--u)) calc(3 * var(--u)) 0 #101010; }
-  .whites .key { height: calc(96 * var(--u)); }
-  .whites .key.group { background: #FFF6D6; }
-  .blacks .key { position: absolute; top: 0; width: calc(38 * var(--u)); height: calc(54 * var(--u)); transform: translateX(-50%); background: #3A3A3A; }
-  .blacks .key.down { transform: translateX(-50%) translate(calc(2 * var(--u)), calc(2 * var(--u))); }
-  .key span { position: absolute; bottom: calc(-16 * var(--u)); left: 50%; transform: translateX(-50%); font: 700 calc(9 * var(--u))/1 var(--mono); white-space: nowrap; }
-  .wnum { display: block; margin-top: calc(70 * var(--u)); text-align: center; font: 700 calc(11 * var(--u))/1 var(--mono); }
-  .sigil { position: absolute; right: calc(28 * var(--u)); bottom: calc(6 * var(--u)); font: 400 calc(13 * var(--u))/1 var(--display); letter-spacing: .04em; }
+  .key { position: relative; cursor: pointer; }
+  .whites .key {
+    height: calc(96 * var(--u)); border-radius: calc(14 * var(--u)); border: calc(2.5 * var(--u)) solid #273845;
+    background: #4E6B80; box-shadow: calc(2.5 * var(--u)) calc(2.5 * var(--u)) 0 #18232C; color: #121F28;
+  }
+  .whites .key::before {
+    content: ""; position: absolute; top: 14%; left: 50%; transform: translateX(-50%);
+    width: calc(4.5 * var(--u)); height: 48%; background: #22323E; border-radius: calc(3 * var(--u));
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.55);
+  }
+  .whites .key.group { background: #55758C; }
+  .blacks .key {
+    position: absolute; top: 0; width: calc(38 * var(--u)); height: calc(56 * var(--u)); transform: translateX(-50%);
+    border-radius: calc(12 * var(--u)); border: calc(2.5 * var(--u)) solid #1E2B34; background: #3B5263;
+    box-shadow: calc(2.5 * var(--u)) calc(2.5 * var(--u)) 0 #141C22; color: #121F28;
+  }
+  .blacks .key::before {
+    content: ""; position: absolute; top: 12%; left: 50%; transform: translateX(-50%);
+    width: calc(4.5 * var(--u)); height: 46%; background: #1B262F; border-radius: calc(3 * var(--u));
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.55);
+  }
+  .blacks .key.down { transform: translateX(-50%) translate(calc(2 * var(--u)), calc(2 * var(--u))); box-shadow: none; background: #334857; }
+  .key span { position: absolute; bottom: calc(-16 * var(--u)); left: 50%; transform: translateX(-50%); font: 700 calc(9 * var(--u))/1 var(--mono); white-space: nowrap; color: #131E26; }
+  .wnum { display: block; margin-top: calc(70 * var(--u)); text-align: center; font: 700 calc(11 * var(--u))/1 var(--mono); color: #131E26; }
+  .sigil { position: absolute; right: calc(28 * var(--u)); bottom: calc(6 * var(--u)); font: 400 calc(13 * var(--u))/1 var(--display); letter-spacing: .04em; color: #2A3E4D; }
   #wake {
     position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
     background: color-mix(in srgb, var(--blue) 92%, transparent); color: #fff; border-radius: inherit; z-index: 5; text-align: center; padding: 16px;
@@ -152,7 +180,7 @@
       <p><b>HOME + PLAY</b> switches between <b>Bardic Crafting</b> (write songs on four tracks) and <b>Encounter</b>.</p>
       <p>In <b>Encounter</b>, white keys <b>1, 5, 9 and 13</b> are the scene groups: rest, explore, combat and climax. The sharps after each group key play its variations; hold the group key for the fourth variation. The other white keys bend the battle.</p>
       <p><b>HOME + REC</b>, held: purge a loop (Bardic) or fall silent (Encounter).</p>
-      <p class="muted">The full field manual: <a href="https://github.com/MikeTsak/Evanders-Music-Box--FM-1-LARP-firmware/blob/main/MANUAL.md">MANUAL.md</a>.</p>
+      <p class="muted">The full field manual: <a href="../manual.html">The Field Manual</a>.</p>
     </section>
     <section class="card">
       <h2>A MIDI keyboard?</h2>
@@ -162,6 +190,6 @@
   </div>
   <footer>GPL-3.0-only. Built on Felucca's FM-1 hardware layer (Hügelton Instruments). Not affiliated with M-VAVE / Cuvave. · Made by <a href="https://miketsak.gr" target="_blank" rel="noopener">miketsak.gr</a></footer>
 </div>
-<script type="module" src="emu.js"></script>
+<script type="module" src="emu.js?v=1.4.1"></script>
 </body>
 </html>

@@ -19,9 +19,9 @@ AddDefaultCharset UTF-8
 </IfModule>
 
 # 3. Dynamic Cache Control & Update Delivery
-# HTML pages and release manifests are never held stale in client or proxy caches
+# HTML pages, scripts, WASM binaries, and release manifests are never held stale in client or proxy caches
 <IfModule mod_headers.c>
-  <FilesMatch "\.(html|htm|json)$">
+  <FilesMatch "\.(html|htm|json|wasm|js|mjs)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
@@ -37,7 +37,7 @@ AddDefaultCharset UTF-8
     Header set Cache-Control "public, max-age=86400, must-revalidate"
   </FilesMatch>
 
-  <FilesMatch "\.(css|js|mjs|wasm)$">
+  <FilesMatch "\.(css)$">
     Header set Cache-Control "public, max-age=3600, must-revalidate"
   </FilesMatch>
 
