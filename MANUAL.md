@@ -46,8 +46,8 @@ The black keys sit in groups of 3, 2, 3, 2 and 1. A gloved hand can find them by
 
 ### The Awakening
 
-At power-on the glass draws the crest of Mother Melody, two sharp-crowned **M**s with wings flared. The crest
-gives way to the **Blue Rose** opening, and then the words appear:
+At power-on the glass draws the logo of Mother Melody in white and blue, the curved **MM** monogram with
+flowing musical staff waves and dancing notes. The logo yields to the **Blue Rose** opening, and then the words appear:
 
 > **EVANDER'S MUSIC BOX — MOTHER MELODY HEARS THY SONG**
 

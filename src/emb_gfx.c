@@ -245,38 +245,94 @@ static void battery(int x, int y, uint32_t pct, uint32_t ext)
 }
 
 /* ------------------------------------------------------------------ the crest and the rose */
-/* The Mother Melody crest: two sharp gothic M's sharing their middle stroke, a crown above, wings
- * flaring from the outer legs. p: how much is drawn, 0..256 (the stroke reveal); s: scale /256 */
+/* The Mother Melody logo: elegant curved MM monogram with central divider, flowing musical staff
+ * waves and dancing notes in white and blue (assets/bluerose.png palette). No wings or crown.
+ * p: stroke reveal 0..256; s: scale /256 */
 static void crest(int cx, int cy, int p, int s, uint16_t c)
 {
-    static const int8_t M[][2] = {                  /* the double M as one stroke, units of 1/32 of its height */
-        {-52, 20}, {-52, -16}, {-40, -30}, {-26, -2}, {-14, -30}, {0, -12},
-        {14, -30}, {26, -2}, {40, -30}, {52, -16}, {52, 20}};
-    static const int8_t CROWN[][2] = {{-18, -40}, {-12, -54}, {-6, -42}, {0, -60}, {6, -42}, {12, -54}, {18, -40}};
-    int n = (int)(sizeof M / sizeof M[0]), seg, k, total = n - 1;
+    /* Left half of the curved MM monogram; mirrored across x = cx */
+    static const int8_t M_LEFT[][2] = {
+        {-80, 6}, {-72, 12}, {-60, 8}, {-50, -4}, {-42, -20}, {-38, -36},
+        {-34, -22}, {-28, -4}, {-22, 12}, {-16, 24}, {-20, 28}, {-25, 23},
+        {-22, 10}, {-16, -6}, {-10, -22}, {-5, -34}, {-3, -16}, {-2, 4}, {-2, 22}
+    };
+    /* Flowing musical staff lines: waving outward behind the monogram */
+    static const int8_t STAFF[][2] = {
+        {-10, 0}, {-24, -4}, {-40, -5}, {-58, 2}, {-72, 3}, {-86, -6}, {-94, -14}
+    };
+    /* Musical notes along the staves: {dx, dy, stem_h, type: 0=single, 1=quaver} */
+    static const int8_t NOTES[][4] = {
+        {-78, -3, -8, 1}, {-62, 2, -9, 0}, {-46, -4, -9, 1}, {-32, -3, -8, 0},
+        {32, -3, -8, 0}, {46, -4, -9, 1}, {62, 2, -9, 0}, {78, -3, -8, 1}
+    };
+    int n = (int)(sizeof M_LEFT / sizeof M_LEFT[0]), seg, k, side, total = n - 1;
     int shown = (p * total) >> 8;
-    for (seg = 0; seg < total && seg <= shown; seg++) {
-        int x0 = cx + ((M[seg][0] * s) >> 8), y0 = cy + ((M[seg][1] * s) >> 8);
-        int x1 = cx + ((M[seg + 1][0] * s) >> 8), y1 = cy + ((M[seg + 1][1] * s) >> 8);
-        if (seg == shown) {                         /* the stroke being drawn */
-            int f = (p * total) & 255;
-            x1 = x0 + (((x1 - x0) * f) >> 8);
-            y1 = y0 + (((y1 - y0) * f) >> 8);
+    int staff_n = (int)(sizeof STAFF / sizeof STAFF[0]) - 1;
+    int staff_shown = (p * staff_n) >> 8;
+    int r_line = (3 * s) >> 8;
+    if (r_line < 1) r_line = 1;
+
+    /* 1. Behind the M: flowing musical staff waves */
+    for (side = -1; side <= 1; side += 2) {
+        int st;
+        for (st = -6; st <= 6; st += 4) {
+            int y_off = (st * s) >> 8;
+            for (seg = 0; seg < staff_n && seg <= staff_shown; seg++) {
+                int x0 = cx + side * ((STAFF[seg][0] * s) >> 8);
+                int y0 = cy + y_off + ((STAFF[seg][1] * s) >> 8);
+                int x1 = cx + side * ((STAFF[seg + 1][0] * s) >> 8);
+                int y1 = cy + y_off + ((STAFF[seg + 1][1] * s) >> 8);
+                if (seg == staff_shown) {
+                    int f = (p * staff_n) & 255;
+                    x1 = x0 + (((x1 - x0) * f) >> 8);
+                    y1 = y0 + (((y1 - y0) * f) >> 8);
+                }
+                /* Staves in subtle blue depth */
+                line(x0, y0, x1, y1, 0, p < 180 ? COL_BLUE_D : COL_BLUE);
+            }
         }
-        line(x0, y0, x1, y1, (3 * s) >> 8, c);
     }
-    if (p < 128)
-        return;
-    for (k = 0; k + 1 < 7; k++)                     /* the crown */
-        line(cx + ((CROWN[k][0] * s) >> 8), cy + ((CROWN[k][1] * s) >> 8), cx + ((CROWN[k + 1][0] * s) >> 8),
-             cy + ((CROWN[k + 1][1] * s) >> 8), (2 * s) >> 8, COL_YELLOW);
-    disc(cx, cy + ((-62 * s) >> 8), (3 * s) >> 8, COL_YELLOW);
-    for (k = 0; k < 4; k++) {                       /* the wings: feathers flaring out and up, longer outward */
-        int len = ((22 + k * 9) * s) >> 8, side, a = 40 + k * 26;
-        for (side = -1; side <= 1; side += 2) {
-            int x0 = cx + side * ((54 * s) >> 8), y0 = cy + (((-10 + k * 8) * s) >> 8);
-            line(x0, y0, x0 + side * ((len * emb_sine[(uint32_t)(256 - a) & 1023u]) >> 15),
-                 y0 - ((len * emb_sine[(uint32_t)a & 1023u]) >> 15), (s >> 8) + 1, c);
+
+    /* 2. Musical notes placed along the staves */
+    if (p >= 60) {
+        int num_notes = (int)(sizeof NOTES / sizeof NOTES[0]);
+        int notes_to_draw = ((p - 60) * num_notes) / 140;
+        if (notes_to_draw > num_notes) notes_to_draw = num_notes;
+        for (k = 0; k < notes_to_draw; k++) {
+            int nx = cx + ((NOTES[k][0] * s) >> 8);
+            int ny = cy + ((NOTES[k][1] * s) >> 8);
+            int sh = (NOTES[k][2] * s) >> 8;
+            disc(nx, ny, (2 * s) >> 8 > 0 ? (2 * s) >> 8 : 1, COL_PAPER);
+            line(nx + 1, ny, nx + 1, ny + sh, 0, COL_PAPER);
+            if (NOTES[k][3]) /* quaver flag */
+                line(nx + 1, ny + sh, nx + 3, ny + sh + 3, 0, COL_BLUE);
+        }
+    }
+
+    /* 3. Center vertical staff bar / divider */
+    {
+        int y0 = cy + ((-44 * s) >> 8), y1 = cy + ((30 * s) >> 8);
+        int bar_prog = p > 120 ? 256 : (p * 256) / 120;
+        int cur_y1 = y0 + (((y1 - y0) * bar_prog) >> 8);
+        line(cx + 1, y0 + 1, cx + 1, cur_y1 + 1, 1, COL_BLUE_D);
+        line(cx, y0, cx, cur_y1, 1, c);
+    }
+
+    /* 4. Symmetrical curved MM monogram (both left and right sides) */
+    for (side = -1; side <= 1; side += 2) {
+        for (seg = 0; seg < total && seg <= shown; seg++) {
+            int x0 = cx + side * ((M_LEFT[seg][0] * s) >> 8);
+            int y0 = cy + ((M_LEFT[seg][1] * s) >> 8);
+            int x1 = cx + side * ((M_LEFT[seg + 1][0] * s) >> 8);
+            int y1 = cy + ((M_LEFT[seg + 1][1] * s) >> 8);
+            if (seg == shown) {
+                int f = (p * total) & 255;
+                x1 = x0 + (((x1 - x0) * f) >> 8);
+                y1 = y0 + (((y1 - y0) * f) >> 8);
+            }
+            /* Deep blue under-stroke shadow, then crisp paper stroke */
+            line(x0 + 1, y0 + 1, x1 + 1, y1 + 1, r_line, COL_BLUE_D);
+            line(x0, y0, x1, y1, r_line, c);
         }
     }
 }
@@ -312,28 +368,29 @@ static void rose(int cx, int cy, int s, int rot)
         disc(cx + pol_x(k * 73, (13 * s) >> 8), cy + pol_y(k * 73, (13 * s) >> 8), (s * 3) >> 9, COL_RED);
 }
 
-/* the boot animation at t ms: the crest is written, it yields to the rose blooming, the proclamation.
+/* the boot animation at t ms: the Mother Melody logo is written, it yields to the Blue Rose blooming, the proclamation.
  * note: a line under it (the last reset's cause, from the FM-1 port), or 0 */
 #define BOOT_MS 3600u
 static void boot_frame(uint32_t t, const char *note)
 {
     static const char *const L[3] = {"EVANDER'S MUSIC BOX", "MOTHER MELODY", "HEARS THY SONG"};
-    static const uint16_t CONF[5] = {COL_BLUE, COL_GREEN, COL_ORANGE, COL_YELLOW, COL_PINK};
+    /* White and blue starlight twinkling in the night sky (Blue Rose palette) */
+    static const uint16_t CONF[5] = {COL_BLUE, COL_PAPER, COL_BLUE_D, COL_LIGHT, COL_BLUE};
     int i;
     fill(0, 0, EMB_W, EMB_H, COL_INK);
-    for (i = 0; i < 28; i++) {                      /* pixel confetti, twinkling */
+    for (i = 0; i < 28; i++) {                      /* pixel starlight, twinkling */
         uint32_t h = (uint32_t)i * 2654435761u;
         int x = (int)((h >> 8) & 255u), y = (int)((h >> 16) & 255u);
         if (x < EMB_W - 4 && y < 170 && ((t >> 7) + (uint32_t)i) % 5u)
             fill(x, y, 3, 3, CONF[h % 5u]);
     }
-    if (t < 1100u) {                                /* the crest, written stroke by stroke */
-        int p = (int)emb_udiv(t * 256u, 900u);
-        crest(120, 94, p > 256 ? 256 : p, 300, COL_PAPER);
-    } else if (t < 1900u) {                         /* the crest gives way to the rose */
+    if (t < 1100u) {                                /* the Mother Melody logo, written stroke by stroke */
+        int p = (int)emb_udiv(t * 256u, 500u);
+        crest(120, 94, p > 256 ? 256 : p, 256, COL_PAPER);
+    } else if (t < 1900u) {                         /* the crest yields to the Blue Rose blooming */
         int f = (int)emb_udiv((t - 1100u) * 256u, 800u);
         if (f < 160)
-            crest(120, 94 - (f >> 3), 256, 300 - f, f < 80 ? COL_PAPER : COL_GREY);
+            crest(120, 94 - (f >> 3), 256, 256 - f, f < 80 ? COL_PAPER : COL_BLUE_D);
         rose(120, 88, (f * 200) >> 8, 512 - (f * 2));
     } else {
         static const uint8_t Y[3] = {174, 196, 213};
@@ -348,7 +405,8 @@ static void boot_frame(uint32_t t, const char *note)
             for (i = 0; L[k][i] && (uint32_t)i < n && i < 23; i++)
                 b[i] = L[k][i];
             b[i] = 0;
-            text_csh(120, Y[k], b, 2, k ? COL_YELLOW : COL_PAPER, k ? COL_ORANGE : COL_BLUE);
+            /* Proclamation in white and blue (paper letters with blue drop shadow) */
+            text_csh(120, Y[k], b, 2, COL_PAPER, COL_BLUE_D);
         }
     }
     text(EMB_W - 4 - text_w("V" EMB_VERSION, 1), 4, "V" EMB_VERSION, 1, COL_GREY);   /* which firmware this is */
@@ -357,3 +415,4 @@ static void boot_frame(uint32_t t, const char *note)
         text_c(120, 231, note, 1, COL_INK);
     }
 }
+
