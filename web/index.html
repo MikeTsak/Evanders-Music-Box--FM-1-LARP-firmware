@@ -23,7 +23,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-  .hero { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; margin: 12px 0 30px; }
+  .hero { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; margin: 8px 0 24px; }
   .hero .rose {
     width: min(200px, 38vw); padding: 14px; background: var(--card); border: 4px solid var(--line);
     border-radius: 28px; box-shadow: 8px 8px 0 var(--line); transform: rotate(-5deg);
@@ -50,6 +50,15 @@
 </head>
 <body>
 <div class="wrap">
+  <header class="hero">
+    <img class="rose" src="rose.png" alt="The Blue Rose of Mother Melody">
+    <div>
+      <h1>Evander's <span>Box</span></h1>
+      <p class="proc">Mother Melody hears thy song &middot; <span class="tag" style="margin-bottom:0; vertical-align:middle; padding:3px 7px;">v1.4.1</span></p>
+      <p class="lede">Custom firmware specifically designed for <b>Live Action Roleplay (LARP)</b>. Turn your M-VAVE FM-1 pocket synthesizer into the sacred relic of Evander, Elven Bard of Mother Melody. By day it scores live battles strapped to your forearm; by night it is a four-track medieval workshop.</p>
+    </div>
+  </header>
+
   <nav class="top">
     <a href="./" aria-current="page">Home</a>
     <a href="manual.html">Manual</a>
@@ -57,15 +66,6 @@
     <a href="installer.html">Installer</a>
     <a href="console.html">Preset Console</a>
   </nav>
-
-  <section class="hero">
-    <img class="rose" src="rose.png" alt="The Blue Rose of Mother Melody">
-    <div>
-      <h1>Evander's <span>Box</span></h1>
-      <p class="proc">Mother Melody hears thy song &middot; <span class="tag" style="margin-bottom:0; vertical-align:middle; padding:3px 7px;">v1.4.1</span></p>
-      <p class="lede">Custom firmware specifically designed for <b>Live Action Roleplay (LARP)</b>. Turn your M-VAVE FM-1 pocket synthesizer into the sacred relic of Evander, Elven Bard of Mother Melody. By day it scores live battles strapped to your forearm; by night it is a four-track medieval workshop.</p>
-    </div>
-  </section>
 
   <!-- Dedicated LARP Bard Section -->
   <section class="larp-banner">
