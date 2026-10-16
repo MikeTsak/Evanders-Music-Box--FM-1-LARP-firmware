@@ -60,13 +60,65 @@ function encoder(parent, id, label, isPot) {
 }
 
 function pressable(e, onDown, onUp) {
-  const down = (ev) => { ev.preventDefault(); e.setPointerCapture?.(ev.pointerId); if (!e.classList.contains("down")) { e.classList.add("down"); onDown(); } };
-  const up = () => { if (e.classList.contains("down")) { e.classList.remove("down"); onUp(); } };
+  const down = (ev) => {
+    ev.preventDefault();
+    if (ev.ctrlKey || ev.metaKey) {
+      if (e.classList.contains("latched")) {
+        e.classList.remove("latched", "down");
+        onUp();
+      } else {
+        e.classList.add("latched", "down");
+        onDown();
+      }
+      return;
+    }
+    if (e.classList.contains("latched")) {
+      e.classList.remove("latched", "down");
+      onUp();
+      return;
+    }
+    e.setPointerCapture?.(ev.pointerId);
+    if (!e.classList.contains("down")) {
+      e.classList.add("down");
+      onDown();
+    }
+  };
+  const up = () => {
+    if (e.classList.contains("latched")) return;
+    if (e.classList.contains("down")) {
+      e.classList.remove("down");
+      onUp();
+    }
+  };
+  const cancel = () => {
+    if (e.classList.contains("latched")) return;
+    if (e.classList.contains("down")) {
+      e.classList.remove("down");
+      onUp();
+    }
+  };
   e.addEventListener("pointerdown", down);
   e.addEventListener("pointerup", up);
-  e.addEventListener("pointercancel", up);
-  e.addEventListener("keydown", (ev) => { if ((ev.key === " " || ev.key === "Enter") && !ev.repeat) { ev.preventDefault(); ev.stopPropagation(); e.classList.add("down"); onDown(); } });
-  e.addEventListener("keyup", (ev) => { if (ev.key === " " || ev.key === "Enter") { ev.stopPropagation(); up(); } });
+  e.addEventListener("pointercancel", cancel);
+  e.addEventListener("keydown", (ev) => {
+    if ((ev.key === " " || ev.key === "Enter") && !ev.repeat) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!e.classList.contains("down")) {
+        e.classList.add("down");
+        onDown();
+      }
+    }
+  });
+  e.addEventListener("keyup", (ev) => {
+    if (ev.key === " " || ev.key === "Enter") {
+      ev.stopPropagation();
+      if (!e.classList.contains("latched") && e.classList.contains("down")) {
+        e.classList.remove("down");
+        onUp();
+      }
+    }
+  });
 }
 
 function buildPanel() {
