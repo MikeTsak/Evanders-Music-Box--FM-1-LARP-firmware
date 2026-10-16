@@ -593,14 +593,14 @@ static void command(const emb_cmd_t *c)
 /* ------------------------------------------------------------------ the mixer */
 static void track_gains(deck_t *d)
 {
-    static const uint8_t ON_AT[EMB_NTRK] = {1, 0, 2, 3};   /* intensity: the drone first, then drums, strings, lead */
+    static const uint8_t ON_AT[EMB_NTRK] = {3, 0, 2, 1};   /* intensity: drone (1) at 0, drums (3) at 1, strings (2) at 2, lead (0) at 3 */
     uint32_t k;
     for (k = 0; k < EMB_NTRK; k++) {
         int32_t t = 32767;
         if (d->slot != 255u) {
             if (intensity < ON_AT[k])
                 t = 0;
-            if (breakdown && k >= 2u)
+            if (breakdown && (k == 0u || k == 2u))
                 t = 0;
         } else if ((emb_mutes >> k) & 1u) {
             t = 0;

@@ -496,6 +496,7 @@ static void fm1_main(void)
     screen_frame();
     bootguard.pending = 0;                          /* boot succeeded: clear pending immediately */
     bootguard.failed = 0;
+    crumb_set(BS_RUNNING);
     for (;;) {
         uint32_t now = fm1_ms;
         fm1_wdt_feed();

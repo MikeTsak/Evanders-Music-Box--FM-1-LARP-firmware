@@ -189,14 +189,18 @@ static void test_ui(void)
     emb_button(B_GLO, 1);
     emb_button(B_GLO, 0);
     emb_button(B_EDIT, 0);
-    CHECK(ui.trk == 0u, "track 1 (drums)");
+    CHECK(emb_bench.t[0].inst == I_TONEWHEEL, "EDIT + GLO: tonewheel on track 1 (lead)");
     press(B_SEL);
-    CHECK(ui.trk == 1u, "SEL: the next track");
+    CHECK(ui.trk == 1u, "SEL: track 2");
+    press(B_SEL);
+    CHECK(ui.trk == 2u, "SEL: track 3");
+    press(B_SEL);
+    CHECK(ui.trk == 3u, "SEL: track 4 (drums)");
     emb_button(B_EDIT, 1);
     emb_button(B_GLO, 1);
     emb_button(B_GLO, 0);
     emb_button(B_EDIT, 0);
-    CHECK(emb_bench.t[1].inst == I_TONEWHEEL, "EDIT + GLO: tonewheel");
+    CHECK(emb_bench.t[3].inst == I_TAVERN_KIT, "drums cannot switch to tonewheel");
     {
         uint32_t p;
         for (p = 0; p < 7u; p++) {                  /* every page draws */
@@ -361,6 +365,7 @@ static int shots(const char *dir)
     static const char *const BOOT_N[4] = {"boot1_crest", "boot2_bloom", "boot3_rose", "boot4_proclamation"};
     emb_power(76, 0);
     for (t = 0; t < 4u; t++) {
+        emb_power(76, t == 3u ? 1 : 0);
         ui.booting = 1;
         ui.boot_started = 1;
         ui.boot_t0 = 1;

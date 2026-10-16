@@ -54,8 +54,8 @@ flowing musical staff waves and dancing notes. The logo yields to the **Blue Ros
 A light runs across the keys while this happens. Press any button after the first half-second to skip the
 rest. The Box always wakes in **Bardic Crafting**, with its last saved songs.
 
-If the last run ended badly (a crash, a hang, a battery too low), a **pink line** at the foot of the boot screen
-says how. See Chapter VII.
+If the last run ended badly (a crash, a hang, a battery too low) and the Box is plugged into USB, a **pink line** at the foot of the boot screen
+says how (on battery power, this diagnostic line is hidden). See Chapter VII.
 
 ---
 
@@ -83,10 +83,10 @@ keeps playing.
 
 | Seat | Track | Default instrument |
 | --- | --- | --- |
-| 1 | the **War Drums** | TAVERN KIT |
+| 1 | the **Lead** | RECORDER |
 | 2 | the **Drone** | HURDY GURDY |
 | 3 | the **Strings** | PHYS HARP |
-| 4 | the **Lead** | RECORDER |
+| 4 | the **War Drums** | TAVERN KIT |
 
 A new song starts in **D Dorian**, tuned **Pythagorean**, and every key is snapped to the mode. A wrong note is
 impossible until you ask for one.
@@ -107,12 +107,12 @@ when that track plays and **dark** when it is muted.
 
 The keys play the chosen track.
 
-**Tracks 2 to 4 (melodic):**
+**Tracks 1 to 3 (melodic):**
 
 - The lowest key is F3. **OCT-** and **OCT+** move the keys three octaves either way.
 - Keys outside the mode play the scale note just below them.
 
-**Track 1 (drums):** the white keys play the drums, eight pieces repeating across the keyboard:
+**Track 4 (drums):** the white keys play the drums, eight pieces repeating across the keyboard:
 
 | White key | Piece | White key | Piece |
 | --- | --- | --- | --- |
@@ -441,7 +441,7 @@ A scene's key is its group key or one of its sharps; for CLIMAX IV, the group ke
 | Silence after a fall | Turn **MASTER** up. Press **PLAY**. **OCT- + OCT+** brings Encounter to full host. |
 | A loop gone wrong in battle | **HOME + REC**, hold. **HOME + SAVE** if you regret it. |
 | A red band on the glass | The Box stumbled and is restarting itself. It wakes with your last kept songs. |
-| A pink line under the rose at boot | The last run ended badly, and the line says how. *LOW VOLTAGE*: charge the Box. *WATCHDOG* or *CRASHED*: please report it, with what you were doing. *STOPPED AT STEP n*: the boot halted at that step; please report the number. |
+| A pink line under the rose at boot | When plugged into USB, the line says why the last run ended. *LOW VOLTAGE*: charge the Box. *WATCHDOG* or *CRASHED*: please report it, with what you were doing. *STOPPED AT STEP n*: the boot halted at that step; please report the number. (On battery, this line is hidden.) |
 | Dark on battery, fine on USB | Charge it fully, then switch on again. If it stays dark, power on with USB, read the pink line, and report it. |
 | To return it to the stock firmware | The Installer's *Return to official V15*, or M-VAVE's updater. |
 | Deeper trouble | **OCT- + OCT+** held five seconds enters the chip's update mode. The README's recovery section names the tools. |

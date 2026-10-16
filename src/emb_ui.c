@@ -22,6 +22,7 @@
 enum { P_HOME, P_FX, P_ENV, P_MOTION, P_VOICE, P_MODE, P_SEQ };
 static const char *const PAGE_NAME[7] = {"HOME", "SANCTUARY", "ENVELOPE", "MOTION", "VOICE", "MODES", "STEPS"};
 #define REL_BTNS ((1u << B_HOME) | (1u << B_SEL) | (1u << B_EDIT) | (1u << B_GLO) | (1u << B_SAVE))
+#define TRACK_DRUM 3u
 
 const int8_t emb_white_of[EMB_NKEY] = {0, -1, 1, -1, 2, -1, 3, 4, -1, 5, -1, 6, 7, -1, 8, -1, 9, -1, 10, 11, -1, 12,
                                        -1, 13, 14, -1, 15};
@@ -154,7 +155,7 @@ void emb_init(uint32_t seed)
     ui.tempo_pm = 1000;
     for (k = 0; k < EMB_NTRK; k++) {
         ui.organ_prev[k] = I_POSITIVE;
-        ui.last_note[k] = (uint8_t)(48 + emb_bench.root);
+        ui.last_note[k] = (uint8_t)(k == TRACK_DRUM ? 1 : 48 + emb_bench.root);
     }
 }
 
@@ -187,7 +188,7 @@ static void set_inst(uint32_t t, int inst)
 static void organ_toggle(void)                      /* EDIT + GLO: pipes <-> tonewheel */
 {
     emb_track_t *t = cur_trk();
-    if (ui.trk == 0u) {
+    if (ui.trk == TRACK_DRUM) {
         say("DRUMS HAVE NO PIPES");
         return;
     }
@@ -216,7 +217,7 @@ static void panic_fire(void)
 static int key_note(uint32_t k)                     /* the note a key plays on the selected track */
 {
     int w = emb_white_of[k];
-    if (ui.trk == 0u)                               /* drums: white keys the pieces, black a ghost of the left one */
+    if (ui.trk == TRACK_DRUM)                       /* drums: white keys the pieces, black a ghost of the left one */
         return 1 + ((w >= 0 ? w : emb_white_of[k - 1u]) & 7);
     {
         int n = 53 + (int)k + 12 * ui.oct;
@@ -232,7 +233,7 @@ static void step_toggle(uint32_t idx)
         s->lock = 255;
         s->micro = 0;
     } else {
-        s->note[0] = ui.last_note[ui.trk] ? ui.last_note[ui.trk] : (uint8_t)(ui.trk ? 50 : 1);
+        s->note[0] = ui.last_note[ui.trk] ? ui.last_note[ui.trk] : (uint8_t)(ui.trk == TRACK_DRUM ? 1 : 50);
         s->vel = s->vel ? s->vel : 100;
         s->gate = s->gate ? s->gate : 4;
     }
@@ -460,7 +461,7 @@ void emb_key(uint32_t k, int down, uint32_t vel)
         ui.key_note[k] = (uint8_t)n;
         ui.key_trk[k] = ui.trk;
         ui.last_note[ui.trk] = (uint8_t)n;
-        emb_post(C_NOTE_ON, ui.trk, (uint32_t)n, bl >= 0 && ui.trk == 0u ? 60u : vel, 0);
+        emb_post(C_NOTE_ON, ui.trk, (uint32_t)n, bl >= 0 && ui.trk == TRACK_DRUM ? 60u : vel, 0);
     }
 }
 
@@ -498,7 +499,7 @@ static void knob(uint32_t k, int d)                 /* K1..K4 = 0..3 */
             step_toggle((uint32_t)ui.step_held);
         switch (k) {
         case 0:
-            if (ui.trk == 0u)
+            if (ui.trk == TRACK_DRUM)
                 s->note[0] = (uint8_t)clamp_add(s->note[0], d, 1, 8);
             else {
                 int n = s->note[0];
@@ -604,7 +605,7 @@ void emb_encoder(uint32_t e, int32_t steps)
                 emb_post(C_SEL_TRACK, ui.trk, 0, 0, 0);
             }
         } else if (e == E_PRESETS) {
-            int lo = ui.trk ? I_FIRST_MELODIC : 0, hi = ui.trk ? I_COUNT - 1 : I_RITUAL_KIT;
+            int lo = ui.trk == TRACK_DRUM ? 0 : I_FIRST_MELODIC, hi = ui.trk == TRACK_DRUM ? I_RITUAL_KIT : I_COUNT - 1;
             int i = cur_trk()->inst + d;
             set_inst(ui.trk, i < lo ? hi : i > hi ? lo : i);
             say(emb_inst_name[cur_trk()->inst]);
@@ -812,7 +813,7 @@ void emb_leds(uint8_t lv[EMB_NLED])
     for (i = 0; i < EMB_NKEY; i++) {                /* playing: the scale glows, the roots half lit */
         int n = 53 + (int)i + 12 * ui.oct;
         uint8_t l;
-        if (ui.trk == 0u)
+        if (ui.trk == TRACK_DRUM)
             l = emb_white_of[i] >= 0 && emb_white_of[i] < 8 ? glow : LED_OFF;
         else if (!emb_set.snap || emb_in_scale(n, emb_bench.root, emb_bench.mode))
             l = (uint32_t)(n - (int)emb_bench.root + 120) % 12u == 0u ? LED_MID : glow;
@@ -1141,7 +1142,7 @@ static void draw_seq(void)
         }
         if (on) {
             char n[8];
-            if (ui.trk == 0u)
+            if (ui.trk == TRACK_DRUM)
                 trunc_cpy(n, emb_drum_name[(s->note[0] - 1u) & 7u], 4);
             else
                 note_name(n, s->note[0]);
@@ -1293,7 +1294,7 @@ uint32_t emb_draw(uint16_t *fb, uint32_t row_dirty[(EMB_H + 31) / 32])
     uint32_t y, any = 0;
     G = fb;
     if (ui.booting) {
-        boot_frame(ui.boot_started ? ui.now - ui.boot_t0 : 0u, ui.boot_note);
+        boot_frame(ui.boot_started ? ui.now - ui.boot_t0 : 0u, ui.ext ? ui.boot_note : 0);
     } else {
         fill(0, 0, EMB_W, EMB_H, COL_INK);
         if (ui.mode)
