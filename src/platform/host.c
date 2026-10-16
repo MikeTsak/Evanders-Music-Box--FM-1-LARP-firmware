@@ -370,7 +370,7 @@ static int shots(const char *dir)
         ui.boot_started = 1;
         ui.boot_t0 = 1;
         ui.now = 1u + BOOT_T[t];
-        emb_boot_note(t == 3u ? "LAST RESET: LOW VOLTAGE" : 0);
+        emb_boot_note(0);
         emb_draw(fb, dirty);
         ppm(dir, BOOT_N[t], fb);
     }
