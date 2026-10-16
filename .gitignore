@@ -47,3 +47,5 @@ desktop.ini
 *.embk
 FM-1.fwsc
 backup*.bin
+
+/clockit_backup_*.csv

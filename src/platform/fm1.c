@@ -355,8 +355,11 @@ static void uboot_now(void)
 static inline void halt_core1(void)
 {
     /* Halt second core (Core 1) if left running by stock V15 / Felucca firmware.
-     * Mask bus-invalid traps so Core 1's bus disconnect does not fault Core 0. */
+     * On cold boot Core 1 is already disabled (bit 3 == 0); return immediately. */
     volatile uint32_t *c1_con = (volatile uint32_t *)0x1EEE004u;
+    if (!(*c1_con & (1u << 3)))
+        return;
+
     volatile uint32_t *dbg_wr_en = (volatile uint32_t *)0x1EEE240u;
     volatile uint32_t *dbg_msg_clr = (volatile uint32_t *)0x1EEE248u;
     volatile uint32_t *dbg_en = (volatile uint32_t *)0x1EEE340u;
@@ -366,13 +369,17 @@ static inline void halt_core1(void)
         *dbg_wr_en = 0xE7u;
     en = *dbg_en;
     *dbg_en = en & ~bus;
+    __asm__ volatile("csync" ::: "memory");
     *c1_con = (*c1_con | (1u << 1)) & ~(1u << 3);  /* bit 1 hold, bit 3 disable */
-    for (n = 0; n < 64u; n++)
+    __asm__ volatile("csync" ::: "memory");
+    for (n = 0; n < 256u; n++)
         ;
     *dbg_msg_clr = bus;
+    __asm__ volatile("csync" ::: "memory");
     *dbg_en = en;
-    if (locked)
+    if (locked && (*dbg_wr_en & 1u))
         *dbg_wr_en = 0xE7u;
+    __asm__ volatile("csync" ::: "memory");
 }
 
 static void fm1_main(void)
@@ -399,14 +406,12 @@ static void fm1_main(void)
     fm1_irq_enable_all();
     leds_write();                                   /* render first frame immediately */
     screen_frame();
+    bootguard.pending = 0;                          /* boot succeeded: clear pending immediately */
+    bootguard.failed = 0;
     for (;;) {
         uint32_t now = fm1_ms;
         fm1_wdt_feed();
         usb_retry(now);
-        if (now > 30000u && bootguard.pending) {   /* a crash or hang in the first 30 s counts as a failed boot */
-            bootguard.pending = 0;
-            bootguard.failed = 0;
-        }
         {   /* OCT- + OCT+ held 5 s: the chip's UBOOT (jl-uboot-tool, unbrickers); letting go cancels */
             uint32_t both = (1u << BTN_ID[B_OCTDN]) | (1u << BTN_ID[B_OCTUP]);
             if ((fm1_in.buttons & both) != both)
@@ -444,9 +449,9 @@ void fm1_cstart(void)
     extern uint32_t _data_start[], _data_end[], _data_load[], _bss_start[], _bss_end[];
     extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[];
     uint32_t *s, *d, p3, src, wdt;
-    halt_core1();                                   /* halt Core 1 before clearing RAM */
     fm1_time_init();
     fm1_reset_reason();
+    halt_core1();                                   /* safely halt Core 1 if left active */
     p3 = fm1_boot.p3_rst;
     src = fm1_boot.rst_src;
     wdt = fm1_boot.wdt_con;
@@ -459,11 +464,6 @@ void fm1_cstart(void)
     if (bootguard.pending)
         bootguard.failed++;
     bootguard.pending = 1;
-    if (bootguard.failed >= 5u) {                   /* five boots died young: enter UBOOT mode */
-        bootguard.failed = 0;
-        bootguard.pending = 0;
-        fm1_enter_uboot();
-    }
     fm1_irq_init();
     for (d = _bss_start; d < _bss_end; d++)
         *d = 0;
@@ -482,4 +482,5 @@ void fm1_cstart(void)
     for (;;)
         ;
 }
+
 
