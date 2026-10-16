@@ -1,0 +1,433 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Field Manual — Evander's Music Box (FM-1 LARP Firmware)</title>
+<meta name="description" content="Complete field manual for Evander's Music Box on the M-VAVE FM-1. Controls, Bardic Crafting workshop, Encounter live scoring, battle modifiers, LED guide, and shortcuts.">
+<meta name="keywords" content="M-VAVE FM-1 manual, LARP synth, Evander's Box, medieval pocket synth, Cuvave FM-1, bardic crafting, encounter mode, field manual">
+<link rel="canonical" href="https://fm1.miketsak.gr/manual.html">
+<meta property="og:title" content="The Field Manual — Evander's Music Box">
+<meta property="og:description" content="Complete field manual for Evander's Music Box on the M-VAVE FM-1: controls, 4-track workshop, 16 battle scenes, and shortcuts.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fm1.miketsak.gr/manual.html">
+<meta property="og:image" content="https://fm1.miketsak.gr/rose.png">
+<meta property="og:site_name" content="Evander's Music Box">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="The Field Manual — Evander's Music Box">
+<meta name="twitter:description" content="Field manual for Evander's Music Box: medieval LARP firmware for M-VAVE FM-1.">
+<meta name="twitter:image" content="https://fm1.miketsak.gr/rose.png">
+<link rel="icon" href="rose.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="crest">
+    <img src="rose.png" alt="The Blue Rose of Mother Melody">
+    <div>
+      <h1>The Field Manual</h1>
+      <p>Evander's Music Box &middot; FM-1 LARP Firmware &middot; <span class="tag" style="margin-bottom:0; vertical-align:middle; padding:3px 7px;">v1.4.1</span></p>
+    </div>
+  </header>
+
+  <nav class="top">
+    <a href="./">Home</a>
+    <a href="manual.html" aria-current="page">Manual</a>
+    <a href="emu/">Emulator</a>
+    <a href="installer.html">Installer</a>
+    <a href="console.html">Preset Console</a>
+  </nav>
+
+  <nav class="toc" aria-label="Table of Contents">
+    <a href="#ch1">I. Controls</a>
+    <a href="#ch2">II. Modes</a>
+    <a href="#ch3">III. Bardic Crafting</a>
+    <a href="#ch4">IV. Encounter</a>
+    <a href="#ch5">V. LEDs &amp; Screen</a>
+    <a href="#ch6">VI. Shortcuts</a>
+    <a href="#ch7">VII. Troubleshooting</a>
+  </nav>
+
+  <blockquote class="lore">
+    <p>Mother Melody gave the First Song no words, only a rhythm and a key. Whoever holds this Box holds a sliver of that Song. In a quiet hour it is a workshop where songs are made. When steel is drawn it is a herald that knows the mood of the field before the bard does. These pages teach both.</p>
+  </blockquote>
+
+  <!-- Chapter I -->
+  <section class="card chapter-anchor" id="ch1">
+    <h2>I. Knowing the Box</h2>
+    <p>Every control on the FM-1 has a purposeful role in the bard's hands.</p>
+    
+    <div class="grid-3" style="margin-bottom: 16px;">
+      <div class="card" style="margin-bottom:0;">
+        <span class="tag">Left Panel</span>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Control</th><th>Function</th></tr></thead>
+            <tbody>
+              <tr><td><kbd>MASTER</kbd></td><td>Analog potentiometer &middot; Master loudness (adds up to +9.5 dB makeup gain)</td></tr>
+              <tr><td><kbd>SELECT</kbd></td><td>Endless encoder &middot; Track selection, step length, crossfade beats</td></tr>
+              <tr><td><kbd>PRESETS</kbd></td><td>Endless encoder &middot; Instruments (Crafting) / Quantize window (Encounter)</td></tr>
+              <tr><td><kbd>ALGORITHM</kbd></td><td>Endless encoder &middot; Tempo adjustment (40 to 240 BPM)</td></tr>
+              <tr><td><kbd>OCT-</kbd> / <kbd>OCT+</kbd></td><td>Octave shift (&plusmn;3 octaves) / Full Host reset</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0;">
+        <span class="tag">Right Knobs &amp; Buttons</span>
+        <p class="muted">Four endless encoders (<kbd>K1</kbd> to <kbd>K4</kbd>) and twelve primary function keys:</p>
+        <pre class="log" style="font-size:14px; padding:12px; margin: 8px 0; background: var(--surface); color: var(--text);">FX    SEL   ENV   LFO   EDIT   GLO
+HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
+        <p class="muted" style="font-size:14px;">In Bardic Crafting they open pages. In Encounter they alter intensity, tempo, reverb hall, and music level.</p>
+      </div>
+
+      <div class="card" style="margin-bottom:0;">
+        <span class="tag">27 Keyboard Keys</span>
+        <ul>
+          <li><b>16 White Keys:</b> Counted 1 to 16 left-to-right. Play notes in Crafting; cue the 4 scene groups and 12 battle modifiers in Encounter.</li>
+          <li><b>11 Black Keys:</b> Marked <code>OP1 OP2 OP3 OP4 OP5 OP6 PIT GLO MONO POLY</code> and unlabelled <code>TOP</code>. Ghost drum hits in Crafting; variations II&ndash;IV in Encounter.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>The Awakening (Boot Sequence)</h3>
+    <p>At power-on the screen paints the white-and-blue curved monogram of Mother Melody with flowing musical waves. As the 6-note physical harp chime resounds, the Blue Rose blooms, proclaiming:</p>
+    <blockquote class="lore" style="border-left-color: var(--blue);">
+      <p><b>EVANDER'S MUSIC BOX &mdash; MOTHER MELODY HEARS THY SONG</b></p>
+    </blockquote>
+    <p class="muted">A light wave sweeps across the keys. Tapping any button after 0.5 s skips the animation. The Box wakes into <b>Bardic Crafting</b> with your last saved session intact.</p>
+  </section>
+
+  <!-- Chapter II -->
+  <section class="card chapter-anchor" id="ch2">
+    <h2>II. The Two Ways of the Box</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Chord</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><kbd>HOME</kbd> + <kbd>PLAY</kbd></td>
+            <td>Switches between <b>Bardic Crafting</b> and <b>Encounter</b> mode seamlessly without stopping or dropping a beat.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Mode</th><th>Glass Display</th><th>HOME LED Indicator</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>Bardic Crafting</b></td>
+            <td>Orange <span class="tag" style="background:var(--orange); color:#fff; border:none; margin:0;">BARDIC</span> chip</td>
+            <td>Solid bright glow</td>
+            <td>Four-track medieval workshop for song creation, sequencing, and live loops.</td>
+          </tr>
+          <tr>
+            <td><b>Encounter</b></td>
+            <td>Blue <span class="tag" style="background:var(--blue); color:#fff; border:none; margin:0;">ENCOUNTER</span> chip</td>
+            <td>Soft, half-lit breath</td>
+            <td>Forearm-mounted real-time scoring for live action roleplay (LARP).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Chapter III -->
+  <section class="card chapter-anchor" id="ch3">
+    <h2>III. Bardic Crafting: the Workshop</h2>
+    <p>Four musical companions sit around the workshop table:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Seat</th><th>Track</th><th>Default Instrument</th><th>Acoustic Character</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><b>Lead</b></td><td>RECORDER</td><td>Breath noise scooping up into pitch; authentic woodwind chiff.</td></tr>
+          <tr><td>2</td><td><b>Drone</b></td><td>HURDY GURDY</td><td>Continuous bowed string with trompette buzzing on eighths.</td></tr>
+          <tr><td>3</td><td><b>Strings</b></td><td>PHYS HARP</td><td>Karplus-Strong physical plucked strings with sympathetic resonance.</td></tr>
+          <tr><td>4</td><td><b>War Drums</b></td><td>TAVERN KIT</td><td>Bodhr&aacute;n, frame drum, tambourine, anvil, tuned timpani, war drum, clack, gong.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Selecting &amp; Muting Tracks</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gesture</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>Tap <kbd>SEL</kbd></td><td>Cycles to next track (1 &rarr; 2 &rarr; 3 &rarr; 4 &rarr; 1)</td></tr>
+          <tr><td>Turn <kbd>SELECT</kbd></td><td>Selects adjacent track on the home page</td></tr>
+          <tr><td>Hold <kbd>SEL</kbd> + <kbd>OP1</kbd>&ndash;<kbd>OP4</kbd></td><td>Jump directly to Track 1, 2, 3, or 4</td></tr>
+          <tr><td>Hold <kbd>SEL</kbd> + White <kbd>1</kbd>&ndash;<kbd>4</kbd></td><td>Mute / unmute tracks 1 to 4 (lit = active, dark = muted)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Drums Layout (Track 4)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>White Key</th><th>Instrument</th><th>White Key</th><th>Instrument</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Bodhr&aacute;n</td><td>5</td><td>Timpani (tuned to root)</td></tr>
+          <tr><td>2</td><td>Frame Drum</td><td>6</td><td>War Drum</td></tr>
+          <tr><td>3</td><td>Tambourine</td><td>7</td><td>Clack</td></tr>
+          <tr><td>4</td><td>Anvil</td><td>8</td><td>Gong</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Black keys play an accented soft ghost hit of the drum to their left.</p>
+
+    <h3>Knob Pages (<kbd>K1</kbd>&ndash;<kbd>K4</kbd>)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Button</th><th>Page</th><th>K1 (Blue)</th><th>K2 (Green)</th><th>K3 (Grey)</th><th>K4 (Orange)</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>HOME</kbd></td><td><b>Home</b></td><td>Track 1 Level</td><td>Track 2 Level</td><td>Track 3 Level</td><td>Track 4 Level</td></tr>
+          <tr><td><kbd>FX</kbd></td><td><b>Sanctuary</b></td><td>Room Size</td><td>Decay Time</td><td>Damping</td><td>Wet Mix</td></tr>
+          <tr><td><kbd>ENV</kbd></td><td><b>Envelope</b></td><td>Attack</td><td>Decay</td><td>Sustain</td><td>Release</td></tr>
+          <tr><td><kbd>LFO</kbd></td><td><b>Motion</b></td><td>Vibrato Rate</td><td>Vibrato Depth</td><td>Swing Feel</td><td>Stereo Pan</td></tr>
+          <tr><td><kbd>EDIT</kbd></td><td><b>Voice</b></td><td>Tone Brightness</td><td>Acoustic Character</td><td>Output Level</td><td>Reverb Send</td></tr>
+          <tr><td><kbd>GLO</kbd></td><td><b>Modes</b></td><td>Root Pitch</td><td>Modal Scale</td><td>Historical Tuning</td><td>Snap On / Off</td></tr>
+          <tr><td><kbd>GLO</kbd> (2nd)</td><td><b>The Box</b></td><td>A4 Tuning (&plusmn;50c)</td><td>MIDI Channel</td><td>LED Mode (GLOW/LIT/DARK)</td><td>Output (LOUD/NORM/SAFE)</td></tr>
+          <tr><td><kbd>SEQ</kbd></td><td><b>Steps</b></td><td>Pattern Length (1&ndash;64)</td><td>Swing Feel</td><td>Track Level</td><td>Reverb Send</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Tonewheel Organ &amp; Leslie Rotor</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Chord</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>EDIT</kbd> + <kbd>GLO</kbd></td><td>Toggles chosen track between pipe organ and Tonewheel organ with spinning Leslie rotor.</td></tr>
+          <tr><td><kbd>LFO</kbd> (Motion page)</td><td>Half-moon switch: Chorale (slow) &harr; Tremolo (fast) rotor speed.</td></tr>
+          <tr><td><kbd>K1</kbd>&ndash;<kbd>K4</kbd> (Voice page)</td><td>Control the 4 drawbar groups: 16&prime;+5&frac13;&prime;, 8&prime;+4&prime;, 2&frac23;&prime;+2&prime;, and 1&frac35;&prime;&ndash;1&prime;.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The 64-Step Sequencer (<kbd>SEQ</kbd>)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gesture</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>OP1</kbd>&ndash;<kbd>OP4</kbd></td><td>Select step window: 1&ndash;16, 17&ndash;32, 33&ndash;48, 49&ndash;64</td></tr>
+          <tr><td>Tap White Key</td><td>Toggle step note on/off</td></tr>
+          <tr><td>Hold White Key + <kbd>K1</kbd></td><td>Tune step note (snapped to current mode)</td></tr>
+          <tr><td>Hold White Key + <kbd>K2</kbd></td><td>Microtiming nudge (&plusmn;&frac12; step)</td></tr>
+          <tr><td>Hold White Key + <kbd>K3</kbd></td><td>Step velocity</td></tr>
+          <tr><td>Hold White Key + <kbd>K4</kbd></td><td>Parameter lock: dedicated step TONE brightness</td></tr>
+          <tr><td>Hold White Key + <kbd>SELECT</kbd></td><td>Gate length (quarter steps)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The Battle Purge (Panic Recovery)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Chord</th><th>Function</th></tr></thead>
+        <tbody>
+          <tr><td>Hold <kbd>HOME</kbd> + <kbd>REC</kbd> (0.4 s)</td><td><b>Purge:</b> Clears all notes on the current track instantly with zero click or memory reallocation.</td></tr>
+          <tr><td><kbd>HOME</kbd> + <kbd>SAVE</kbd></td><td><b>Undo:</b> Restores the purged loop immediately if triggered by mistake.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Chapter IV -->
+  <section class="card chapter-anchor" id="ch4">
+    <h2>IV. Encounter: the Herald</h2>
+    <blockquote class="lore">
+      <p>When the Box is strapped to the forearm in armor or robes, Evander does not compose. He calls. Four lit keys hold the four moods of the field, and the sharps beside each one hold its variations. The Box waits for the bar line, then turns the music as a minstrel troupe would.</p>
+    </blockquote>
+
+    <h3>The Four Moods &amp; Sixteen Scenes</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Group</th><th>Color</th><th>Variation I (Key)</th><th>Variation II</th><th>Variation III</th><th>Variation IV</th></tr></thead>
+        <tbody>
+          <tr><td><b>REST</b> (Key 1)</td><td>Green</td><td>TAVERN</td><td>CAMPFIRE</td><td>SANCTUARY</td><td>LAMENT</td></tr>
+          <tr><td><b>EXPLORE</b> (Key 5)</td><td>Yellow</td><td>WILDERNESS</td><td>FEY FOREST</td><td>DUNGEON</td><td>SEA ROAD</td></tr>
+          <tr><td><b>COMBAT</b> (Key 9)</td><td>Orange</td><td>SKIRMISH</td><td>BATTLE</td><td>AMBUSH</td><td>SIEGE</td></tr>
+          <tr><td><b>CLIMAX</b> (Key 13)</td><td>Pink</td><td>BOSS</td><td>LAST STAND</td><td>VICTORY</td><td>REQUIEM</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Reaching Variations</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Group</th><th>Variation II</th><th>Variation III</th><th>Variation IV</th></tr></thead>
+        <tbody>
+          <tr><td>REST</td><td><kbd>OP1</kbd></td><td><kbd>OP2</kbd></td><td><kbd>OP3</kbd></td></tr>
+          <tr><td>EXPLORE</td><td><kbd>OP4</kbd></td><td><kbd>OP5</kbd></td><td><kbd>OP6</kbd></td></tr>
+          <tr><td>COMBAT</td><td><kbd>PIT</kbd></td><td><kbd>GLO</kbd></td><td><kbd>MONO</kbd></td></tr>
+          <tr><td>CLIMAX</td><td><kbd>POLY</kbd></td><td><kbd>TOP</kbd></td><td><i>Hold</i> Key 13 (0.6 s)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Slide your thumb or finger right from the lit group key across the raised black keys. Holding any group key 0.6 s cues variation IV directly.</p>
+
+    <h3>The Twelve Battle Modifiers</h3>
+    <p>The 12 unlit white keys dynamically bend the live performance on the next beat:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>White Key</th><th>Modifier</th><th>Musical Effect</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>2</kbd></td><td><b>PHRYGIAN</b></td><td>Shifts modal scale to Phrygian darkness and dread.</td></tr>
+          <tr><td><kbd>3</kbd></td><td><b>HARMONIC</b></td><td>Harmonic minor: sinister villain presence.</td></tr>
+          <tr><td><kbd>4</kbd></td><td><b>TRIUMPH</b></td><td>Ionian major: the tide of battle turns.</td></tr>
+          <tr><td><kbd>6</kbd></td><td><b>KEY UP</b></td><td>Modulates up 1 whole step (up to +3 times).</td></tr>
+          <tr><td><kbd>7</kbd></td><td><b>KEY DOWN</b></td><td>Modulates down 1 whole step.</td></tr>
+          <tr><td><kbd>8</kbd></td><td><b>HOME KEY</b></td><td>Resets all bends: returns to original scene key, scale, and tempo.</td></tr>
+          <tr><td><kbd>10</kbd></td><td><b>DOUBLE TIME</b></td><td>Drums accelerate to 2&times; speed.</td></tr>
+          <tr><td><kbd>11</kbd></td><td><b>HALF TIME</b></td><td>Drums drop into slow half-time march.</td></tr>
+          <tr><td><kbd>12</kbd></td><td><b>BREAKDOWN</b></td><td>Drops melodic tracks, leaving only drums and drone.</td></tr>
+          <tr><td><kbd>14</kbd></td><td><b>FULL HOST</b></td><td>Restores all 4 tracks to 100% full intensity.</td></tr>
+          <tr><td><kbd>15</kbd></td><td><b>STINGER</b></td><td>Dramatic gong, war drum, and brass hit on the next downbeat.</td></tr>
+          <tr><td><kbd>16</kbd></td><td><b>SWELL</b></td><td>Cathedral Swell: launches huge Sanctuary reverb space.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Knobs &amp; Controls in Battle</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Control</th><th>Effect in Encounter</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>K1</kbd> / <kbd>OCT&plusmn;</kbd></td><td><b>Intensity:</b> Drone only &rarr; + Drums &rarr; + Strings &rarr; Full Host</td></tr>
+          <tr><td><kbd>K2</kbd> / <kbd>ALGORITHM</kbd></td><td><b>Tempo:</b> Smoothly adjust speed from 70% to 140%</td></tr>
+          <tr><td><kbd>K3</kbd></td><td><b>The Hall:</b> Reverb size and mix depth</td></tr>
+          <tr><td><kbd>K4</kbd></td><td><b>Music Volume:</b> Sub-mix level under the analog MASTER knob</td></tr>
+          <tr><td><kbd>SELECT</kbd></td><td><b>Crossfade Length:</b> 0 to 8 beats (0 = instant cut)</td></tr>
+          <tr><td><kbd>PRESETS</kbd></td><td><b>Quantization:</b> Changes land on Beat, Bar, 2 Bars, or 4 Bars</td></tr>
+          <tr><td><kbd>ARP</kbd></td><td><b>Duck:</b> Lowers music volume so spoken LARP roleplay is heard clearly</td></tr>
+          <tr><td><kbd>HOME</kbd> + <kbd>REC</kbd> (0.4 s)</td><td><b>Silence:</b> Complete instant silence across all audio engines</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Chapter V -->
+  <section class="card chapter-anchor" id="ch5">
+    <h2>V. The Lights in the Dark</h2>
+    <p>A bard in a dark forest cannot read small text. The reactive LED matrix communicates state at a glance:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>LED / Button</th><th>State</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>PLAY</kbd></td><td>Flashes</td><td>Pulses on every musical beat</td></tr>
+          <tr><td><kbd>HOME</kbd></td><td>Solid Lit</td><td>Bardic Crafting Home Page</td></tr>
+          <tr><td><kbd>HOME</kbd></td><td>Soft Half-Lit</td><td>Encounter Mode Active</td></tr>
+          <tr><td><kbd>HOME</kbd> + <kbd>REC</kbd></td><td>Fast Blinking</td><td>Arming battle purge or silence</td></tr>
+          <tr><td>White Keys (Crafting)</td><td>Soft Glow</td><td>Key belongs to active modal scale</td></tr>
+          <tr><td>White Keys (Crafting)</td><td>Half-Lit</td><td>Root note of current scale</td></tr>
+          <tr><td>White Keys (Crafting)</td><td>Dark</td><td>Key is outside current scale</td></tr>
+          <tr><td>White Keys 1, 5, 9, 13 (Encounter)</td><td>Half-Lit</td><td>Idle: The four scene mood groups</td></tr>
+          <tr><td>Group Key (Encounter)</td><td>Solid Lit</td><td>A scene in this group is currently playing</td></tr>
+          <tr><td>Black Sharps (Encounter)</td><td>Solid Lit</td><td>Active playing variation</td></tr>
+          <tr><td>Any Scene Key</td><td>Fast Blink</td><td>Queued: will crossfade at next bar boundary</td></tr>
+          <tr><td>Modifier Keys (2&ndash;16)</td><td>Solid Lit</td><td>Battle modifier active (dark when disengaged)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Stealth Mode for Night Ambushes</h3>
+    <p>Configure on Box page (<kbd>GLO</kbd> &rarr; <kbd>GLO</kbd> &rarr; <kbd>K3</kbd>):</p>
+    <ul>
+      <li><b>GLOW (Default):</b> Full reactive scale lighting and ambient cues.</li>
+      <li><b>LIT:</b> Removes ambient background glow; only active functional keys illuminate.</li>
+      <li><b>DARK (Stealth):</b> Blackout for covert night raids. Only playing scene, queue blink, beat pulse, and active modifiers shine.</li>
+    </ul>
+  </section>
+
+  <!-- Chapter VI -->
+  <section class="card chapter-anchor" id="ch6">
+    <h2>VI. Every Shortcut on One Page</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Chord or Gesture</th><th>Bardic Crafting</th><th>Encounter Mode</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>HOME</kbd> + <kbd>PLAY</kbd></td><td>Switch to Encounter</td><td>Switch to Crafting</td></tr>
+          <tr><td><kbd>HOME</kbd> + <kbd>REC</kbd> (0.4 s)</td><td>Purge current track loop</td><td>Instant silence</td></tr>
+          <tr><td><kbd>HOME</kbd> + <kbd>SAVE</kbd></td><td>Undo track purge</td><td>&mdash;</td></tr>
+          <tr><td><kbd>EDIT</kbd> + <kbd>GLO</kbd></td><td>Pipe organ &harr; Tonewheel + Leslie</td><td>&mdash;</td></tr>
+          <tr><td><kbd>OCT-</kbd> + <kbd>OCT+</kbd></td><td>Reset octave to 0</td><td>Restore Full Host intensity</td></tr>
+          <tr><td><kbd>OCT-</kbd> + <kbd>OCT+</kbd> (5 s)</td><td>Chip UBOOT update mode</td><td>Chip UBOOT update mode</td></tr>
+          <tr><td><kbd>SAVE</kbd> (hold 1 s)</td><td>Save workbench &amp; settings to flash</td><td>Save settings to flash</td></tr>
+          <tr><td><kbd>SAVE</kbd> + Scene Key</td><td>Bind workbench into that scene slot</td><td>Copy that scene into workbench</td></tr>
+          <tr><td><kbd>ARP</kbd></td><td>Drone latch on / off</td><td>Dialogue Duck on / off</td></tr>
+          <tr><td><kbd>FX</kbd></td><td>Open Sanctuary reverb page</td><td>Trigger Cathedral Swell</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>MIDI Control</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Message</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>Program Change 1&ndash;16</td><td>Cue scenes 1 to 16 (REST I through CLIMAX IV)</td></tr>
+          <tr><td>Notes 36&ndash;51 (Encounter)</td><td>Cue scenes 1 to 16</td></tr>
+          <tr><td>Notes 52&ndash;63 (Encounter)</td><td>Trigger the 12 battle modifiers</td></tr>
+          <tr><td>CC 7</td><td>Music sub-volume</td></tr>
+          <tr><td>MIDI Start / Stop</td><td>Controls master transport</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Chapter VII -->
+  <section class="card chapter-anchor" id="ch7">
+    <h2>VII. When the Box Falters</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Trouble</th><th>Remedy</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Too quiet outdoors</td>
+            <td>Turn <kbd>MASTER</kbd> past halfway: it engages up to +9.5 dB makeup gain through the peak limiter. Set <b>OUTPUT</b> to <b>LOUD</b> (<kbd>GLO</kbd> &rarr; <kbd>GLO</kbd> &rarr; <kbd>K4</kbd>).</td>
+          </tr>
+          <tr>
+            <td>Crackles at maximum volume</td>
+            <td>Set <b>OUTPUT</b> to <b>NORM</b> (-3 dBFS) or <b>SAFE</b> (-6 dBFS) for sensitive external portable speakers.</td>
+          </tr>
+          <tr>
+            <td>Silence after a drop or bump</td>
+            <td>Turn <kbd>MASTER</kbd> up. Press <kbd>PLAY</kbd>. Press <kbd>OCT-</kbd> + <kbd>OCT+</kbd> to restore Full Host.</td>
+          </tr>
+          <tr>
+            <td>Corrupted loop in battle</td>
+            <td>Hold <kbd>HOME</kbd> + <kbd>REC</kbd> for 0.4 s to purge. Tap <kbd>HOME</kbd> + <kbd>SAVE</kbd> to undo if needed.</td>
+          </tr>
+          <tr>
+            <td>Pink diagnostic line at boot</td>
+            <td>Appears only when USB-connected to diagnose past crashes: <i>LOW VOLTAGE</i> (recharge battery), <i>WATCHDOG</i> or <i>CRASHED</i> (report with current activity), or <i>STOPPED AT STEP n</i>. (Hidden on battery power).</td>
+          </tr>
+          <tr>
+            <td>Return to stock firmware</td>
+            <td>Open <a href="installer.html">The Installer</a> and use <b>Restore V15</b> with official M-VAVE stock firmware.</td>
+          </tr>
+          <tr>
+            <td>Deep recovery mode</td>
+            <td>Hold <kbd>OCT-</kbd> + <kbd>OCT+</kbd> for 5 seconds on power-on to invoke the JieLi hardware bootloader (UBOOT).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <blockquote class="lore">
+      <p>A bard's last trick: when every string is cut, hum. Mother Melody hears that too.</p>
+    </blockquote>
+  </section>
+
+  <footer>
+    GPL-3.0-only. Built on Felucca's FM-1 hardware layer by H&uuml;gelton Instruments. Not affiliated with M-VAVE / Cuvave. &middot; Made by <a href="https://miketsak.gr" target="_blank" rel="noopener">miketsak.gr</a>
+  </footer>
+</div>
+</body>
+</html>

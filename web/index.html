@@ -4,8 +4,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Evander's Music Box</title>
-<meta name="description" content="Evander's Music Box: LARP firmware for the M-VAVE FM-1. Emulator, installer and preset console.">
+<title>Evander's Music Box — Medieval LARP Bard Firmware for M-VAVE FM-1</title>
+<meta name="description" content="Custom LARP firmware transforming the M-VAVE FM-1 pocket synthesizer into an Elven Bard's relic. Four-track medieval workshop, real-time battle scoring on your forearm, web emulator, and USB flasher.">
+<meta name="keywords" content="M-VAVE FM-1, LARP, Bard, medieval synth, custom firmware, Evander's Music Box, Cuvave FM-1, live roleplay music, WebMIDI installer, WebAssembly emulator, Karplus-Strong, hurdy-gurdy, forearm synth">
+<link rel="canonical" href="https://fm1.miketsak.gr/">
+<meta property="og:title" content="Evander's Music Box — Medieval LARP Bard Firmware for M-VAVE FM-1">
+<meta property="og:description" content="Custom LARP firmware transforming the M-VAVE FM-1 into an Elven Bard's relic. Forearm live battle scoring, 20 historical instruments, web emulator, and USB installer.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fm1.miketsak.gr/">
+<meta property="og:image" content="https://fm1.miketsak.gr/rose.png">
+<meta property="og:site_name" content="Evander's Music Box">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Evander's Music Box — Medieval LARP Bard Firmware">
+<meta name="twitter:description" content="Score live LARP battles and tavern nights from your forearm on the M-VAVE FM-1 pocket synth.">
+<meta name="twitter:image" content="https://fm1.miketsak.gr/rose.png">
 <link rel="icon" href="rose.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -20,50 +32,121 @@
   .hero h1 span { display: inline-block; background: var(--blue); color: #fff; padding: 0 12px 4px; border: 4px solid var(--line);
     border-radius: 14px; box-shadow: 5px 5px 0 var(--line); transform: rotate(1.5deg); }
   .hero p.proc { font: 700 13px/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; margin: 0 0 14px; }
-  .hero p.lede { font-size: 19px; max-width: 560px; margin: 0; }
+  .hero p.lede { font-size: 19px; max-width: 620px; margin: 0; }
   .card .big { font: 400 40px/1 var(--display); margin: 0 0 6px; }
+  .larp-banner {
+    background: color-mix(in srgb, var(--orange) 16%, var(--surface));
+    border: 3px solid var(--line); border-radius: 18px; padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow);
+  }
+  .larp-banner h2 { font: 400 32px/1.1 var(--display); margin: 0 0 12px; }
+  .larp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+  .larp-item { background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: 3px 3px 0 var(--line); }
+  .larp-item h3 { font: 700 15px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 8px; color: var(--orange); }
+  .larp-item p { margin: 0; font-size: 15px; line-height: 1.45; }
+  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
+  .grid-4 > .card { margin-bottom: 0; }
   @media (max-width: 640px) { .hero { grid-template-columns: 1fr; justify-items: start; } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <nav class="top">
-    <a href="./" aria-current="page">Home</a><a href="emu/">Emulator</a><a href="installer.html">Installer</a><a href="console.html">Preset Console</a>
+    <a href="./" aria-current="page">Home</a>
+    <a href="manual.html">Manual</a>
+    <a href="emu/">Emulator</a>
+    <a href="installer.html">Installer</a>
+    <a href="console.html">Preset Console</a>
   </nav>
+
   <section class="hero">
     <img class="rose" src="rose.png" alt="The Blue Rose of Mother Melody">
     <div>
       <h1>Evander's <span>Box</span></h1>
       <p class="proc">Mother Melody hears thy song &middot; <span class="tag" style="margin-bottom:0; vertical-align:middle; padding:3px 7px;">v1.4.1</span></p>
-      <p class="lede">Evander's Music Box is firmware for the M-VAVE FM-1. By night it's a four-track medieval
-        workshop. By day it's strapped to your forearm, scoring a live roleplay one key at a time.</p>
+      <p class="lede">Custom firmware specifically designed for <b>Live Action Roleplay (LARP)</b>. Turn your M-VAVE FM-1 pocket synthesizer into the sacred relic of Evander, Elven Bard of Mother Melody. By day it scores live battles strapped to your forearm; by night it is a four-track medieval workshop.</p>
     </div>
   </section>
-  <div class="grid-3">
+
+  <!-- Dedicated LARP Bard Section -->
+  <section class="larp-banner">
+    <span class="tag" style="background:var(--orange); color:#fff; border-color:var(--line);">Live Action Roleplay</span>
+    <h2>Built Specifically to Play a Bard in a LARP</h2>
+    <p>Most synthesizers belong on a studio desk or a stage stand. Evander's Box was forged for the mud, costumes, leather armor, and campfires of live roleplay.</p>
+    
+    <div class="larp-grid">
+      <div class="larp-item">
+        <h3>Forearm-Mounted Scoring</h3>
+        <p>Strapped to your forearm, the tactile 27-key panel can be played in leather bracers or gloves. Change the battle soundtrack seamlessly on the next bar without taking your eyes off the skirmish.</p>
+      </div>
+
+      <div class="larp-item">
+        <h3>Authentic Medieval Vibes</h3>
+        <p>20 historical acoustic engines: Hurdy-Gurdy with buzzing wheel, Phys Harp, Lute, Bagpipes, Shawm, Psaltery, Cathedral Choir, and Bodhr&aacute;n war drums. Zero modern electronic beeps.</p>
+      </div>
+
+      <div class="larp-item">
+        <h3>Pure Acoustic Sound</h3>
+        <p>There are no recorded wind, fire, or bird sound effects. You are already standing in the real forest and around the real campfire&mdash;every ounce of DSP power goes into resonant physical instruments.</p>
+      </div>
+
+      <div class="larp-item">
+        <h3>Loud Enough for Outdoors</h3>
+        <p>Featuring +9.5 dB master makeup gain and an intelligent look-ahead peak limiter. Your bardic songs ring out clearly across outdoor clearings and battlefields without distortion.</p>
+      </div>
+
+      <div class="larp-item">
+        <h3>16 Live Battle Scenes</h3>
+        <p>Encounter mode provides 16 soundtrack scenes across four moods (REST, EXPLORE, COMBAT, CLIMAX). Crossfade from quiet campfire chords into an intense boss battle with a single keypress.</p>
+      </div>
+
+      <div class="larp-item">
+        <h3>Night Ambush Stealth</h3>
+        <p>Reactive LEDs light only notes in the current modal scale. For covert night raids, activate Stealth Mode to black out ambient glow while keeping active triggers visible.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid-4">
     <section class="card blue">
       <span class="tag">Try it</span>
       <p class="big">Emulator</p>
-      <p>The real firmware compiled to WebAssembly, on a drawn FM-1. Play it before you flash anything.</p>
-      <a class="btn" href="emu/">Open the emulator</a>
+      <p>The real C firmware running in WebAssembly. Test every knob, gesture, and chord before flashing your hardware.</p>
+      <a class="btn" href="emu/">Open emulator</a>
     </section>
+
+    <section class="card yellow">
+      <span class="tag">Learn it</span>
+      <p class="big">The Manual</p>
+      <p>Complete field manual: every gesture, 16 scenes table, 12 battle modifiers, 64-step sequencer, and shortcuts.</p>
+      <a class="btn" href="manual.html">Read manual</a>
+    </section>
+
     <section class="card green">
       <span class="tag">Flash it &middot; v1.4.1</span>
       <p class="big">Installer</p>
-      <p>Write Evander's Box to your FM-1 over USB from Chrome or Edge. You can return to the official V15 at any time.</p>
-      <a class="btn" href="installer.html">Open the installer</a>
+      <p>Install Evander's Box directly over USB from Chrome or Edge. Full backup and 1-click restore to official V15 firmware.</p>
+      <a class="btn" href="installer.html">Open installer</a>
     </section>
+
     <section class="card orange">
       <span class="tag">Keep it</span>
-      <p class="big">Preset Console</p>
-      <p>Back up your scenes, share songs as <code>.emb</code> files, and cue scenes from a game master's laptop.</p>
-      <a class="btn" href="console.html">Open the console</a>
+      <p class="big">Console</p>
+      <p>Preset Console: backup all 16 scenes, exchange <code>.emb</code> song files, and cue live battle scenes remotely from a GM laptop.</p>
+      <a class="btn" href="console.html">Open console</a>
     </section>
   </div>
-  <section class="card">
-    <h2>The field manual</h2>
-    <p>Every shortcut and every light are in <a href="https://github.com/MikeTsak/Evanders-Music-Box--FM-1-LARP-firmware/blob/main/MANUAL.md">MANUAL.md</a>. To build it yourself, see <a href="https://github.com/MikeTsak/Evanders-Music-Box--FM-1-LARP-firmware/blob/main/BUILDING.md">BUILDING.md</a>.</p>
+
+  <section class="card" style="margin-top: 24px;">
+    <h2>The Two Ways of Evander's Box</h2>
+    <p>A single chord, <kbd>HOME</kbd> + <kbd>PLAY</kbd>, flips the FM-1 between two dedicated operational modes without dropping a single beat:</p>
+    <ul>
+      <li><b>Bardic Crafting:</b> A 4-track medieval sequencer workshop (Lead, Drone, Strings, War Drums). 64 steps, parameter locks, microtiming, Pythagorean/meantone temperaments, live looping, and the safety loop purge (<kbd>HOME</kbd>+<kbd>REC</kbd>).</li>
+      <li><b>Encounter Herald:</b> The live LARP performance mode. 4 lit group keys (Rest, Explore, Combat, Climax), 12 battle modifier keys (Phrygian dread, key changes, double/half time, breakdowns, stingers, cathedral swells), and instant dialogue ducking (<kbd>ARP</kbd>).</li>
+    </ul>
+    <p class="muted">Read the full instructions, tables, and troubleshooting in <a href="manual.html">The Field Manual</a>.</p>
   </section>
-  <footer>GPL-3.0-only. Built on Felucca's FM-1 hardware layer by Hügelton Instruments. Not affiliated with M-VAVE / Cuvave. · Made by <a href="https://miketsak.gr" target="_blank" rel="noopener">miketsak.gr</a></footer>
+
+  <footer>GPL-3.0-only. Built on Felucca's FM-1 hardware layer by H&uuml;gelton Instruments. Not affiliated with M-VAVE / Cuvave. &middot; Made by <a href="https://miketsak.gr" target="_blank" rel="noopener">miketsak.gr</a></footer>
 </div>
 </body>
 </html>

@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Evander's Music Box - Apache Configuration
+# Guarantees instant client updates, proper MIME types, and compression.
+
+# 1. UTF-8 Character Encoding
+AddDefaultCharset UTF-8
+
+# 2. MIME Types
+<IfModule mod_mime.c>
+  AddType application/wasm .wasm
+  AddType application/octet-stream .fwsc .bin
+  AddType application/json .json
+  AddType text/javascript .js .mjs
+  AddType text/markdown;charset=utf-8 .md
+  AddType text/css .css
+  AddType image/png .png
+  AddType image/x-icon .ico
+  AddType audio/wav .wav
+</IfModule>
+
+# 3. Dynamic Cache Control & Update Delivery
+# HTML pages and release manifests are never held stale in client or proxy caches
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|htm|json)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  <FilesMatch "\.(fwsc|bin)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  <FilesMatch "\.(ico|png|jpg|jpeg|gif|svg)$">
+    Header set Cache-Control "public, max-age=86400, must-revalidate"
+  </FilesMatch>
+
+  <FilesMatch "\.(css|js|mjs|wasm)$">
+    Header set Cache-Control "public, max-age=3600, must-revalidate"
+  </FilesMatch>
+
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# 4. Compression (mod_deflate)
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json application/wasm image/svg+xml
+</IfModule>
+
+# 5. Clean URLs (mod_rewrite)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME}\.html -f
+  RewriteRule ^(.*)$ $1.html [L]
+</IfModule>

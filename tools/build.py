@@ -127,6 +127,8 @@ def cmd_web(a):
         meta = json.loads((BUILD / "fw" / "emb.json").read_text())
         (fdir / "firmware.json").write_text(json.dumps({**meta, "file": "emb.fwsc"}, indent=2))
     (site / ".nojekyll").write_text("")
+    if (ROOT / "web" / ".htaccess").exists():
+        shutil.copy(ROOT / "web" / ".htaccess", site / ".htaccess")
     print(f"site     {site}  (serve it: python3 -m http.server -d {site.relative_to(ROOT)})")
 
 

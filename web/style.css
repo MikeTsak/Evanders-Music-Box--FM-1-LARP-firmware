@@ -129,7 +129,38 @@ pre.log {
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: 8px; border-bottom: 2px solid color-mix(in srgb, var(--line) 25%, transparent); font-size: 15px; }
 th { font: 700 12px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 12px 0 16px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); padding: 4px 8px; box-shadow: 2px 2px 0 var(--line); }
+.table-wrap table { min-width: 480px; }
+kbd {
+  display: inline-block; padding: 2px 6px; font-family: var(--mono); font-size: .84em; font-weight: 700;
+  line-height: 1.2; color: var(--text); background: var(--surface); border: 2px solid var(--line);
+  border-radius: 6px; box-shadow: 2px 2px 0 var(--line); vertical-align: middle; margin: 1px 2px;
+}
+blockquote.lore {
+  margin: 16px 0; padding: 14px 18px; background: color-mix(in srgb, var(--yellow) 15%, var(--surface));
+  border-left: 6px solid var(--orange); border-radius: 0 12px 12px 0; font-style: italic; border-top: 2px solid var(--line);
+  border-right: 2px solid var(--line); border-bottom: 2px solid var(--line); box-shadow: 3px 3px 0 var(--line);
+}
+blockquote.lore p { margin: 0; }
+blockquote.lore p + p { margin-top: 8px; }
+.toc { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 24px; }
+.toc a {
+  font: 700 12px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; padding: 8px 12px;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 10px; box-shadow: 2px 2px 0 var(--line);
+  text-decoration: none; color: var(--text);
+}
+.toc a:hover { background: var(--yellow); color: var(--ink); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--line); }
+.chapter-anchor { scroll-margin-top: 20px; }
 footer { color: var(--muted); font: 12px/1.6 var(--mono); margin-top: 40px; text-align: center; }
 ul { padding-left: 1.2em; }
 li { margin: 4px 0; }
-@media (max-width: 560px) { .wrap { padding: 16px 16px 48px; } .card { padding: 16px; } }
+@media (max-width: 680px) {
+  .wrap { padding: 16px 12px 48px; }
+  .card { padding: 16px; border-radius: 14px; margin-bottom: 16px; }
+  header.crest { gap: 12px; margin-bottom: 14px; }
+  header.crest img { width: 52px; height: 52px; border-radius: 12px; }
+  nav.top { gap: 6px; margin-bottom: 18px; }
+  nav.top a { padding: 8px 10px; font-size: 11px; border-radius: 9px; }
+  .table-wrap table { font-size: 13px; }
+  th, td { padding: 6px; font-size: 13px; }
+}
