@@ -17,7 +17,7 @@
     <img src="rose.png" alt="">
     <div>
       <h1>The Installer</h1>
-      <p>Flash Evander's Box to your FM-1 over USB</p>
+      <p>Flash Evander's Box to your FM-1 over USB &middot; <span class="tag" style="margin-bottom:0; vertical-align:middle; padding:3px 7px;">v1.2</span></p>
     </div>
   </header>
   <nav class="top">
@@ -39,10 +39,10 @@
 
   <div class="grid-3">
     <section class="card green">
-      <h2>Install Evander's Box</h2>
+      <h2>Install Evander's Box <span class="tag" style="margin-left: 6px; margin-bottom: 0; vertical-align: middle;">v1.2</span></h2>
       <p id="relInfo" class="muted">Looking for the release package&hellip;</p>
       <div class="row">
-        <button id="goRelease" class="go" disabled>Install</button>
+        <button id="goRelease" class="go" disabled>Install v1.2</button>
       </div>
       <p class="muted" style="margin-top:12px">Or your own package (a local build: <code>build/emb.fwsc</code>):</p>
       <div class="row"><input type="file" id="pkgFile" accept=".fwsc"> <button id="goFile" disabled>Install file</button></div>
@@ -107,14 +107,30 @@ async function readPackage(bytes) {
 (async () => {
   if (!navigator.requestMIDIAccess) { say("This browser has no WebMIDI: use Chrome or Edge."); return; }
   try {
-    const r = await fetch("firmware/firmware.json");
+    const r = await fetch("firmware/firmware.json?t=" + Date.now(), { cache: "no-store" });
     if (!r.ok) throw new Error("this site was built without one");
     const meta = await r.json();
-    const bytes = new Uint8Array(await (await fetch("firmware/" + meta.file)).arrayBuffer());
+    let bytes = null;
+    try {
+      const resp = await fetch("firmware/" + meta.file + "?v=" + encodeURIComponent(meta.sha256), { cache: "no-store" });
+      if (resp.ok) bytes = new Uint8Array(await resp.arrayBuffer());
+    } catch (_) {}
+    if (!bytes || (await sha256hex(bytes)) !== meta.sha256) {
+      try {
+        const ghUrl = `https://github.com/MikeTsak/Evanders-Music-Box--FM-1-LARP-firmware/releases/download/v${meta.version}/${meta.file}`;
+        const ghResp = await fetch(ghUrl);
+        if (ghResp.ok) {
+          const ghBytes = new Uint8Array(await ghResp.arrayBuffer());
+          if ((await sha256hex(ghBytes)) === meta.sha256) bytes = ghBytes;
+        }
+      } catch (_) {}
+    }
+    if (!bytes) throw new Error("could not download release package");
     const p = await readPackage(bytes);
     if (p.sha !== meta.sha256) throw new Error("the package does not match its checksum");
     release = { ...p, version: meta.version };
-    $("relInfo").textContent = `Evander's Music Box ${meta.version} (${p.product}), SHA-256 ${p.sha.slice(0, 16)}...`;
+    $("relInfo").textContent = `Evander's Music Box v${meta.version} (${p.product}) ready to install.`;
+    $("goRelease").textContent = `Install v${meta.version}`;
   } catch (e) {
     $("relInfo").textContent = "No release package on this site (" + e.message + "). Choose a .fwsc file instead.";
   }
