@@ -49,6 +49,7 @@ static struct {
     int8_t cat_key;                                 /* Encounter: the group key held (for variation IV), -1 none */
     uint32_t cat_t0, vol_t;                         /* vol_t: the MASTER card shows until then (0 none) */
     const char *boot_note;
+    uint8_t chime_step;
 } ui;
 
 /* ---- Encounter: what each key does ---- */
@@ -677,8 +678,17 @@ void emb_tick(uint32_t ms)
         ui.boot_started = 1;
         ui.boot_t0 = ms;
     }
-    if (ui.booting && ms - ui.boot_t0 > BOOT_MS)
-        ui.booting = 0;
+    if (ui.booting) {
+        static const uint16_t CHIME_T[6] = {400, 700, 1000, 1300, 1600, 1950};
+        static const uint8_t CHIME_NOTE[6] = {74, 77, 81, 84, 81, 86};
+        uint32_t dt = ms - ui.boot_t0;
+        while (ui.chime_step < 6u && dt >= CHIME_T[ui.chime_step]) {
+            emb_post(C_CHIME, CHIME_NOTE[ui.chime_step], ui.chime_step == 5u ? 115u : 100u, 0, 0);
+            ui.chime_step++;
+        }
+        if (dt > BOOT_MS)
+            ui.booting = 0;
+    }
     if (ui.cat_key >= 0 && ms - ui.cat_t0 >= 600u) {   /* a group key held: its variation IV */
         int s = enc_slot((uint32_t)ui.cat_key) + 3;
         ui.cat_key = -1;

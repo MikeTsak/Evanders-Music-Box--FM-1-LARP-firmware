@@ -157,7 +157,7 @@ typedef struct {                     /* one command: UI side -> audio side */
     int32_t v;
 } emb_cmd_t;
 enum { C_NOTE_ON, C_NOTE_OFF, C_PLAY, C_STOP, C_QUEUE, C_PURGE, C_MOD, C_PANIC, C_HOLD, C_LESLIE,
-       C_TEMPO, C_FX, C_INTENS, C_DUCK, C_STINGER, C_SEL_TRACK, C_RESYNC };
+       C_TEMPO, C_FX, C_INTENS, C_DUCK, C_STINGER, C_SEL_TRACK, C_RESYNC, C_CHIME };
 void emb_post(uint32_t op, uint32_t a, uint32_t b, uint32_t c, int32_t v);
 
 typedef struct {                     /* what the UI reads back from the audio side (one writer: audio) */

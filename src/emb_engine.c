@@ -103,6 +103,7 @@ static emb_track_t stinger_trk;
 
 static int32_t bus[EMB_NTRK][EMB_CTL], les_bus[EMB_NTRK][EMB_CTL];
 static int32_t mix_l[EMB_CTL], mix_r[EMB_CTL], send_l[EMB_CTL], send_r[EMB_CTL];
+static int32_t chime_bus[EMB_CTL];
 
 static int deck_root(const deck_t *d) { return (int)d->song->root + key_shift; }
 static uint32_t deck_mode(const deck_t *d) { return mode_over >= 0 ? (uint32_t)mode_over : d->song->mode; }
@@ -587,6 +588,15 @@ static void command(const emb_cmd_t *c)
     case C_RESYNC:                                  /* REC: arm / disarm live looping */
         rec_on = (uint8_t)(c->a != 0u);
         break;
+    case C_CHIME: {
+        static emb_track_t chime_trk;
+        emb_track_defaults(&chime_trk, I_HARP);
+        chime_trk.att = 2;
+        chime_trk.dec = 65;
+        chime_trk.rel = 85;
+        play_note(3, 0, &chime_trk, c->a, c->b ? c->b : 105, 80, 2, T_PYTH, 0);
+        break;
+    }
     }
 }
 
@@ -710,7 +720,7 @@ void emb_render(int32_t *lr, uint32_t frames)
             for (i = 0; i < EMB_CTL; i++)
                 bus[k][i] = les_bus[k][i] = 0;
         for (i = 0; i < EMB_CTL; i++)
-            mix_l[i] = mix_r[i] = send_l[i] = send_r[i] = 0;
+            chime_bus[i] = mix_l[i] = mix_r[i] = send_l[i] = send_r[i] = 0;
         for (k = 0; k < EMB_NVOICE; k++) {
             voice_t *v = &vox[k];
             int32_t g;
@@ -722,7 +732,10 @@ void emb_render(int32_t *lr, uint32_t frames)
             }
             nvox++;
             g = v->deck < 2u ? mul15(deck[v->deck].gain, deck[v->deck].tg[v->trk & 3u]) : 32767;
-            voice_run(v, v->inst == I_TONEWHEEL ? les_bus[v->trk & 3u] : bus[v->trk & 3u], g);
+            if (v->deck == 3u)
+                voice_run(v, chime_bus, g);
+            else
+                voice_run(v, v->inst == I_TONEWHEEL ? les_bus[v->trk & 3u] : bus[v->trk & 3u], g);
         }
         for (k = 0; k < EMB_NTRK; k++) {            /* tracks: pan, sends, inserts */
             const emb_track_t *t = deck[act].on && deck[act].song ? &deck[act].song->t[k] : &emb_bench.t[k];
@@ -758,6 +771,13 @@ void emb_render(int32_t *lr, uint32_t frames)
                     }
                 }
             }
+        }
+        for (i = 0; i < EMB_CTL; i++) {
+            int32_t s = chime_bus[i];
+            mix_l[i] += s;
+            mix_r[i] += s;
+            send_l[i] += mul15(s, 20000);
+            send_r[i] += mul15(s, 20000);
         }
         rv_run(send_l, send_r, mix_l, mix_r);
         music_gain += (music_gain_t - music_gain) >> 5;
