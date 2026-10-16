@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
  * Evander's Music Box: the engine. Two decks (what is playing, what fades in), the clock, the step
  * sequencer with microtiming and parameter locks, live looping, the Encounter modifiers, the mixer.
  * Audio side: everything here runs inside emb_render, fed by the command ring. */

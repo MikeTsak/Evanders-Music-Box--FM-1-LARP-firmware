@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
  * Evander's Music Box: the sixteen factory Encounter scenes and the track defaults.
  *
  * A scene's tracks are written as pattern strings, one character a sixteenth step, lanes split by '|'

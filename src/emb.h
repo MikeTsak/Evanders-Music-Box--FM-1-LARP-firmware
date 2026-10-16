@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
  * Evander's Music Box: FM-1 LARP Firmware
  *
  * The portable core. Everything musical lives here and builds unchanged for three platforms:

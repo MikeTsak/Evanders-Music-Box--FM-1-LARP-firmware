@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
+# Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
 """Build Evander's Music Box (BUILDING.md).
 
   python3 tools/build.py test                 host self-test (any C compiler, or zig)

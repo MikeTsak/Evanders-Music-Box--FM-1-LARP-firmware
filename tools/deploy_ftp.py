@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
+# Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
 """Upload build/web/ (python3 tools/build.py web --with-fw) to the website over FTP, replacing what is there.
 
   python3 tools/deploy_ftp.py [--host fm1.miketsak.gr] [--user fm1] [--dir REMOTE_DIR] [--plain]

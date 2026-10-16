@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+// Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
 // Evander's Music Box: the preset protocol (src/emb_ui.c emb_sysex), spoken to the hardware over WebMIDI or
 // to the emulator's core. Body between F0 and F7: 7D 45 4D cmd ...
 //   01 identity   02 s c get chunk   03 s c data put chunk   04 s factory   06 s cue a scene

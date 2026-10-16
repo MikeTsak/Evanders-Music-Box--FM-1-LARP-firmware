@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+// Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
 // Evander's Music Box: the emulator's audio thread. The whole firmware core (emb.wasm, built from the same
 // src/ as the FM-1) lives here: the page sends it the controls, it renders the sound and sends back the
 // screen and the LEDs. One thread owns the core, as the FM-1's audio ISR and main loop share it.

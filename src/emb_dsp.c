@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
  * Evander's Music Box: the sound. Fixed-point voices (strings, bowed, choir, winds, organs, drums),
  * the sympathetic strings, the SANCTUARY reverb and the Leslie rotor. Audio side only (see emb.h).
  * Part of the unity build (src/emb.c). */

@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
  * Evander's Music Box on the M-VAVE FM-1 (JieLi AC791N / WL82, pi32v2). One compilation unit, as Felucca builds:
  *
  *   upstream/felucca/firmware/hal/   the FM-1 hardware layer (registers, I2S DMA, key matrix, LCD SPI, flash,

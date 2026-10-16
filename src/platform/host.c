@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
  * Evander's Music Box on a computer: the self-test, a WAV renderer and screenshots.
  *   host                 run the self-test (exit 0 = every check passed)
  *   host wav SLOT SEC F  render an Encounter scene (0..15) to a WAV file

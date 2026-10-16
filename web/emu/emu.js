@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+// Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
 // Evander's Music Box: the emulator page. Draws the FM-1's panel, sends every gesture to the core in the
 // AudioWorklet (worklet.js) and shows what it sends back: the screen and the LEDs.
 

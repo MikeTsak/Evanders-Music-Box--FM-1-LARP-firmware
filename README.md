@@ -18,8 +18,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/firmware-v1.4.1-blue?style=flat-square" alt="Version 1.4.1">
   <img src="https://img.shields.io/badge/hardware-M--VAVE%20FM--1-lightgrey?style=flat-square" alt="Hardware M-VAVE FM-1">
-  <img src="https://img.shields.io/badge/license-GPL--3.0--only-orange?style=flat-square" alt="License GPL-3.0">
-  <a href="https://miketsak.gr"><img src="https://img.shields.io/badge/author-Mike%20Tsak-blueviolet?style=flat-square" alt="Made by Mike Tsak"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-orange?style=flat-square" alt="License GPL-3.0"></a>
+  <a href="https://miketsak.gr"><img src="https://img.shields.io/badge/author-Michail%20Tsakiroglou-blueviolet?style=flat-square" alt="Made by Michail Tsakiroglou"></a>
 </p>
 
 ---
@@ -279,9 +279,9 @@ the boss fight to a WAV, and `tools/build.py shots` writes screenshots.
 
 ## Credits and licence
 
-**GPL-3.0-only** (see [LICENSE](LICENSE)), because the FM-1 build includes Felucca.
+**GPL-3.0-only** (see [LICENSE](LICENSE)). Copyright (C) 2026 Michail Tsakiroglou &lt;https://miketsak.gr&gt;.
 
-- **[Mike Tsak](https://miketsak.gr)**: Concept, firmware architecture, C DSP audio engine, physical modelling instruments, SANCTUARY reverb, graphics & boot animation, WebAssembly emulator, WebMIDI tooling, and site design.
+- **[Michail Tsakiroglou](https://miketsak.gr)**: Concept, firmware architecture, C DSP audio engine, physical modelling instruments, SANCTUARY reverb, graphics & boot animation, WebAssembly emulator, WebMIDI tooling, and site design.
 - **[Felucca](https://github.com/hugelton/Felucca)** by Leo Kuroshita / Hügelton Instruments: the FM-1
   hardware layer, USB-MIDI, the M-UPGRADE protocol and update loader, the package format, and the web update
   library (`web/vendor/` in the built site). GPL-3.0-only.

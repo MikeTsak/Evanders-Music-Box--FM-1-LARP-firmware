@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
  * Evander's Music Box: the two modes and every control. UI side (main loop): reads emb_st, edits the
  * workbench, posts commands. The mapping is documented for the bard in MANUAL.md; the short form:
  *

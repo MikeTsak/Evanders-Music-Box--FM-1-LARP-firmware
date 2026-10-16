@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
  * Evander's Music Box in the browser: the same core as the FM-1, compiled to wasm32 (freestanding, no libc)
  * and run inside an AudioWorklet (web/emu/worklet.js). The worklet calls these exports; storage goes
  * through two imports the worklet supplies (the page keeps the bytes in localStorage).

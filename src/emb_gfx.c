@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
+ * Copyright (C) 2026 Michail Tsakiroglou <https://miketsak.gr>
  * Evander's Music Box: drawing. A 240x240 RGB565 frame (native byte order; the FM-1 port swaps for the panel).
  * The look: flat blocks of bold colour on ink, hard offset shadows, a 5x7 pixel font, little 1-bit sprites
  * (a pocket synth's screen crossed with a party game). Primitives, sprites, the crest, the Blue Rose, the boot. */
