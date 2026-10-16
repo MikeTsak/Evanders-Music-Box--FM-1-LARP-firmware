@@ -8,11 +8,14 @@
 <meta name="description" content="Evander's Music Box: the FM-1 LARP firmware running in your browser via WebAssembly and AudioWorklet, built from the exact same C source as the hardware.">
 <meta name="keywords" content="FM-1 emulator, WebAssembly synth, LARP synthesizer emulator, Evanders Box, AudioWorklet synth">
 <link rel="canonical" href="https://fm1.miketsak.gr/emu/">
+<meta name="author" content="Mike Tsak (miketsak.gr)">
 <meta property="og:title" content="The Emulator — Evander's Music Box">
 <meta property="og:description" content="Play the real Evander's Music Box C firmware in your browser via WebAssembly.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://fm1.miketsak.gr/emu/">
 <meta property="og:image" content="https://fm1.miketsak.gr/rose.png">
+<meta property="og:site_name" content="Evander's Music Box">
+<meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="The Emulator — Evander's Music Box">
 <meta name="twitter:description" content="Full FM-1 LARP firmware running in your browser.">
@@ -20,7 +23,18 @@
 <link rel="icon" href="../rose.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../style.css?v=1.4.1">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Evander's Music Box Emulator",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Web Browser",
+  "author": { "@type": "Person", "name": "Mike Tsak", "url": "https://miketsak.gr" },
+  "offers": { "@type": "Offer", "price": "0" }
+}
+</script>
 <style>
   .fm1 {
     --u: min(1px, calc((100vw - 32px) / 1040));     /* one panel unit: the panel is 1040 units wide */
@@ -125,6 +139,7 @@
 </head>
 <body>
 <div class="wrap">
+  <div class="top-credit">Made by <a href="https://miketsak.gr" target="_blank" rel="noopener">miketsak</a></div>
   <header class="crest">
     <img src="../rose.png" alt="The Blue Rose of Mother Melody">
     <div>

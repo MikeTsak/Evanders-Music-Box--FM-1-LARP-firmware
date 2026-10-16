@@ -64,6 +64,14 @@ header.hero, header.crest {
 nav.top {
   view-transition-name: page-nav;
 }
+.top-credit {
+  view-transition-name: page-credit;
+}
+
+::view-transition-group(page-credit) {
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
 
 ::view-transition-group(page-nav) {
   animation-duration: 400ms;
@@ -94,6 +102,30 @@ nav.top {
 @keyframes page-fade-in {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.top-credit {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font: 700 12px/1.2 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  margin: -6px 0 14px;
+}
+.top-credit a {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-left: 5px;
+  transition: background 60ms, color 60ms;
+}
+.top-credit a:hover {
+  background: var(--yellow);
+  color: var(--ink);
+  text-decoration: none;
 }
 
 header.crest { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }

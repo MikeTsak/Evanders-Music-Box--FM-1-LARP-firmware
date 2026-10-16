@@ -8,12 +8,14 @@
 <meta name="description" content="Custom LARP firmware transforming the M-VAVE FM-1 pocket synthesizer into an Elven Bard's relic. Four-track medieval workshop, real-time battle scoring on your forearm, web emulator, and USB flasher.">
 <meta name="keywords" content="M-VAVE FM-1, LARP, Bard, medieval synth, custom firmware, Evander's Music Box, Cuvave FM-1, live roleplay music, WebMIDI installer, WebAssembly emulator, Karplus-Strong, hurdy-gurdy, forearm synth">
 <link rel="canonical" href="https://fm1.miketsak.gr/">
+<meta name="author" content="Mike Tsak (miketsak.gr)">
 <meta property="og:title" content="Evander's Music Box — Medieval LARP Bard Firmware for M-VAVE FM-1">
 <meta property="og:description" content="Custom LARP firmware transforming the M-VAVE FM-1 into an Elven Bard's relic. Forearm live battle scoring, 20 historical instruments, web emulator, and USB installer.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://fm1.miketsak.gr/">
 <meta property="og:image" content="https://fm1.miketsak.gr/rose.png">
 <meta property="og:site_name" content="Evander's Music Box">
+<meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Evander's Music Box — Medieval LARP Bard Firmware">
 <meta name="twitter:description" content="Score live LARP battles and tavern nights from your forearm on the M-VAVE FM-1 pocket synth.">
@@ -21,7 +23,20 @@
 <link rel="icon" href="rose.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=1.4.1">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Evander's Music Box",
+  "softwareVersion": "1.4.1",
+  "operatingSystem": "M-VAVE FM-1 / Web Browser",
+  "applicationCategory": "MultimediaApplication",
+  "offers": { "@type": "Offer", "price": "0" },
+  "author": { "@type": "Person", "name": "Mike Tsak", "url": "https://miketsak.gr" },
+  "description": "Custom LARP firmware transforming the M-VAVE FM-1 pocket synthesizer into an Elven Bard's relic."
+}
+</script>
 <style>
   .hero { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; margin: 8px 0 24px; }
   .hero .rose {
@@ -50,6 +65,7 @@
 </head>
 <body>
 <div class="wrap">
+  <div class="top-credit">Made by <a href="https://miketsak.gr" target="_blank" rel="noopener">miketsak</a></div>
   <header class="hero">
     <img class="rose" src="rose.png" alt="The Blue Rose of Mother Melody">
     <div>
