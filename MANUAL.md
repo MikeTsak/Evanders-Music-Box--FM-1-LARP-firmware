@@ -52,7 +52,8 @@ flowing musical staff waves and dancing notes. The logo yields to the **Blue Ros
 > **EVANDER'S MUSIC BOX — MOTHER MELODY HEARS THY SONG**
 
 A light runs across the keys while this happens. Press any button after the first half-second to skip the
-rest. The Box always wakes in **Bardic Crafting**, with its last saved songs.
+rest. The Box wakes **exactly where you left it**: the same mode, track and scale lock, with every song and loop
+(it keeps itself every 30 seconds; see *Keeping songs*).
 
 If the last run ended badly (a crash, a hang, a battery too low) and the Box is plugged into USB, a **pink line** at the foot of the boot screen
 says how (on battery power, this diagnostic line is hidden). See Chapter VII.
@@ -89,7 +90,8 @@ keeps playing.
 | 4 | the **War Drums** | TAVERN KIT |
 
 A new song starts in **D Dorian**, tuned **Pythagorean**, and every key is snapped to the mode. A wrong note is
-impossible until you ask for one.
+impossible until you ask for one. To hold *everything*, scenes included, in one scale, use the **Scale Lock**
+below.
 
 ### Choosing a track
 
@@ -143,7 +145,7 @@ Each page sets what the four knobs **K1 to K4** do. Press a page's button to ope
 | **ENV** | **Envelope** | attack | decay | sustain | release |
 | **LFO** | **Motion** | vibrato rate | vibrato depth | swing | pan |
 | **EDIT** | **Voice** | tone | character | level | reverb send |
-| **GLO** | **Modes** | root | mode | tuning | snap on / off |
+| **GLO** | **Modes** | root | mode (11, the pentatonics and diminished too) | tuning | snap on / off |
 | **GLO** again | **The Box** | A4 calibration (±50 cents) | MIDI channel | LEDS: GLOW / LIT / DARK | OUTPUT: LOUD / NORM / SAFE |
 | **SEQ** | **Steps** | length (1 to 64) | swing | level | reverb send |
 
@@ -226,12 +228,95 @@ and its seat, and nothing is moved or reallocated.
 
 A single brush of a button does nothing. Letting go before the ring closes does nothing. One undo is kept.
 
-### Keeping songs
+### Scale Lock: playing like a harmonica
+
+*A bard who must play while running should not have to think of the key.*
+
+The **Scale Lock** holds every note of the Box in one scale: the keys, the sequencer, the Encounter scenes,
+freestyle and MIDI notes from outside. With it on, a wrong note cannot be played. It works in both modes.
+
+**Hold GLO** and the glass shows the keyboard with what each key sets. While GLO is held, a key does not play:
+
+| Hold **GLO** + | Sets |
+| --- | --- |
+| a key from **F3 to E4** (the left twelve, white and black) | the **root**: the key's own note (F3 sets F, the black key after it F#, and so on) |
+| **F4** | **MAJOR** |
+| **G4** | **MINOR** |
+| **A4** | **DORIAN** |
+| **B4** | **PHRYGIAN** |
+| **C5** | **LYDIAN** |
+| **D5** | **MIXOLYDIAN** |
+| **E5** | **HARMONIC MINOR** |
+| **F5** | **PENTATONIC MAJOR** |
+| **G5** | **PENTATONIC MINOR** |
+| **F#4** (black) | **DIMINISHED** (whole-half) |
+| **G#4** (black) | **PHRYGIAN DOMINANT** |
+| **F#5** (black) | **lock off** |
+| **ENV** (button) | **lock off**: back to the normal scale of the song or scene |
+
+Choosing a root or a scale turns the lock on, and the glass shows it (*LOCK: D DORIAN*). Root and scale are set
+separately, so to change only the scale, press only the scale key.
+
+**Press the same root key again** to step through the scales: *C MAJOR → C MINOR → C DORIAN → PHRYGIAN →
+LYDIAN → MIXOLYDIAN → HARMONIC → PENTA MAJOR → PENTA MINOR → DIMINISHED → PHRYGIAN DOMINANT*, then round
+to major. A new root keeps the scale you had. Let go of GLO and the keys play again.
+Tapping GLO alone still opens the Modes page.
+
+**How it sounds:**
+- **Sequenced notes and scenes** are carried into the lock's scale degree by degree, so a melody keeps its shape.
+  A scene keeps its own register: the lock's root is taken in the octave nearest the scene's.
+- **Live keys** that fall outside the scale play the scale note just below.
+- **Drums** are untouched; the timpani and gong tune to the lock's root.
+- The lock is kept with everything else (autosave), so it is still on after power-off.
+
+While the lock is on, GLO's light is half-lit, and the home page header reads *LOCK* with the key.
+
+### The knob HUD
+
+Turn any of **K1 to K4**, on any page, in either mode, and a card in the knob's own colour names exactly what it
+changes and shows the value: *TRACK 2 LEVEL*, *REVERB DECAY*, *FILTER CUTOFF*, *STEP TIMING (NUDGE)*,
+*INTENSITY*. It leaves a second after the knob stops.
+
+### Modern Mode (a secret)
+
+*Some bards travel further than others.*
+
+Press **HOME + FX + GLO** together, in any order, and the glass says *MODERN MODE UNLOCKED*. **PRESETS** now
+steps through the whole engine as well as the medieval bank:
+
+| Instrument | Engine | TONE / CHARACTER |
+| --- | --- | --- |
+| TONEWHEEL | drawbar organ through a Leslie | (drawbars) |
+| SAW LEAD, SQUARE LEAD | subtractive: oscillator, resonant lowpass, filter envelope | filter cutoff / filter envelope |
+| SUPERSAW | three detuned saws | filter cutoff / filter envelope |
+| SYNTH PAD | two slow saws, a soft filter | filter cutoff / filter envelope |
+| ACID BASS | one saw, a squelching resonant filter | filter cutoff / filter envelope |
+| FM E-PIANO, FM BELL, FM BASS | two-operator FM | FM depth / character |
+| ELECTRO KIT (drum track) | kick, snare, clap, closed hat, open hat, low tom, high tom, cowbell | |
+
+Press **HOME + FX + GLO** again (*BACK TO THE OLD WAYS*) to hide them. Any track playing a modern sound returns
+to the harp (the drum track to the tavern kit). The tonewheel stays reachable with **EDIT + GLO** either way. The
+choice is kept through power-off.
+
+### Keeping songs (autosave)
+
+**You never need to save the workbench.** Every 30 seconds, if anything changed, the Box keeps:
+- your workbench: every step, every loop, every instrument and its settings
+- your settings, including the Scale Lock and Modern Mode
+- where you are: the mode, the chosen track, the octaves, the last scene, tempo and music volume
+
+When it is switched on again, it wakes exactly there. The footer says *KEPT: AUTOSAVED* for a moment after each
+save. Nothing starts playing by itself.
+
+On the FM-1, clearing a flash sector stops the sound for a few hundredths of a second. The Box therefore clears
+sectors only while it is stopped and untouched, and saves into those blank ones while you play, so a save never
+interrupts a song. Only after two full minutes of unsaved changes, made without ever stopping, will it take that
+short gap mid-song rather than risk losing them.
 
 | Gesture | Effect |
 | --- | --- |
-| hold **SAVE** for one second | keep the workbench and all settings; the glass says *MOTHER MELODY KEEPS IT* |
-| hold **SAVE** + a **scene's key** for a moment | **bind** the workbench to that Encounter scene (Chapter IV: a group key or one of its sharps) |
+| hold **SAVE** for one second | keep everything **now** (*MOTHER MELODY KEEPS IT*) |
+| hold **SAVE** + a **white key** for a moment | **bind** the workbench to that Encounter scene (white key 1-16) |
 
 A bound song can be played in battle (Chapter IV). The sixteen factory scenes can always be restored from the
 Preset Console.
@@ -240,111 +325,112 @@ Preset Console.
 
 ## IV. Encounter: the Herald
 
-*When the Box is strapped to the forearm, Evander does not compose. He calls. Four keys hold the four moods of
-the field, and the sharps beside each one hold its shades. The Box waits for the end of the bar, then turns the
-music the way a minstrel band would.*
+*When the Box is strapped to the forearm, Evander does not compose. He calls. Each white key is a mood of the
+field; once one sounds, the sharps bend it. The Box waits for the end of the bar, then turns the music the way a
+minstrel band would.*
 
-### The four groups
+### The sixteen scenes (white keys)
 
-Only **four white keys are lit**: the first of each row of four. These are the four **scene groups**. Each group
-holds four scenes: the group's first scene, which is its key, and three variations.
+Each **white key is a scene**: count them **1 to 16** from the left. The first key of each group of four is
+half-lit, so you can count in the dark.
 
-| Group key | Group | I (the key) | II | III | IV |
+| White key | Scene | Mood | What it is | Mode | Tuning |
 | --- | --- | --- | --- | --- | --- |
-| white **1** | **REST** (green) | TAVERN | CAMPFIRE | SANCTUARY | LAMENT |
-| white **5** | **EXPLORE** (yellow) | WILDERNESS | FEY FOREST | DUNGEON | SEA ROAD |
-| white **9** | **COMBAT** (orange) | SKIRMISH | BATTLE | AMBUSH | SIEGE |
-| white **13** | **CLIMAX** (pink) | BOSS | LAST STAND | VICTORY | REQUIEM |
+| **1** | TAVERN | REST | harp, hurdy-gurdy, bodhrán, recorder | D Dorian | Pythagorean |
+| **2** | CAMPFIRE | REST | lute, a slow bodhrán pulse, low cello drone, pan flute | A Aeolian | Pythagorean |
+| **3** | SANCTUARY | REST | choir, portative organ, harp | D Dorian | just |
+| **4** | LAMENT | REST | koto, cello, a lone pan flute | E Aeolian | meantone |
+| **5** | WILDERNESS | EXPLORE | distant flute calls over a bagpipe drone | E Dorian | Pythagorean |
+| **6** | FEY FOREST | EXPLORE | psaltery cascades, choir, recorder | G Lydian | just |
+| **7** | DUNGEON | EXPLORE | war drum and anvil, cello, organetto | C Phrygian | meantone |
+| **8** | SEA ROAD | EXPLORE | a rolling 6/8 feel, shawm and gurdy | D Mixolydian | Pythagorean |
+| **9** | SKIRMISH | COMBAT | driving war drums, a tense low cello ostinato | D Aeolian | equal |
+| **10** | BATTLE | COMBAT | galloping drums, buzzing gurdy, brass | E Phrygian | equal |
+| **11** | AMBUSH | COMBAT | clacks and silence, plucked koto | C harmonic minor | equal |
+| **12** | SIEGE | COMBAT | timpani, choir, cathedral organ, brass | A Aeolian | equal |
+| **13** | BOSS | CLIMAX | full cathedral organ, galloping percussion, brass stabs | D harmonic minor | equal |
+| **14** | LAST STAND | CLIMAX | war drums, gurdy, shawm, the organ behind | E Aeolian | Pythagorean |
+| **15** | VICTORY | CLIMAX | fanfare, positive organ, harp | D Ionian | just |
+| **16** | REQUIEM | CLIMAX | gong, choir, cathedral organ | D Aeolian | just |
 
-**To reach a variation:** press the **sharps that follow the group key**, in order, as the keys lie:
-
-| Group | II | III | IV |
-| --- | --- | --- | --- |
-| REST | **OP1** | **OP2** | **OP3** |
-| EXPLORE | **OP4** | **OP5** | **OP6** |
-| COMBAT | **PIT** | **GLO** | **MONO** |
-| CLIMAX | **POLY** | **TOP** | *hold* white 13 |
-
-Each group's sharps sit just to the right of its group key. To find them, slide a finger right from the lit key,
-over the raised keys. For any group, **holding the group key for 0.6 s** cues its variation **IV**. It first
-cues variation I, then changes its mind. That is the only way to reach REQUIEM, because CLIMAX has only two
-sharps after it.
-
-The glass shows the groups as four coloured rows, one per key, with the scene playing filled in.
-
-| Scene | What it is | Mode | Tuning |
-| --- | --- | --- | --- |
-| TAVERN | harp, hurdy-gurdy, bodhrán, recorder | D Dorian | Pythagorean |
-| CAMPFIRE | lute, a slow bodhrán pulse, low cello drone, pan flute | A Aeolian | Pythagorean |
-| SANCTUARY | choir, portative organ, harp | D Dorian | just |
-| LAMENT | koto, cello, a lone pan flute | E Aeolian | meantone |
-| WILDERNESS | distant flute calls over a bagpipe drone | E Dorian | Pythagorean |
-| FEY FOREST | psaltery cascades, choir, recorder | G Lydian | just |
-| DUNGEON | war drum and anvil, cello, organetto | C Phrygian | meantone |
-| SEA ROAD | a rolling 6/8 feel, shawm and gurdy | D Mixolydian | Pythagorean |
-| SKIRMISH | driving war drums, a tense low cello ostinato | D Aeolian | equal |
-| BATTLE | galloping drums, buzzing gurdy, brass | E Phrygian | equal |
-| AMBUSH | clacks and silence, plucked koto | C harmonic minor | equal |
-| SIEGE | timpani, choir, cathedral organ, brass | A Aeolian | equal |
-| BOSS | full cathedral organ, galloping percussion, brass stabs | D harmonic minor | equal |
-| LAST STAND | war drums, gurdy, shawm, the organ behind | E Aeolian | Pythagorean |
-| VICTORY | fanfare, positive organ, harp | D Ionian | just |
-| REQUIEM | gong, choir, cathedral organ | D Aeolian | just |
-
-There is no fire, wind or forest in the music. You will be standing in the real ones.
+The groups are keys **1-4 REST**, **5-8 EXPLORE**, **9-12 COMBAT** and **13-16 CLIMAX**.
 
 **How cueing works:**
 
-- **Press a scene's key.** It blinks fast and the glass counts down to the change (*NEXT*).
+- **Press a white key.** It blinks fast and the glass counts down to the change (*NEXT*).
 - **On the next bar** the new scene fades in over two beats and the old one fades away beneath it.
 - **Press the blinking key again** to cancel.
 - **Program change 1-16** over MIDI does the same thing. A game master can also press *Cue* in the Preset
   Console.
 
-### The battle modifiers (the other white keys)
+There is no fire, wind or forest in the music. You will be standing in the real ones.
 
-The twelve white keys that are not group keys bend the battle. They stay **dark** until a modifier is in effect,
-then they light. Modifiers take hold on the next beat. A modifier pressed while a scene is queued waits for that
-scene and lands on it, because a new scene brings its own key.
+### The variations (the black keys)
 
-| White key | Modifier | Effect |
+Once a scene is chosen (playing or queued), **all eleven sharps** become its variations. Before that they stay
+dark and do nothing. A variation takes hold on the next beat; one pressed while a scene is queued waits for that
+scene and lands on it. Choosing a new scene clears them all, so each scene starts as written. A variation's sharp
+stays **lit** while it is in effect.
+
+The sharps keep their physical groups of 3, 2, 3, 2 and 1, one kind of change per group:
+
+| Sharp | Variation | Effect |
 | --- | --- | --- |
-| **2** | **PHRYGIAN** | the music darkens into Phrygian tension |
-| **3** | **HARMONIC** | harmonic minor: menace, the villain's theme |
-| **4** | **TRIUMPH** | major (Ionian): the tide turns |
-| **6** | **KEY UP** | up a whole tone (up to three times) |
-| **7** | **KEY DOWN** | down a whole tone |
-| **8** | **HOME KEY** | undo every bend: home key, home mode, normal time |
-| **10** | **DOUBLE TIME** | the drums run twice as fast (again: back) |
-| **11** | **HALF TIME** | the drums run half as fast (again: back) |
-| **12** | **BREAKDOWN** | only drums and drone remain (again: back) |
-| **14** | **FULL HOST** | everything back in, at full intensity |
-| **15** | **STINGER** | a gong, a war drum and a brass chord, on the beat |
-| **16** | **SWELL** | the cathedral swell (as **FX**) |
+| **OP1** | **DARK** | the scene darkens into Phrygian |
+| **OP2** | **TENSE** | harmonic minor: menace, the villain's theme |
+| **OP3** | **BRIGHT** | major (Ionian): the tide turns |
+| **OP4** | **KEY UP** | up a whole tone (up to three times) |
+| **OP5** | **KEY DOWN** | down a whole tone |
+| **OP6** | **HALF TIME** | the drums run half as fast (again: back) |
+| **PIT** | **DOUBLE TIME** | the drums run twice as fast (again: back) |
+| **GLO** | **BREAKDOWN** | only drums and drone remain (again: back) |
+| **MONO** | **HOME** | undo every variation: the scene as written |
+| **POLY** | **FULL HOST** | everything back in, at full intensity |
+| **TOP** | **STINGER** | a gong, a war drum and a brass chord, on the beat |
 
-The modes come first and the reset last in each row: three modes, then two key changes and *home*, then three
-time changes, then *full*, *stinger* and *swell*.
+A change of mood keeps each note's place in the scale. The tune stays the tune and only its colour turns: the
+same melody in Phrygian sounds like the same melody turned dangerous. Under a **Scale Lock** (Chapter III) the
+three moods and the two key changes do not move the pitch; the time changes, HOME, FULL and STINGER still work.
 
-Modal shifts keep each note's place in the scale. The tune stays the tune and only its colour turns: the same
-melody in Phrygian sounds like the same melody turned dangerous.
+### Freestyle: take the stage
+
+| Gesture | Effect |
+| --- | --- |
+| tap **SEQ** | **FREESTYLE** on: every key plays a note, live, over the scene; tap again to return to the scenes |
+| hold **SEQ** (over half a second) | freestyle only while held: let go, and the keys are scenes again |
+
+In freestyle:
+- **Every key is in key.** The keys play the scene's scale as it sounds now, including any mood or key change, or
+  the Scale Lock if one is on. Like a harmonica, there is no wrong note.
+- **The loop keeps playing**, and its lead track steps aside so your melody takes its place.
+- Your instrument is the scene's own lead. Turn **PRESETS** to choose another; the Box remembers your choice.
+- **OCT- and OCT+** move your keys an octave. **OCT- + OCT+** returns to octave 0.
+
+The glass turns pink and says **FREESTYLE**, with your instrument, its scale and octave. Over MIDI, notes play
+your freestyle voice too.
 
 ### The knobs and buttons in battle
 
 | Control | Effect |
 | --- | --- |
-| **K1** (or **OCT- / OCT+**) | **intensity**: drone only → + drums → + strings → full host |
+| **K1** (or **OCT- / OCT+** when not in freestyle) | **intensity**: drone only → + drums → + strings → full host |
 | **K2** | **tempo**, 70 % to 140 % (also **ALGORITHM**, in coarser steps) |
 | **K3** | the **hall**: how much Sanctuary |
 | **K4** | the **music volume**, under MASTER |
 | **SELECT** | **crossfade** length, 0 to 8 beats (0 = a hard cut) |
-| **PRESETS** | when changes land: on the beat, the bar, every 2 bars or every 4 bars |
+| **PRESETS** | when changes land: on the beat, the bar, every 2 bars or every 4 bars (in freestyle: your instrument) |
 | **ARP** | **duck**: the music drops low so a speech can be heard; again, it rises |
 | **FX** | **cathedral swell**: the hall grows huge (for the reveal of a god); again, back |
+| **SEQ** | **freestyle** (above) |
 | **PLAY** | fade out over a bar; again, play the last scene |
 | **OCT- + OCT+** | intensity back to full host |
 | **HOME + REC**, held 0.4 s | **silence**: everything stops at once, with no click |
+| hold **GLO** + a key | **Scale Lock** (Chapter III) |
 
 The other buttons belong to the workshop. In Encounter they only say so on the glass.
+
+Whichever knob you turn, a card on the glass names what it changes and shows its value, and leaves a second after
+you stop.
 
 ---
 
@@ -367,12 +453,17 @@ The other buttons belong to the workshop. In Encounter they only say so on the g
 | **REC** | solid | weaving a loop |
 | **REC** | blinking | armed, stopped |
 | **OCT** | half-lit / blinking / solid | ±1 / ±2 / ±3 octaves (as on the stock firmware) |
-| Encounter group keys (1, 5, 9, 13) | half-lit | waiting: the four groups, the only white keys lit |
-| Encounter group key | lit | a scene of **its group is playing** |
-| Encounter sharps | lit | **that variation** is playing |
-| Encounter: any scene key | fast blink | **queued** |
-| Encounter: other white keys | lit | that **modifier** is in effect (dark otherwise) |
+| Encounter white keys | lit | the scene **playing** |
+| Encounter white keys | fast blink | **queued** |
+| Encounter white keys 1, 5, 9, 13 | half-lit | the first scene of each mood: landmarks |
+| Encounter white keys | soft glow | the other scenes |
+| Encounter sharps | dark | no scene chosen yet: nothing to vary |
+| Encounter sharps | soft glow | a scene is chosen: its variations are ready |
+| Encounter sharps | lit | **that variation** is in effect |
+| **SEQ** (Encounter) | lit | **freestyle**: the keys glow as in Bardic (the scale, the roots half-lit) |
 | **FX** (Encounter) | lit | the cathedral swell |
+| **GLO** | half-lit | the **Scale Lock** is on |
+| holding **GLO** | keys F3-E4 glow, the root lit | the root picker; the scale keys glow, the chosen scale lit, F#5 (lock off) half-lit |
 
 **For a night ambush:** set *LEDS* on the Box page (GLO, GLO, K3).
 
@@ -380,7 +471,7 @@ The other buttons belong to the workshop. In Encounter they only say so on the g
 | --- | --- |
 | GLOW (default) | everything above |
 | LIT | no soft glow; only what matters shines |
-| DARK | stealth: only the playing scene, the queue, the beat and active modifiers |
+| DARK | stealth: only the playing scene, the queue, the beat and active variations |
 
 ### The glass
 
@@ -389,6 +480,9 @@ The other buttons belong to the workshop. In Encounter they only say so on the g
 | top left | the mode chip: **BARDIC** (orange) or **ENCOUNTER** (blue) |
 | top right | the **battery**: four bars, pink when nearly empty, a yellow bolt on USB power |
 | above the footer | four chips in the knobs' own colours: what **K1** (blue), **K2** (green), **K3** (grey) and **K4** (orange) do now |
+| top bar | the key: *LOCK D DOR* while a Scale Lock holds |
+| over everything | turn a knob: the **knob HUD**, its full name and value; a second after, gone |
+| over everything | hold **GLO**: the **Scale Lock** picker, a keyboard showing what each key sets |
 | the paper footer | a **tip** that changes every few seconds with what you're doing; button names are drawn as black keycaps |
 | over everything | turn **MASTER**: a **VOLUME** card shows the level, and leaves a second after you stop |
 
@@ -402,10 +496,13 @@ The other buttons belong to the workshop. In Encounter they only say so on the g
 | **HOME + REC** (hold 0.4 s) | purge the track's loop | silence |
 | **HOME + SAVE** | undo the purge | — |
 | **EDIT + GLO** | pipe organ ⇄ tonewheel + Leslie | — |
-| **OCT- + OCT+** | octave 0 | full host |
+| **OCT- + OCT+** | octave 0 | full host (in freestyle: octave 0) |
+| hold **GLO** + a key | **Scale Lock**: F3-E4 root (again: next scale), F4-G5 scale, F#5 off | same |
+| **GLO + ENV** | **Scale Lock off**: the normal scale again | same |
+| **HOME + FX + GLO** | **Modern Mode** on / off | same |
 | **OCT- + OCT+** held **5 s** | the chip's update mode (UBOOT): for repairs | same |
-| **SAVE** (hold 1 s) | keep everything | keep everything |
-| **SAVE + a scene's key** (hold) | bind the workbench to that scene | copy that scene to the workbench |
+| **SAVE** (hold 1 s) | keep everything now (it also keeps itself every 30 s) | same |
+| **SAVE + white key** (hold) | bind the workbench to that scene | copy that scene to the workbench |
 | **SEL + OP1-OP4** | choose a track | — |
 | **SEL + white 1-4** | mute or unmute | — |
 | **ARP** | drone latch | duck |
@@ -413,22 +510,30 @@ The other buttons belong to the workshop. In Encounter they only say so on the g
 | **LFO** twice | Leslie fast ⇄ slow | — |
 | **PLAY** | start or stop the workbench | fade out / play again |
 | **REC** | live-loop on/off | — |
-| white 1, 5, 9, 13 | note / step | a scene group (held: its variation IV) |
-| black key | note / step page | the variation after the group key |
-| other white keys | note / step | battle modifier |
-
-A scene's key is its group key or one of its sharps; for CLIMAX IV, the group key held.
+| **SEQ** | the Steps page | **freestyle**: tap on / off, hold for while held |
+| white key | note / step | cue that scene (1-16) |
+| black key | note / step page | a variation of the chosen scene |
+| any key in freestyle | — | a note, in key, over the loop |
 
 **MIDI** (on the channel set on the Box page):
 
 | Message | Effect |
 | --- | --- |
-| program change 1-16 | cue a scene (REST I .. CLIMAX IV) |
+| program change 1-16 | cue scene 1-16 |
 | Encounter: notes 36-51 | cue scenes 1-16 |
-| Encounter: notes 52-63 | the twelve modifiers (52 PHRYGIAN, 53 HOME KEY, 54 HARMONIC, 55 TRIUMPH, 56 KEY UP, 57 KEY DOWN, 58 DOUBLE, 59 HALF, 60 BREAKDOWN, 61 FULL HOST, 62 STINGER, 63 SWELL) |
-| Bardic: notes | play the chosen track |
+| Encounter: notes 52-63 | 52 DARK, 53 HOME, 54 TENSE, 55 BRIGHT, 56 KEY UP, 57 KEY DOWN, 58 DOUBLE, 59 HALF, 60 BREAKDOWN, 61 FULL HOST, 62 STINGER, 63 SWELL |
+| Bardic: notes | play the chosen track (held in the Scale Lock, if on) |
+| Encounter freestyle: notes | play your freestyle voice |
 | CC 7 | music volume |
 | Start / Stop | start or stop the transport |
+
+### On a computer
+
+Plug the FM-1 into a computer with a data cable. It appears as a **USB audio input** and a **USB MIDI port**,
+class compliant, so no driver is needed on Windows, macOS or Linux. In a DAW or Audacity, choose it as the
+recording input: you record exactly what the Box plays (the master output, 16-bit stereo, 44.1 or 48 kHz as
+the program asks). MASTER and the OUTPUT ceiling apply to the recording too. The port is named *Felucca*, after
+the hardware layer the Box is built on.
 
 ---
 
@@ -440,7 +545,11 @@ A scene's key is its group key or one of its sharps; for CLIMAX IV, the group ke
 | Crackles at full volume | Set **OUTPUT** to **NORM** or **SAFE**. |
 | Silence after a fall | Turn **MASTER** up. Press **PLAY**. **OCT- + OCT+** brings Encounter to full host. |
 | A loop gone wrong in battle | **HOME + REC**, hold. **HOME + SAVE** if you regret it. |
-| A red band on the glass | The Box stumbled and is restarting itself. It wakes with your last kept songs. |
+| A red band on the glass | The Box stumbled and is restarting itself. It wakes with what it kept at most 30 seconds before. |
+| Notes you did not expect | A **Scale Lock** may be on (GLO half-lit): **GLO + ENV** frees the keys. |
+| A sharp does nothing in Encounter | Choose a scene first (a white key): the sharps are its variations. |
+| An instrument you did not expect | Modern Mode may be on: **HOME + FX + GLO** turns it off. |
+| The computer does not see the audio | Use a data cable; in the DAW pick the FM-1 (*Felucca*) as the input; try 44.1 kHz. |
 | A pink line under the rose at boot | When plugged into USB, the line says why the last run ended. *LOW VOLTAGE*: charge the Box. *WATCHDOG* or *CRASHED*: please report it, with what you were doing. *STOPPED AT STEP n*: the boot halted at that step; please report the number. (On battery, this line is hidden.) |
 | Dark on battery, fine on USB | Charge it fully, then switch on again. If it stays dark, power on with USB, read the pink line, and report it. |
 | To return it to the stock firmware | The Installer's *Return to official V15*, or M-VAVE's updater. |

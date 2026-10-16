@@ -63,20 +63,30 @@ enum {                               /* track 1: drum kits */
     /* winds and reeds */
     I_PANFLUTE, I_RECORDER, I_SHAWM, I_BRASS,
     /* organs */
-    I_ORGANETTO, I_POSITIVE, I_CATHEDRAL, I_TONEWHEEL,
+    I_ORGANETTO, I_POSITIVE, I_CATHEDRAL,
+    /* MODERN MODE (HOME + FX + GLO): the tonewheel organ and the electronic bank */
+    I_TONEWHEEL,
+    I_SAW_LEAD, I_SQUARE_LEAD, I_SUPERSAW, I_SYNTH_PAD, I_ACID_BASS,   /* subtractive */
+    I_FM_EPIANO, I_FM_BELL, I_FM_BASS,                                  /* two-operator FM */
+    I_ELECTRO_KIT,                                                      /* a drum machine */
     I_COUNT
 };
-#define I_FIRST_MELODIC I_HARP
+#define I_FIRST_MODERN I_TONEWHEEL
+int emb_inst_is_drum(uint32_t inst);
 enum { DR_BODHRAN, DR_FRAME, DR_TAMB, DR_ANVIL, DR_TIMPANI, DR_WAR, DR_CLACK, DR_GONG, DR_COUNT };
 extern const char *const emb_inst_name[I_COUNT];
 extern const char *const emb_drum_name[DR_COUNT];
+extern const char *const emb_drum_name_e[DR_COUNT];   /* the ELECTRO KIT's pieces */
 
 /* ---- scales and temperaments ---- */
-enum { M_IONIAN, M_DORIAN, M_PHRYGIAN, M_LYDIAN, M_MIXOLYDIAN, M_AEOLIAN, M_HARMONIC, M_PHRYG_DOM, M_COUNT };
+enum { M_IONIAN, M_DORIAN, M_PHRYGIAN, M_LYDIAN, M_MIXOLYDIAN, M_AEOLIAN, M_HARMONIC, M_PHRYG_DOM,
+       M_DIMINISHED, M_PENTA_MAJ, M_PENTA_MIN, M_COUNT };
 enum { T_EQUAL, T_PYTH, T_MEAN, T_JUST, T_COUNT };
 extern const char *const emb_mode_name[M_COUNT];
 extern const char *const emb_temper_name[T_COUNT];
-extern const uint8_t emb_scale[M_COUNT][7];
+extern const uint8_t emb_scale[M_COUNT][8];       /* the scale's semitones above the root, emb_scale_n of them */
+extern const uint8_t emb_scale_n[M_COUNT];
+extern const char *const emb_scale_name[M_COUNT]; /* the friendly names: MAJOR, MINOR, DIMINISHED .. */
 
 /* ---- the song: what a deck plays. Plain bytes: stored to flash and sent over SysEx as is ---- */
 typedef struct {
@@ -111,16 +121,19 @@ typedef struct {
     int8_t tune;                     /* A4 calibration, cents -50..+50 (the FM-1's I2S clock runs ~0.7 cent sharp) */
     uint8_t midi_ch, leds, fade_beats;   /* MIDI channel 0..15; LEDs 0 GLOW 1 LIT ONLY 2 STEALTH; crossfade, beats */
     uint8_t quant, rv_size, rv_decay, rv_damp;   /* Encounter quantize 0 beat 1 bar 2 two bars 3 four bars */
-    uint8_t rv_mix, snap, out_level, _r;   /* out_level: OUTPUT ceiling 0 LOUD (-0.5 dBFS) 1 NORMAL (-3) 2 SAFE (-6) */
+    uint8_t rv_mix, snap, out_level, lock_on;   /* out_level: OUTPUT ceiling 0 LOUD (-0.5 dBFS) 1 NORMAL (-3) 2 SAFE (-6) */
+    uint8_t lock_root, lock_mode, modern, _r;   /* SCALE LOCK: every note in lock_root lock_mode; MODERN MODE on */
     uint32_t sum;
 } emb_settings_t;
-#define EMB_SET_MAGIC 0x54455345u    /* "ESET" */
+#define EMB_SET_MAGIC 0x32455345u    /* "ESE2" */
 
 /* ---- persistence slots (the platform maps them to flash sectors / localStorage keys) ---- */
-enum { ST_SETTINGS = 0, ST_WORKBENCH = 1, ST_SCENE0 = 2 };   /* scenes: ST_SCENE0 + 0..15 */
+enum { ST_SETTINGS = 0, ST_WORKBENCH = 1, ST_SCENE0 = 2,      /* scenes: ST_SCENE0 + 0..15 */
+       ST_AUTO0 = 18, ST_AUTO_N = 4 };                        /* the autosave ring: ST_AUTO0 + 0..3 */
 
-/* ---- the platform supplies these ---- */
-int emb_hal_store(uint32_t slot, const void *p, uint32_t n);   /* 0 = ok; called from the main loop */
+/* ---- the platform supplies these (main loop only). A slot holds one record of up to 4 KiB ---- */
+int emb_hal_erase(uint32_t slot);                              /* 0 = ok; the slot reads as blank after */
+int emb_hal_write(uint32_t slot, const void *p, uint32_t n);   /* 0 = ok; into an erased slot */
 int emb_hal_load(uint32_t slot, void *p, uint32_t n);          /* 0 = ok and n bytes read */
 
 /* ---- core API ----
@@ -158,7 +171,8 @@ typedef struct {                     /* one command: UI side -> audio side */
     int32_t v;
 } emb_cmd_t;
 enum { C_NOTE_ON, C_NOTE_OFF, C_PLAY, C_STOP, C_QUEUE, C_PURGE, C_MOD, C_PANIC, C_HOLD, C_LESLIE,
-       C_TEMPO, C_FX, C_INTENS, C_DUCK, C_STINGER, C_SEL_TRACK, C_RESYNC, C_CHIME };
+       C_TEMPO, C_FX, C_INTENS, C_DUCK, C_STINGER, C_SEL_TRACK, C_RESYNC, C_CHIME, C_FREESTYLE };
+#define TRK_FREE 4u                  /* C_NOTE_ON / C_NOTE_OFF on this "track": Encounter's freestyle voice */
 void emb_post(uint32_t op, uint32_t a, uint32_t b, uint32_t c, int32_t v);
 
 typedef struct {                     /* what the UI reads back from the audio side (one writer: audio) */
@@ -168,6 +182,8 @@ typedef struct {                     /* what the UI reads back from the audio si
     volatile uint8_t mod_mode, key_shift, rate_t1, hold;   /* hold: bit per track (drone latch) */
     volatile uint8_t leslie, swell, voices, cpu;
     volatile uint8_t deck_slot[2];   /* what each deck plays: slot, 255 workbench, 254 none */
+    volatile int8_t play_root;       /* the key the front deck sounds in now (modifiers and lock applied) */
+    volatile uint8_t play_mode, freestyle;
     volatile uint32_t beats;         /* beats since power-on (the LED pulse) */
     volatile int16_t peak;           /* output meter */
 } emb_status_t;

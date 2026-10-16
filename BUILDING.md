@@ -144,14 +144,16 @@ These come from `upstream/felucca/firmware/app.ld`, which the build uses unchang
 
 - The app must fit the stock app slot of **0x8DFBC bytes**. The build refuses anything bigger.
 - Flash: the boot head `0x0000-0x3FFF` is never written. The app lives in `0x4000-0x93000`. Evander's Box keeps
-  its data at `0x97000 + slot × 4 KiB` (18 sectors), and updates stage at `0xE0000`.
+  its data at `0x97000 + slot × 4 KiB` (22 sectors to `0xAD000`: settings, workbench, 16 scenes and a
+  4-sector autosave ring), and updates stage at `0xE0000`. The platform hooks are `emb_hal_erase`, `emb_hal_write`
+  (page writes only, which never silence the audio) and `emb_hal_load`.
 - No runtime library is linked. The core uses no float, no heap, and no variable-width 64-bit shifts
   (`tools/build.py check` enforces the last one). Felucca's `libc.c` supplies `memcpy` and `memset`.
 
 ## 3. Release
 
 ```sh
-python3 tools/build.py all --version 1.0
+python3 tools/build.py all            # the version comes from the VERSION file
 ```
 
 This writes `build/web/firmware/emb.fwsc` and `firmware.json` (version, identity, SHA-256), which the

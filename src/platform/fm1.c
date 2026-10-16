@@ -19,7 +19,9 @@
 #define FELUCCA_OTA 1
 #define FELUCCA_OTA_DRYRUN 0
 #define FELUCCA_CDC 0
-#define FELUCCA_UAC 0
+#define FELUCCA_UAC 1                                /* USB audio in (UAC1, class compliant): the master output, 16-bit
+                                                      * stereo 44.1 / 48 kHz, for any DAW or Audacity; no driver */
+#define HALF_FRAMES 128u                             /* the I2S half buffer (usb.c's USB audio ring is sized on it) */
 #define FM1_CPU1_USED 0                              /* one core: the second stays halted */
 #ifndef FELUCCA_ID
 #define FELUCCA_ID "FM-1_777"                        /* the package identity (tools/build.py --product) */
@@ -58,7 +60,6 @@ static char boot_note[40];
 static void crumb_set(uint32_t s) { crumb.stage = s; }
 
 /* ------------------------------------------------------------------ audio: ALNK0 I2S, double-buffered DMA */
-#define HALF_FRAMES 128u
 #define HALF_WORDS (HALF_FRAMES * 2u)
 static int32_t abuf[2u * HALF_WORDS] __attribute__((aligned(4)));
 static volatile uint8_t in_audio;
@@ -82,8 +83,12 @@ void fm1_alnk0_irq(void)                            /* via isr_alnk0 (hal/fm1_is
     if (p & FM1_AUDIO_HALF) {
         uint32_t half = fm1_audio_free_half(), us;
         int32_t *o = &abuf[half * HALF_WORDS];
-        uint32_t k;
-        emb_render(o, HALF_FRAMES);                 /* interleaved L R, Q15, peaks under the OUTPUT ceiling */
+        uint32_t k, b;
+        uac_render_start();                         /* USB audio: a render begins (the ring's fill is checked) */
+        for (b = 0; b < HALF_FRAMES; b += EMB_CTL) {   /* a block at a time, as Felucca: the USB packets keep pace */
+            emb_render(o + 2u * b, EMB_CTL);        /* interleaved L R, Q15, peaks under the OUTPUT ceiling */
+            uac_tap(o + 2u * b, EMB_CTL);           /* the same master output to the computer */
+        }
         for (k = 0; k < HALF_WORDS; k++)            /* Q15 -> the codec's 24 bits: full scale (Felucca: << 7, -6 dB) */
             o[k] *= 1 << 8;
         fm1_audio_ack_half();
@@ -117,6 +122,8 @@ void fm1_timer5_irq(void)
         sub = 0;
     if (!in_audio && usb_due)                       /* 2 kHz; a late poll catches up on the next tick */
         usb_poll();
+    else if (in_audio && usb_due)                   /* inside a render: only the USB audio packet (EP4), which */
+        uac_service();                              /* cannot wait for it; nothing usb_poll's own path touches */
 }
 extern void isr_timer5(void);
 
@@ -176,27 +183,31 @@ static void ota_commit(const uint8_t *parm)
  * 0x97000 .. 0xA9000). A record is only believed with its magic and checksum (emb_ui.c), so whatever another
  * firmware left there reads as "empty" and the factory scenes load. */
 #define EMB_FL_BASE FL_DATA_LO
-static uint8_t st_buf[0x1000] EMB_POOL;
 
-int emb_hal_store(uint32_t slot, const void *p, uint32_t n)
+#define EMB_FL_SLOTS (ST_AUTO0 + ST_AUTO_N)          /* 22 sectors: 0x97000 .. 0xAD000 */
+int emb_hal_erase(uint32_t slot)                     /* (the sound stops for the erase: IRQs off, ~20..50 ms) */
 {
     uint32_t off = EMB_FL_BASE + slot * 0x1000u, took, f;
     int rc;
-    if (!flash_ok || n > 0x1000u || slot >= 2u + EMB_NSLOT || !FL_STORE_OK(off, 0x1000u))
+    if (!flash_ok || slot >= EMB_FL_SLOTS || !FL_STORE_OK(off, 0x1000u))
         return -1;
-    memcpy(st_buf, p, n);                           /* (the source must be RAM: it is, this copy is the record) */
     f = irq_save();
     audio_silence();
     fm1__led_lines(0);
     rc = FL_FAR(fl_erase4k_ram)(off, &took);
     irq_restore(f);
-    if (!rc)
-        rc = fl_write(off, st_buf, n);
     return rc;
+}
+int emb_hal_write(uint32_t slot, const void *p, uint32_t n)   /* 256-byte pages, IRQs off ~1 ms each: no gap */
+{
+    uint32_t off = EMB_FL_BASE + slot * 0x1000u;
+    if (!flash_ok || n > 0x1000u || slot >= EMB_FL_SLOTS || !FL_STORE_OK(off, n))
+        return -1;
+    return fl_write(off, p, n);                     /* (every caller's record is in RAM, as the flash driver needs) */
 }
 int emb_hal_load(uint32_t slot, void *p, uint32_t n)
 {
-    if (!flash_ok || n > 0x1000u || slot >= 2u + EMB_NSLOT)
+    if (!flash_ok || n > 0x1000u || slot >= EMB_FL_SLOTS)
         return -1;
     return st_read(EMB_FL_BASE + slot * 0x1000u, p, n);
 }

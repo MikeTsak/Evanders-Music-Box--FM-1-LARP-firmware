@@ -169,22 +169,38 @@ static inline int32_t saw_blep(uint32_t ph, uint32_t inc, uint32_t r)
 }
 
 /* ------------------------------------------------------------------ instruments */
-enum { ENG_PLUCK, ENG_BOW, ENG_CHOIR, ENG_WIND, ENG_ORGAN, ENG_DRUM };
+enum { ENG_PLUCK, ENG_BOW, ENG_CHOIR, ENG_WIND, ENG_ORGAN, ENG_DRUM, ENG_SYNTH, ENG_FM };
 static const uint8_t INST_ENG[I_COUNT] = {
     ENG_DRUM, ENG_DRUM, ENG_DRUM,
     ENG_PLUCK, ENG_PLUCK, ENG_PLUCK, ENG_PLUCK, ENG_PLUCK,
     ENG_CHOIR, ENG_BOW, ENG_BOW, ENG_BOW,
     ENG_WIND, ENG_WIND, ENG_WIND, ENG_WIND,
-    ENG_ORGAN, ENG_ORGAN, ENG_ORGAN, ENG_ORGAN};
+    ENG_ORGAN, ENG_ORGAN, ENG_ORGAN, ENG_ORGAN,
+    ENG_SYNTH, ENG_SYNTH, ENG_SYNTH, ENG_SYNTH, ENG_SYNTH,
+    ENG_FM, ENG_FM, ENG_FM,
+    ENG_DRUM};
 
 const char *const emb_inst_name[I_COUNT] = {
     "TAVERN KIT", "WAR KIT", "RITUAL KIT",
     "PHYS HARP", "LUTE", "NYLON GTR", "KOTO", "PSALTERY",
     "CHOIR", "HURDY GURDY", "BAGPIPE", "LOW CELLO",
     "PAN FLUTE", "RECORDER", "SHAWM", "WAR BRASS",
-    "ORGANETTO", "POSITIVE", "CATHEDRAL", "TONEWHEEL"};
+    "ORGANETTO", "POSITIVE", "CATHEDRAL", "TONEWHEEL",
+    "SAW LEAD", "SQUARE LEAD", "SUPERSAW", "SYNTH PAD", "ACID BASS",
+    "FM E-PIANO", "FM BELL", "FM BASS",
+    "ELECTRO KIT"};
 const char *const emb_drum_name[DR_COUNT] = {"BODHRAN", "FRAME DRUM", "TAMBOURINE", "ANVIL",
                                              "TIMPANI", "WAR DRUM", "CLACK", "GONG"};
+const char *const emb_drum_name_e[DR_COUNT] = {"KICK", "SNARE", "CLAP", "CLOSED HAT",
+                                               "OPEN HAT", "LOW TOM", "HIGH TOM", "COWBELL"};
+int emb_inst_is_drum(uint32_t inst) { return inst < I_COUNT && INST_ENG[inst] == ENG_DRUM; }
+
+/* the subtractive bank: filter resonance (damping, Q15: lower rings more) and filter-envelope decay, ms */
+static const uint16_t SYN_Q[5] = {14000, 16000, 18000, 20000, 5000};
+static const uint16_t SYN_FENV[5] = {400, 300, 800, 1500, 180};
+/* the FM bank: modulator ratio (x/8), FM depth at the strike and at rest (radians x 20860, the phase units
+ * of sin_ph: 2^32 / 2pi / 2^15), and its fall, ms */
+static const uint16_t FM_P[3][4] = {{8, 33400, 5200, 420}, {28, 62000, 10400, 1600}, {8, 52000, 6300, 110}};
 
 /* organ ranks: harmonic multiples in eighths (16' = 4, 8' = 8, 5 1/3' = 12, 4' = 16, 2 2/3' = 24, 2' = 32,
  * 1 3/5' = 40, 1 1/3' = 48, 1' = 64) and the stops each organ draws (Q15) */
@@ -226,8 +242,23 @@ static const uint16_t INST_GAIN[I_COUNT] = {
     14115, 24122, 16788, 15458, 12988,             /* strings: a pluck's energy is all at the start */
     6753, 4969, 3214, 3933,                         /* choir, gurdy, bagpipe, cello */
     2624, 2609, 5057, 3328,                         /* pan flute, recorder, shawm, brass */
-    6339, 7041, 6361, 3732};                        /* organs */
+    6339, 7041, 6361, 3732,                         /* organs */
+    6558, 3798, 11110, 11790, 5383,                 /* subtractive */
+    4684, 5577, 3248,                               /* FM */
+    8192};                                          /* electro kit (per piece: DRUM_GAIN_E) */
 static const uint16_t DRUM_GAIN[DR_COUNT] = {7800, 7000, 5700, 5700, 6100, 7000, 20480, 4900};
+/* the electro kit (MODERN MODE), the same keys: kick, snare, clap, closed hat, open hat, low tom, high tom, cowbell */
+static const drum_t DRUM_E[DR_COUNT] = {
+    {50, {256, 0, 0, 0}, {30000, 0, 0, 0}, {380, 1, 1, 1}, 4000, 3000, 8000, 6, 24 * 256, 35},
+    {185, {256, 410, 0, 0}, {12000, 6000, 0, 0}, {120, 80, 1, 1}, 20000, 3500, 12000, 160, 2 * 256, 20},
+    {1000, {256, 0, 0, 0}, {0, 0, 0, 0}, {1, 1, 1, 1}, 26000, 1200, 9000, 180, 0, 1},
+    {8000, {256, 0, 0, 0}, {0, 0, 0, 0}, {1, 1, 1, 1}, 18000, 5400, 30000, 45, 0, 1},
+    {8000, {256, 0, 0, 0}, {0, 0, 0, 0}, {1, 1, 1, 1}, 16000, 5400, 30000, 280, 0, 1},
+    {110, {256, 0, 0, 0}, {24000, 0, 0, 0}, {300, 1, 1, 1}, 3000, 400, 20000, 40, 5 * 256, 60},
+    {175, {256, 0, 0, 0}, {22000, 0, 0, 0}, {250, 1, 1, 1}, 3000, 600, 20000, 40, 5 * 256, 50},
+    {540, {256, 378, 0, 0}, {12000, 10000, 0, 0}, {220, 180, 1, 1}, 0, 1000, 10000, 1, 0, 1},
+};
+static const uint16_t DRUM_GAIN_E[DR_COUNT] = {6272, 5493, 8494, 11390, 10804, 8489, 9117, 10878};
 
 /* per kit: base pitch (x/256) and decay (x/256) */
 static const uint16_t KIT_TUNE[3][2] = {{280, 200}, {220, 330}, {200, 420}};
@@ -437,12 +468,32 @@ static void voice_start(voice_t *v, const emb_track_t *t, uint32_t inst, uint32_
             v->atk = (int32_t)emb_udiv(12174284u, 120u);
         break;
     }
+    case ENG_SYNTH: {                               /* oscillators -> resonant lowpass, its own envelope */
+        uint32_t s = inst - I_SAW_LEAD;
+        v->r = emb_udiv(0x80000000u, (v->base_inc >> 16) | 1u);
+        v->ph[1] = v->nz;
+        v->ph[2] = v->nz * 13u;
+        v->f1q = SYN_Q[s];
+        v->nz_a = 1 << 24;                          /* the filter envelope */
+        v->nz_k = decay_k(SYN_FENV[s]);
+        break;
+    }
+    case ENG_FM: {                                  /* a carrier, a modulator, the depth falling */
+        const uint16_t *p = FM_P[inst - I_FM_EPIANO];
+        v->inc[1] = (uint32_t)(((uint64_t)v->base_inc * p[0]) >> 3);
+        v->pa[0] = (int32_t)(((uint32_t)p[1] * (64u + tone)) >> 7) << 8;   /* TONE: the FM depth */
+        v->pa[1] = (int32_t)(((uint32_t)p[2] * (64u + tone)) >> 7) << 8;
+        v->pk[0] = decay_k(p[3]);
+        break;
+    }
     case ENG_DRUM: {
-        const drum_t *d = &DRUM[v->piece];
-        uint32_t kit = inst <= I_RITUAL_KIT ? inst : 0, tune = KIT_TUNE[kit][0], dec = KIT_TUNE[kit][1];
-        uint32_t base = v->piece == DR_TIMPANI || v->piece == DR_GONG ? v->base_inc :
+        uint32_t electro = inst == I_ELECTRO_KIT;
+        const drum_t *d = electro ? &DRUM_E[v->piece] : &DRUM[v->piece];
+        uint32_t kit = inst <= I_RITUAL_KIT ? inst : 0, tune = electro ? 256u : KIT_TUNE[kit][0],
+                 dec = electro ? 256u : KIT_TUNE[kit][1];
+        uint32_t base = !electro && (v->piece == DR_TIMPANI || v->piece == DR_GONG) ? v->base_inc :
                         (uint32_t)(((uint64_t)d->hz * 97391u * tune) >> 8);   /* Hz -> inc: 2^32 / FS = 97391 */
-        if (v->piece == DR_TIMPANI || v->piece == DR_WAR)
+        if (!electro && (v->piece == DR_TIMPANI || v->piece == DR_WAR))
             dec = dec + 100u;
         v->base_inc = base;
         for (i = 0; i < 4u; i++) {
@@ -458,11 +509,13 @@ static void voice_start(voice_t *v, const emb_track_t *t, uint32_t inst, uint32_
         v->pdrop_k = (int32_t)decay_k(d->drop_ms);
         v->atk = 1 << 24;
         v->sus = 0;
-        v->dk = decay_k(((uint32_t)d->dec[0] * dec) >> 7);   /* the whole voice: twice the main mode */
+        /* the whole voice: twice its longest part (a clap or a hat is all noise) */
+        v->dk = decay_k(((uint32_t)(d->dec[0] > d->n_dec ? d->dec[0] : d->n_dec) * dec) >> 7);
         break;
     }
     }
-    v->vel = (int32_t)(((int64_t)vel_q15 * (eng == ENG_DRUM ? DRUM_GAIN[v->piece & 7u] : INST_GAIN[inst])) >> 13);
+    v->vel = (int32_t)(((int64_t)vel_q15 * (eng != ENG_DRUM ? INST_GAIN[inst] : inst == I_ELECTRO_KIT ?
+                                            DRUM_GAIN_E[v->piece & 7u] : DRUM_GAIN[v->piece & 7u])) >> 13);
 }
 
 static void voice_release(voice_t *v)
@@ -511,7 +564,7 @@ static uint32_t voice_inc(voice_t *v, int32_t vib_q15)
         x = v->pdrop;
         v->pdrop = (int32_t)(((int64_t)v->pdrop * v->pdrop_k) >> 16);
     }
-    if (v->eng == ENG_BOW || v->eng == ENG_CHOIR || v->eng == ENG_WIND)
+    if (v->eng == ENG_BOW || v->eng == ENG_CHOIR || v->eng == ENG_WIND || v->eng == ENG_SYNTH)
         x += cents_oct((vib_q15 * vib_depth) >> 15);
     if (v->wob_amt) {
         v->wob_ph += v->wob_inc;
@@ -526,7 +579,7 @@ static void voice_run(voice_t *v, int32_t *out, int32_t gain_q15)
     uint32_t i, inc = 0;
     int32_t e0 = v->env0 >> 9, de = ((v->env >> 9) - e0) >> 5;   /* Q15, the ramp over the block */
     int32_t g = mul15(v->vel, gain_q15);
-    if (v->eng == ENG_BOW || v->eng == ENG_CHOIR || v->eng == ENG_WIND)
+    if (v->eng == ENG_BOW || v->eng == ENG_CHOIR || v->eng == ENG_WIND || v->eng == ENG_SYNTH)
         inc = voice_inc(v, sin_ph(vib_ph));
     switch (v->eng) {
     case ENG_PLUCK: {
@@ -661,7 +714,7 @@ static void voice_run(voice_t *v, int32_t *out, int32_t gain_q15)
                     s += mul15(sin_ph(v->ph[k]), amp[k]);
                     v->ph[k] += pinc[k];
                 }
-            if (v->piece == DR_TAMB)                /* jingles: the partials ring-modulate the noise */
+            if (v->piece == DR_TAMB && v->inst != I_ELECTRO_KIT)   /* jingles: the partials ring-modulate the noise */
                 s = mul15(s, n) * 3;
             s += mul15(svf_bp(&v->f1, n, v->f1f, v->f1q), n_a);
             out[i] += mul15(mul15(s, e0 + de * (int32_t)i), g);
@@ -669,6 +722,44 @@ static void voice_run(voice_t *v, int32_t *out, int32_t gain_q15)
         for (k = 0; k < 4; k++)
             v->pa[k] = (int32_t)(((int64_t)v->pa[k] * v->pk[k]) >> 16);
         v->nz_a = (int32_t)(((int64_t)v->nz_a * v->nz_k) >> 16);
+        break;
+    }
+    case ENG_SYNTH: {
+        uint32_t s = v->inst - I_SAW_LEAD, inc2 = inc + (inc >> 8), inc3 = inc - (inc >> 8);   /* +-6.8 cents */
+        int32_t fenv = v->nz_a >> 9, hz, f;         /* (Q15) */
+        hz = 80 + ((int32_t)v->tone * v->tone) / 3 + (int32_t)((((int64_t)v->chr * v->chr * 64) * fenv) >> 22);
+        f = svf_f(hz);
+        for (i = 0; i < EMB_CTL; i++) {
+            int32_t o;
+            if (s == 1u)                            /* square: two saws half a cycle apart */
+                o = saw_blep(v->ph[0], inc, v->r) - saw_blep(v->ph[0] + 0x80000000u, inc, v->r);
+            else if (s == 2u)                       /* supersaw: three, spread */
+                o = ((saw_blep(v->ph[0], inc, v->r) + saw_blep(v->ph[1], inc2, v->r) +
+                      saw_blep(v->ph[2], inc3, v->r)) * 10923) >> 15;
+            else if (s == 3u)                       /* pad: two, gently apart */
+                o = (saw_blep(v->ph[0], inc, v->r) + saw_blep(v->ph[1], inc + (inc >> 9), v->r)) >> 1;
+            else
+                o = saw_blep(v->ph[0], inc, v->r);
+            v->ph[0] += inc;
+            v->ph[1] += s == 3u ? inc + (inc >> 9) : inc2;
+            v->ph[2] += inc3;
+            svf_bp(&v->f1, o >> 1, f, v->f1q);
+            o = clampi(v->f1.lp, -40000, 40000);
+            out[i] += mul15(mul15(o, e0 + de * (int32_t)i), g);
+        }
+        v->nz_a = (int32_t)(((int64_t)v->nz_a * v->nz_k) >> 16);
+        break;
+    }
+    case ENG_FM: {
+        int32_t idx = v->pa[0] >> 8;
+        for (i = 0; i < EMB_CTL; i++) {
+            int32_t m = sin_ph(v->ph[1]);
+            int32_t s = sin_ph(v->ph[0] + (uint32_t)(m * idx));
+            v->ph[0] += v->base_inc;
+            v->ph[1] += v->inc[1];
+            out[i] += mul15(mul15(s, e0 + de * (int32_t)i), g);
+        }
+        v->pa[0] = v->pa[1] + (int32_t)(((int64_t)(v->pa[0] - v->pa[1]) * v->pk[0]) >> 16);
         break;
     }
     }

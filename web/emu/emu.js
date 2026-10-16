@@ -149,7 +149,7 @@ function buildPanel() {
     $("btns").append(b);
   }
   for (let w = 0; w < 16; w++) {
-    const k = el("div", w % 4 === 0 ? "key group" : "key");   // 1, 5, 9, 13: Encounter's scene groups
+    const k = el("div", w % 4 === 0 ? "key group" : "key");   // 1, 5, 9, 13: Encounter's counting marks
     k.tabIndex = 0;
     k.setAttribute("aria-label", `white key ${w + 1}`);
     k.append(el("span", "", ""));
@@ -217,14 +217,17 @@ function bindKeyboard(turners) {
 const KEY = (slot) => `emb.slot.${slot}`;
 function loadStored() {
   const out = {};
-  for (let s = 0; s < 2 + 16; s++) {
+  for (let s = 0; s < 2 + 16 + 4; s++) {           // settings, workbench, 16 scenes, the 4 autosave slots
     const b64 = localStorage.getItem(KEY(s));
     if (b64) try { out[s] = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); } catch (_) { /* a broken entry: ignore */ }
   }
   return out;
 }
 function store(slot, bytes) {
-  try { localStorage.setItem(KEY(slot), btoa(String.fromCharCode(...bytes))); } catch (_) { /* private mode: nothing kept */ }
+  try {
+    if (!bytes.length) localStorage.removeItem(KEY(slot));   // an erase
+    else localStorage.setItem(KEY(slot), btoa(String.fromCharCode(...bytes)));
+  } catch (_) { /* private mode: nothing kept */ }
 }
 
 // ---------------------------------------------------------------- the screen and the LEDs
@@ -278,7 +281,7 @@ async function wake() {
   $("wakeBtn").disabled = true;
   try {
     ctx = new AudioContext({ sampleRate: 44100, latencyHint: "interactive" });
-    const bust = "v=1.4.1&t=" + Date.now();
+    const bust = "v=1.5.2&t=" + Date.now();
     const [wasm] = await Promise.all([
       fetch("emb.wasm?" + bust, { cache: "no-store" }).then((r) => {
         if (!r.ok) throw new Error("emb.wasm: HTTP " + r.status);
@@ -293,7 +296,7 @@ async function wake() {
       if (m.type === "frame") {
         if (m.fb) showFrame(m.fb);
         showLeds(m.leds);
-        $("meters").textContent = `v1.4.1   voices ${m.voices}   peak ${(20 * Math.log10(Math.max(1, m.peak) / 32768)).toFixed(1)} dBFS   ${ctx.sampleRate} Hz`;
+        $("meters").textContent = `v1.5.2   voices ${m.voices}   peak ${(20 * Math.log10(Math.max(1, m.peak) / 32768)).toFixed(1)} dBFS   ${ctx.sampleRate} Hz`;
       } else if (m.type === "store") {
         store(m.slot, m.bytes);
       } else if (m.type === "sysex") {

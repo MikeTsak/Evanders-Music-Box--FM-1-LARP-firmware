@@ -1,6 +1,6 @@
 <p align="center">
   <img src="assets/bluerose.png" width="160" alt="The Blue Rose of Mother Melody"><br>
-  <b>v1.4.1</b>
+  <b>v1.5.2</b>
 </p>
 
 <h1 align="center">Evander's Music Box</h1>
@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/firmware-v1.4.1-blue?style=flat-square" alt="Version 1.4.1">
+  <img src="https://img.shields.io/badge/firmware-v1.5.2-blue?style=flat-square" alt="Version 1.5.2">
   <img src="https://img.shields.io/badge/hardware-M--VAVE%20FM--1-lightgrey?style=flat-square" alt="Hardware M-VAVE FM-1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-orange?style=flat-square" alt="License GPL-3.0"></a>
   <a href="https://miketsak.gr"><img src="https://img.shields.io/badge/author-Michail%20Tsakiroglou-blueviolet?style=flat-square" alt="Made by Michail Tsakiroglou"></a>
@@ -52,17 +52,21 @@
 
 Most synthesizers belong on a studio desk or a stage stand. Evander's Box was forged for the mud, costumes, leather armor, and campfires of live roleplay. It turns your FM-1 into the sacred relic of Evander, Elven Bard of Mother Melody. By day it scores live skirmishes and boss battles strapped directly to your forearm or bracers; by night around the tavern fire it is a four-track acoustic composition workshop.
 
-There are **zero modern synth bleeps or electronic sweeps**. Every voice is an authentic acoustic physical model tuned for historical and fantasy settings: hurdy-gurdy with buzzing trompette, physical harps, lutes, psaltery, shawms, bagpipes, cathedral choirs, and bodhrán war drums.
+Out of the box there are **no modern synth bleeps or electronic sweeps**. Every voice is an authentic acoustic physical model tuned for historical and fantasy settings: hurdy-gurdy with buzzing trompette, physical harps, lutes, psaltery, shawms, bagpipes, cathedral choirs, and bodhrán war drums. (A bard who knows the secret chord can unlock a modern bank: see [Modern Mode](MANUAL.md#modern-mode-a-secret).)
 
 It features two distinct operational modes:
 
 - **Bardic Crafting.** A four-track medieval workshop: war drums, drones, plucked strings and winds. It has a
   64-step sequencer with microtiming and parameter locks, live looping, modal scales and historical
   temperaments.
-- **Encounter.** For live roleplay, with the unit strapped to the forearm. Four lit keys are the four scene
-  groups (rest, explore, combat, climax). The sharps after each group key play its variations, so there are
-  sixteen soundtracks, from tavern to boss fight. A scene changes on the next bar with a crossfade. The other
-  white keys bend the battle: Phrygian dread, a key change, half time, a breakdown, a stinger.
+- **Encounter.** For live roleplay, with the unit strapped to the forearm. The sixteen white keys are sixteen
+  scenes, from tavern to boss fight; a scene changes on the next bar with a crossfade. Once one is chosen, the
+  eleven black keys bend it: Phrygian dread, a key change, half time, a breakdown, a stinger. Tap **SEQ** for
+  **Freestyle**: every key plays a melody over the scene, always in its scale.
+
+Across both modes: a **Scale Lock** (hold GLO + a key) that keeps every note in one scale like a harmonica, a
+**knob HUD** that names what each knob changes, **autosave** every 30 seconds so the Box wakes where it was
+left, and **USB audio and MIDI** with no driver, to record straight into a DAW or Audacity.
 
 The same C core runs on the FM-1, compiled to WebAssembly in the browser emulator, and natively in a host
 self-test.
@@ -79,13 +83,16 @@ self-test.
 
 | | Bardic Crafting | Encounter |
 | --- | --- | --- |
-| **Keys** | play the selected track, snapped to the mode | white 1 · 5 · 9 · 13: the scene groups · the sharps after each: its variations II-IV (hold the group key: IV) · the other whites: 12 battle modifiers |
+| **Keys** | play the selected track, snapped to the mode | white 1-16: the scenes · black: 11 variations of the chosen scene · SEQ: Freestyle, every key in key |
 | **Tracks** | 1 drums · 2 drone · 3 strings · 4 lead, any instrument on 2-4 | each scene is a four-track song |
 | **Sequencer** | 64 steps, 4 notes a step, microtiming ±½ step, TONE p-locks, swing, live record (REC) | plays the scenes |
 | **Timing** | free | changes quantized to beat / bar / 2 bars / 4 bars, crossfade 0-8 beats |
 | **Control** | pages: SANCTUARY, ENVELOPE, MOTION, VOICE, MODES, STEPS | K1 intensity · K2 tempo · K3 hall · K4 music level |
 | **Safety** | HOME + REC (hold 0.4 s): purge the loop, undoable | HOME + REC (hold): silence |
 | **Switch** | **HOME + PLAY**: either way, the music never stops | |
+| **Scale Lock** | hold **GLO** + a key: root and scale (same root again: next scale; GLO + ENV: off) (major, minor, Dorian, diminished, pentatonic…); every engine and track snaps | same, scenes and freestyle included |
+| **Memory** | autosave every 30 s: steps, loops, instruments, settings, mode; boots where it was left | |
+| **Computer** | class-compliant USB MIDI + USB audio (UAC1, 16-bit stereo): no driver | |
 
 **Instruments (20):** TAVERN / WAR / RITUAL drum kits, each with bodhrán, frame drum, tambourine, anvil,
 timpani (tuned), war drum, clack and gong · PHYS HARP, LUTE, NYLON GTR, KOTO, PSALTERY (Karplus-Strong strings
@@ -93,6 +100,10 @@ with three sympathetic strings per track) · CHOIR, HURDY GURDY (with a trompett
 BAGPIPE, LOW CELLO · PAN FLUTE, RECORDER, SHAWM, WAR BRASS (breath noise, chiff, reed saturation) · ORGANETTO,
 POSITIVE, CATHEDRAL pipe organs, and the modern **TONEWHEEL** organ with four drawbar groups and a **Leslie**
 rotor that spins up and slows down (EDIT + GLO).
+
+**Modern Mode** (HOME + FX + GLO, kept through power-off) adds ten more: SAW LEAD, SQUARE LEAD, SUPERSAW,
+SYNTH PAD and ACID BASS (subtractive, with a resonant filter and filter envelope), FM E-PIANO, FM BELL and FM
+BASS (two-operator FM), and an ELECTRO KIT for the drum track.
 
 Every voice has details taken from the real instrument:
 
@@ -123,13 +134,14 @@ with 0.73 ms of look-ahead. Peaks are turned down smoothly instead of squared of
 | NORMAL | −3 dBFS |
 | SAFE | −6 dBFS, Felucca's own level, for a speaker that crackles near full scale |
 
-**Tuning:** eight modes (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, harmonic minor, Phrygian
-dominant). Four temperaments relative to the root: equal, Pythagorean, quarter-comma meantone, 5-limit just.
-New songs default to D Dorian, Pythagorean, with snapping on.
+**Tuning:** eleven scales (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, harmonic minor, Phrygian
+dominant, diminished, pentatonic major and minor). Four temperaments relative to the root: equal, Pythagorean,
+quarter-comma meantone, 5-limit just. New songs default to D Dorian, Pythagorean, with snapping on.
 
 **Reactive LEDs:** scale notes glow, roots shine at half light, and out-of-scale keys stay dark. In Encounter
-only the four group keys are lit while idle. PLAY pulses on the beat, a queued scene blinks, and active
-modifiers light up. See [MANUAL.md](MANUAL.md#v-the-lights-in-the-dark).
+the scene keys glow (1 · 5 · 9 · 13 brighter, to count by), the playing scene is lit and a queued one blinks;
+the sharps wake once a scene is chosen, and a variation's sharp stays lit while it holds. PLAY pulses on the
+beat. See [MANUAL.md](MANUAL.md#v-the-lights-in-the-dark).
 
 **The screen:** flat bold colour blocks on ink, hard shadows, a pixel font and pixel-art sprites for the scene
 groups. Every screen has these, and the volume card appears whenever MASTER is turned:
@@ -140,6 +152,8 @@ groups. Every screen has these, and the volume card appears whenever MASTER is t
 | knob strip | four chips in the knobs' own colours |
 | tips footer | changes with what you're doing; key names are drawn as keycaps |
 | volume card | appears when MASTER turns, and leaves a second after it stops |
+| knob HUD | names what K1-K4 change (*REVERB DECAY*, *FILTER CUTOFF*…) with the value, for a second |
+| lock picker | while GLO is held: the keyboard, with the root or scale each key sets |
 
 **The web suite (`web/`):** an emulator of the whole firmware in an AudioWorklet, a WebMIDI installer for the
 `.fwsc` package (resume after interruption, return to official V15), and a preset console (backup and restore,
@@ -151,12 +165,12 @@ groups. Every screen has these, and the volume card appears whenever MASTER is t
 src/
   emb.h             the core's whole interface: types, controls, the platform hooks
   emb.c             unity build of the core (one compilation unit, as Felucca builds)
-  emb_dsp.c         fixed-point voices, sympathetic strings, Leslie, SANCTUARY reverb
-  emb_engine.c      two decks, clock, sequencer, microtiming, live loop, purge, modifiers, mixer, limiter
+  emb_dsp.c         fixed-point voices, sympathetic strings, Leslie, subtractive + FM engines, SANCTUARY reverb
+  emb_engine.c      two decks, clock, sequencer, microtiming, live loop, purge, variations, scale lock, freestyle, mixer, limiter
   emb_scenes.c      the 16 factory scenes (pattern strings) and instrument defaults
   emb_gfx.c         240x240 RGB565 drawing, 5x7 font, sprites, battery, the crest, the Blue Rose, the boot
-  emb_ui.c          both modes, every shortcut, LEDs, screens, tips, volume card, persistence, MIDI, SysEx
-  platform/fm1.c    the FM-1: boot, ISRs, I2S DMA, key matrix, LCD, flash, USB-MIDI, updates
+  emb_ui.c          both modes, every shortcut, LEDs, screens, tips, HUDs, autosave, MIDI, SysEx
+  platform/fm1.c    the FM-1: boot, ISRs, I2S DMA, key matrix, LCD, flash, USB MIDI + audio, updates
   platform/wasm.c   the browser: exports for the AudioWorklet
   platform/host.c   self-test, WAV renderer, screenshots
 upstream/felucca    git submodule, Felucca v1.6.1 (GPL-3.0-only): the FM-1 HAL, USB, OTA, update loader, packager
@@ -180,7 +194,7 @@ a purge clears a track in place. On a desktop core the busiest scene renders at 
 
 **Two decks.** Encounter changes are crossfades between two decks that share one voice pool. The queued scene
 starts on the next quantize boundary, and the old deck fades over the crossfade length and then releases its
-voices. Modifiers wait for the next beat. A modifier pressed while a scene is queued waits for that scene and
+voices. Variations wait for the next beat. A variation pressed while a scene is queued waits for that scene and
 lands on it. Intensity (drone → +drums → +strings → full host) gates track gains with a 25 ms slew, so nothing
 clicks.
 
@@ -209,8 +223,16 @@ If a run ends badly, the next boot screen names why on a pink line:
 | `LAST RESET: WATCHDOG` | a hang |
 
 **Persistence.** The settings, the workbench and the sixteen scenes take one 4 KiB flash sector each, in
-Felucca's data area (`0x97000`, 18 sectors). A record is believed only if its magic and checksum agree, so
-anything another firmware left there reads as empty and the factory scenes load.
+Felucca's data area from `0x97000`; four more sectors (to `0xAD000`) are an autosave ring holding the whole
+state with a sequence number. A record is believed only if its magic and checksum agree, so anything another
+firmware left there reads as empty and the factory scenes load. Erasing a NOR sector stops the sound for
+20-50 ms, so the ring is erased only while the Box is stopped and idle and written (page writes, no gap) into
+blank sectors while it plays; only after two minutes of unsaved changes mid-song does it take that gap.
+
+**USB audio.** Felucca's `usb.c` is built with its UAC1 interface on: the master output is tapped block by block
+inside the audio interrupt into its USB ring, and the isochronous endpoint is serviced from the timer tick even
+during a render. The FM-1 then shows up as an audio input and a MIDI port named *Felucca* on any computer.
+**Not yet confirmed on a unit.**
 
 ## Flashing
 
@@ -266,13 +288,18 @@ python3 tools/build.py fw           # the FM-1 package (JieLi pi32v2 toolchain +
 - the step editor, the organ toggle, and every page drawing
 - the SysEx protocol round trip and factory restore
 - the boot animation's full length after an even first tick
-- the Encounter key map: every scene reachable, no key doubled, a held group key cueing variation IV, and a
-  modifier landing on the scene it waited for
-- the volume card: it shows on a turn, ignores pot jitter, and leaves a second later
+- the Encounter key map: all 16 scenes on the white keys, the sharps silent until a scene is chosen, then each a
+  distinct variation, and a variation landing on the scene it waited for
+- Freestyle: notes in the scene's scale, the lead track stepping aside, momentary SEQ
+- the Scale Lock: every key and scene note in the locked scale, the root kept in the scene's register
+- Modern Mode: the chord toggles it, the modern bank is hidden without it, and tracks fall back when it closes
+- autosave: a reboot restores the workbench, settings and mode, and no sector is erased while playing
+- the volume card and knob HUD: they show on a turn, ignore pot jitter, and leave a second later
 - the limiter: at full MASTER on the loudest scene, no sample passes the ceiling
 
 Every melodic instrument was measured in tune (≤ 2 cents; the cathedral and tonewheel organs also sound their
-16′ rank, an octave down, as real ones do). Each was level-matched to −14 dBFS, averaged over four notes. The web
+16′ rank, an octave down, as real ones do). Each, the modern bank included, was level-matched to −14 dBFS,
+averaged over four notes. The web
 pages were checked in Chrome: the emulator plays its boot animation, switches mode, and cues a scene. It also
 shows the volume card when MASTER is turned. The installer and console load. `tools/build.py wav 13 30` renders
 the boss fight to a WAV, and `tools/build.py shots` writes screenshots.

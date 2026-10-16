@@ -29,7 +29,8 @@ void *memset(void *d, int c, unsigned long n)
     return d;
 }
 
-int emb_hal_store(uint32_t slot, const void *p, uint32_t n) { return js_store(slot, p, n); }
+int emb_hal_erase(uint32_t slot) { return js_store(slot, 0, 0); }   /* (an empty entry loads as nothing) */
+int emb_hal_write(uint32_t slot, const void *p, uint32_t n) { return js_store(slot, p, n); }
 int emb_hal_load(uint32_t slot, void *p, uint32_t n) { return js_load(slot, p, n); }
 
 static int32_t audio[2 * 128];

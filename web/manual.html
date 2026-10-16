@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Field Manual — Evander's Music Box (FM-1 LARP Firmware)</title>
-<meta name="description" content="Complete field manual for Evander's Music Box on the M-VAVE FM-1. Controls, Bardic Crafting workshop, Encounter live scoring, battle modifiers, LED guide, and shortcuts.">
+<meta name="description" content="Complete field manual for Evander's Music Box on the M-VAVE FM-1. Controls, Bardic Crafting workshop, Encounter live scoring with variations and Freestyle, Scale Lock, autosave, USB audio, LED guide, and shortcuts.">
 <meta name="keywords" content="M-VAVE FM-1 manual, LARP synth, Evander's Box, medieval pocket synth, Cuvave FM-1, bardic crafting, encounter mode, field manual">
 <link rel="canonical" href="https://fm1.miketsak.gr/manual.html">
 <meta name="author" content="Michail Tsakiroglou (miketsak.gr)">
@@ -23,7 +23,7 @@
 <link rel="icon" href="rose.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1.4.1">
+<link rel="stylesheet" href="style.css?v=1.5.2">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -41,7 +41,7 @@
     <img src="rose.png" alt="The Blue Rose of Mother Melody">
     <div>
       <h1>The Field Manual</h1>
-      <p>Evander's Music Box &middot; FM-1 LARP Firmware &middot; <span class="tag" style="margin-bottom:0; vertical-align:middle; padding:3px 7px;">v1.4.1</span></p>
+      <p>Evander's Music Box &middot; FM-1 LARP Firmware &middot; <span class="tag" style="margin-bottom:0; vertical-align:middle; padding:3px 7px;">v1.5.2</span></p>
     </div>
   </header>
 
@@ -100,8 +100,8 @@ HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
       <div class="card" style="margin-bottom:0;">
         <span class="tag">27 Keyboard Keys</span>
         <ul>
-          <li><b>16 White Keys:</b> Counted 1 to 16 left-to-right. Play notes in Crafting; cue the 4 scene groups and 12 battle modifiers in Encounter.</li>
-          <li><b>11 Black Keys:</b> Marked <code>OP1 OP2 OP3 OP4 OP5 OP6 PIT GLO MONO POLY</code> and unlabelled <code>TOP</code>. Ghost drum hits in Crafting; variations II&ndash;IV in Encounter.</li>
+          <li><b>16 White Keys:</b> Counted 1 to 16 left-to-right. Play notes in Crafting; cue the 16 scenes in Encounter.</li>
+          <li><b>11 Black Keys:</b> Marked <code>OP1 OP2 OP3 OP4 OP5 OP6 PIT GLO MONO POLY</code> and unlabelled <code>TOP</code>. Ghost drum hits in Crafting; the 11 variations of the chosen scene in Encounter.</li>
         </ul>
       </div>
     </div>
@@ -111,7 +111,7 @@ HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
     <blockquote class="lore" style="border-left-color: var(--blue);">
       <p><b>EVANDER'S MUSIC BOX &mdash; MOTHER MELODY HEARS THY SONG</b></p>
     </blockquote>
-    <p class="muted">A light wave sweeps across the keys. Tapping any button after 0.5 s skips the animation. The Box wakes into <b>Bardic Crafting</b> with your last saved session intact.</p>
+    <p class="muted">A light wave sweeps across the keys. Tapping any button after 0.5 s skips the animation. The Box wakes <b>exactly where you left it</b>: the same mode, track and Scale Lock, with every song and loop (it keeps itself every 30 seconds).</p>
   </section>
 
   <!-- Chapter II -->
@@ -238,6 +238,61 @@ HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
       </table>
     </div>
 
+    <h3>Scale Lock: Playing Like a Harmonica</h3>
+    <p>The <b>Scale Lock</b> holds every note of the Box in one scale: the keys, the sequencer, the Encounter scenes, freestyle and MIDI notes. With it on, a wrong note cannot be played. <b>Hold <kbd>GLO</kbd></b> and the glass shows the keyboard with what each key sets; while GLO is held, keys do not play.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Hold <kbd>GLO</kbd> +</th><th>Sets</th></tr></thead>
+        <tbody>
+          <tr><td>a key from <b>F3 to E4</b> (the left twelve, white and black)</td><td>the <b>root</b>: the key's own note</td></tr>
+          <tr><td><kbd>F4</kbd> &middot; <kbd>G4</kbd> &middot; <kbd>A4</kbd> &middot; <kbd>B4</kbd></td><td><b>MAJOR</b> &middot; <b>MINOR</b> &middot; <b>DORIAN</b> &middot; <b>PHRYGIAN</b></td></tr>
+          <tr><td><kbd>C5</kbd> &middot; <kbd>D5</kbd> &middot; <kbd>E5</kbd></td><td><b>LYDIAN</b> &middot; <b>MIXOLYDIAN</b> &middot; <b>HARMONIC MINOR</b></td></tr>
+          <tr><td><kbd>F5</kbd> &middot; <kbd>G5</kbd></td><td><b>PENTATONIC MAJOR</b> &middot; <b>PENTATONIC MINOR</b></td></tr>
+          <tr><td><kbd>F#4</kbd> &middot; <kbd>G#4</kbd> (black)</td><td><b>DIMINISHED</b> (whole-half) &middot; <b>PHRYGIAN DOMINANT</b></td></tr>
+          <tr><td><kbd>F#5</kbd> (black)</td><td><b>lock off</b></td></tr>
+          <tr><td><kbd>ENV</kbd> (button)</td><td><b>lock off</b>: back to the normal scale of the song or scene</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul>
+      <li>Sequenced notes and scenes move into the lock's scale degree by degree, so a melody keeps its shape; a scene keeps its own register.</li>
+      <li><b>Press the same root key again</b> to step through the scales: C MAJOR &rarr; C MINOR &rarr; C DORIAN &rarr; Phrygian &rarr; Lydian &rarr; Mixolydian &rarr; harmonic &rarr; penta major &rarr; penta minor &rarr; diminished &rarr; Phrygian dominant, then round again. A new root keeps the scale.</li>
+      <li>Live keys outside the scale play the scale note just below. Drums are untouched; timpani and gong tune to the root.</li>
+      <li>While the lock is on, <kbd>GLO</kbd> is half-lit and the header reads <i>LOCK</i> with the key. Tapping GLO alone still opens the Modes page.</li>
+    </ul>
+
+    <h3>The Knob HUD</h3>
+    <p>Turn any of <kbd>K1</kbd>&ndash;<kbd>K4</kbd>, on any page, in either mode, and a card in the knob's own colour names exactly what it changes and shows the value (<i>TRACK 2 LEVEL</i>, <i>REVERB DECAY</i>, <i>FILTER CUTOFF</i>, <i>INTENSITY</i>&hellip;). It leaves a second after the knob stops.</p>
+
+    <h3>Modern Mode (a Secret)</h3>
+    <blockquote class="lore"><p>Some bards travel further than others.</p></blockquote>
+    <p>Press <kbd>HOME</kbd> + <kbd>FX</kbd> + <kbd>GLO</kbd> together and the glass says <i>MODERN MODE UNLOCKED</i>. <kbd>PRESETS</kbd> now steps through a modern bank as well:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Instrument</th><th>Engine</th><th>TONE / CHARACTER</th></tr></thead>
+        <tbody>
+          <tr><td>TONEWHEEL</td><td>drawbar organ through a Leslie</td><td>(drawbars)</td></tr>
+          <tr><td>SAW LEAD, SQUARE LEAD, SUPERSAW, SYNTH PAD, ACID BASS</td><td>subtractive: oscillators, resonant lowpass, filter envelope</td><td>filter cutoff / filter envelope</td></tr>
+          <tr><td>FM E-PIANO, FM BELL, FM BASS</td><td>two-operator FM</td><td>FM depth / character</td></tr>
+          <tr><td>ELECTRO KIT (drum track)</td><td>kick, snare, clap, closed and open hat, low and high tom, cowbell</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Press the chord again (<i>BACK TO THE OLD WAYS</i>) to hide them; tracks playing a modern sound return to the harp (drums to the tavern kit). The choice survives power-off.</p>
+
+    <h3>Keeping Songs (Autosave)</h3>
+    <p><b>You never need to save the workbench.</b> Every 30 seconds, if anything changed, the Box keeps every step, loop, instrument and setting (Scale Lock and Modern Mode included), plus the mode, track, octaves, last scene, tempo and music volume. At power-on it wakes exactly there; the footer says <i>KEPT: AUTOSAVED</i> after each save.</p>
+    <p class="muted">Clearing a flash sector silences the FM-1 for a few hundredths of a second, so the Box clears sectors only while stopped and untouched, and saves into blank ones while you play. Only after two minutes of unsaved changes without ever stopping will it take that short gap mid-song.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gesture</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>Hold <kbd>SAVE</kbd> 1 s</td><td>Keep everything <b>now</b></td></tr>
+          <tr><td>Hold <kbd>SAVE</kbd> + white key</td><td><b>Bind</b> the workbench to that Encounter scene (1&ndash;16)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <h3>The Battle Purge (Panic Recovery)</h3>
     <div class="table-wrap">
       <table>
@@ -254,71 +309,94 @@ HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
   <section class="card chapter-anchor" id="ch4">
     <h2>IV. Encounter: the Herald</h2>
     <blockquote class="lore">
-      <p>When the Box is strapped to the forearm in armor or robes, Evander does not compose. He calls. Four lit keys hold the four moods of the field, and the sharps beside each one hold its variations. The Box waits for the bar line, then turns the music as a minstrel troupe would.</p>
+      <p>When the Box is strapped to the forearm in armor or robes, Evander does not compose. He calls. Each white key is a mood of the field; once one sounds, the sharps bend it. The Box waits for the bar line, then turns the music as a minstrel troupe would.</p>
     </blockquote>
 
-    <h3>The Four Moods &amp; Sixteen Scenes</h3>
+    <h3>The Sixteen Scenes (White Keys)</h3>
+    <p>Each <b>white key is a scene</b>, counted 1 to 16 from the left. Keys 1, 5, 9 and 13 (the first of each mood) are half-lit so you can count in the dark.</p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Group</th><th>Color</th><th>Variation I (Key)</th><th>Variation II</th><th>Variation III</th><th>Variation IV</th></tr></thead>
+        <thead><tr><th>Key</th><th>Scene</th><th>Mood</th><th>What it is</th></tr></thead>
         <tbody>
-          <tr><td><b>REST</b> (Key 1)</td><td>Green</td><td>TAVERN</td><td>CAMPFIRE</td><td>SANCTUARY</td><td>LAMENT</td></tr>
-          <tr><td><b>EXPLORE</b> (Key 5)</td><td>Yellow</td><td>WILDERNESS</td><td>FEY FOREST</td><td>DUNGEON</td><td>SEA ROAD</td></tr>
-          <tr><td><b>COMBAT</b> (Key 9)</td><td>Orange</td><td>SKIRMISH</td><td>BATTLE</td><td>AMBUSH</td><td>SIEGE</td></tr>
-          <tr><td><b>CLIMAX</b> (Key 13)</td><td>Pink</td><td>BOSS</td><td>LAST STAND</td><td>VICTORY</td><td>REQUIEM</td></tr>
+          <tr><td><kbd>1</kbd></td><td><b>TAVERN</b></td><td>REST</td><td>harp, hurdy-gurdy, bodhr&aacute;n, recorder</td></tr>
+          <tr><td><kbd>2</kbd></td><td><b>CAMPFIRE</b></td><td>REST</td><td>lute, slow bodhr&aacute;n, low cello drone, pan flute</td></tr>
+          <tr><td><kbd>3</kbd></td><td><b>SANCTUARY</b></td><td>REST</td><td>choir, portative organ, harp</td></tr>
+          <tr><td><kbd>4</kbd></td><td><b>LAMENT</b></td><td>REST</td><td>koto, cello, a lone pan flute</td></tr>
+          <tr><td><kbd>5</kbd></td><td><b>WILDERNESS</b></td><td>EXPLORE</td><td>distant flute calls over a bagpipe drone</td></tr>
+          <tr><td><kbd>6</kbd></td><td><b>FEY FOREST</b></td><td>EXPLORE</td><td>psaltery cascades, choir, recorder</td></tr>
+          <tr><td><kbd>7</kbd></td><td><b>DUNGEON</b></td><td>EXPLORE</td><td>war drum and anvil, cello, organetto</td></tr>
+          <tr><td><kbd>8</kbd></td><td><b>SEA ROAD</b></td><td>EXPLORE</td><td>a rolling 6/8 feel, shawm and gurdy</td></tr>
+          <tr><td><kbd>9</kbd></td><td><b>SKIRMISH</b></td><td>COMBAT</td><td>driving war drums, tense low cello ostinato</td></tr>
+          <tr><td><kbd>10</kbd></td><td><b>BATTLE</b></td><td>COMBAT</td><td>galloping drums, buzzing gurdy, brass</td></tr>
+          <tr><td><kbd>11</kbd></td><td><b>AMBUSH</b></td><td>COMBAT</td><td>clacks and silence, plucked koto</td></tr>
+          <tr><td><kbd>12</kbd></td><td><b>SIEGE</b></td><td>COMBAT</td><td>timpani, choir, cathedral organ, brass</td></tr>
+          <tr><td><kbd>13</kbd></td><td><b>BOSS</b></td><td>CLIMAX</td><td>full cathedral organ, galloping percussion, brass stabs</td></tr>
+          <tr><td><kbd>14</kbd></td><td><b>LAST STAND</b></td><td>CLIMAX</td><td>war drums, gurdy, shawm, the organ behind</td></tr>
+          <tr><td><kbd>15</kbd></td><td><b>VICTORY</b></td><td>CLIMAX</td><td>fanfare, positive organ, harp</td></tr>
+          <tr><td><kbd>16</kbd></td><td><b>REQUIEM</b></td><td>CLIMAX</td><td>gong, choir, cathedral organ</td></tr>
         </tbody>
       </table>
     </div>
+    <ul>
+      <li><b>Press a white key:</b> it blinks fast and the glass counts down (<i>NEXT</i>). On the next bar the new scene fades in over the old one.</li>
+      <li><b>Press the blinking key again</b> to cancel. Program change 1&ndash;16 over MIDI, or <i>Cue</i> in the Preset Console, does the same.</li>
+    </ul>
 
-    <h3>Reaching Variations</h3>
+    <h3>The Variations (Black Keys)</h3>
+    <p>Once a scene is chosen (playing or queued), <b>all eleven sharps</b> become its variations; before that they stay dark and do nothing. A variation lands on the next beat, and one pressed while a scene is queued waits for that scene. Choosing a new scene clears them all. A variation's sharp stays <b>lit</b> while it holds.</p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Group</th><th>Variation II</th><th>Variation III</th><th>Variation IV</th></tr></thead>
+        <thead><tr><th>Sharp</th><th>Variation</th><th>Effect</th></tr></thead>
         <tbody>
-          <tr><td>REST</td><td><kbd>OP1</kbd></td><td><kbd>OP2</kbd></td><td><kbd>OP3</kbd></td></tr>
-          <tr><td>EXPLORE</td><td><kbd>OP4</kbd></td><td><kbd>OP5</kbd></td><td><kbd>OP6</kbd></td></tr>
-          <tr><td>COMBAT</td><td><kbd>PIT</kbd></td><td><kbd>GLO</kbd></td><td><kbd>MONO</kbd></td></tr>
-          <tr><td>CLIMAX</td><td><kbd>POLY</kbd></td><td><kbd>TOP</kbd></td><td><i>Hold</i> Key 13 (0.6 s)</td></tr>
+          <tr><td><kbd>OP1</kbd></td><td><b>DARK</b></td><td>the scene darkens into Phrygian</td></tr>
+          <tr><td><kbd>OP2</kbd></td><td><b>TENSE</b></td><td>harmonic minor: the villain's theme</td></tr>
+          <tr><td><kbd>OP3</kbd></td><td><b>BRIGHT</b></td><td>major: the tide turns</td></tr>
+          <tr><td><kbd>OP4</kbd></td><td><b>KEY UP</b></td><td>up a whole tone (up to three times)</td></tr>
+          <tr><td><kbd>OP5</kbd></td><td><b>KEY DOWN</b></td><td>down a whole tone</td></tr>
+          <tr><td><kbd>OP6</kbd></td><td><b>HALF TIME</b></td><td>the drums run half as fast (again: back)</td></tr>
+          <tr><td><kbd>PIT</kbd></td><td><b>DOUBLE TIME</b></td><td>the drums run twice as fast (again: back)</td></tr>
+          <tr><td><kbd>GLO</kbd></td><td><b>BREAKDOWN</b></td><td>only drums and drone remain (again: back)</td></tr>
+          <tr><td><kbd>MONO</kbd></td><td><b>HOME</b></td><td>undo every variation: the scene as written</td></tr>
+          <tr><td><kbd>POLY</kbd></td><td><b>FULL HOST</b></td><td>everything back in, at full intensity</td></tr>
+          <tr><td><kbd>TOP</kbd></td><td><b>STINGER</b></td><td>a gong, a war drum and a brass chord, on the beat</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="muted">Slide your thumb or finger right from the lit group key across the raised black keys. Holding any group key 0.6 s cues variation IV directly.</p>
+    <p class="muted">A change of mood keeps each note's place in the scale: the same tune, a new colour. Under a Scale Lock the moods and key changes leave the pitch alone; the rest still work.</p>
 
-    <h3>The Twelve Battle Modifiers</h3>
-    <p>The 12 unlit white keys dynamically bend the live performance on the next beat:</p>
+    <h3>Freestyle: Take the Stage</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>White Key</th><th>Modifier</th><th>Musical Effect</th></tr></thead>
+        <thead><tr><th>Gesture</th><th>Effect</th></tr></thead>
         <tbody>
-          <tr><td><kbd>2</kbd></td><td><b>PHRYGIAN</b></td><td>Shifts modal scale to Phrygian darkness and dread.</td></tr>
-          <tr><td><kbd>3</kbd></td><td><b>HARMONIC</b></td><td>Harmonic minor: sinister villain presence.</td></tr>
-          <tr><td><kbd>4</kbd></td><td><b>TRIUMPH</b></td><td>Ionian major: the tide of battle turns.</td></tr>
-          <tr><td><kbd>6</kbd></td><td><b>KEY UP</b></td><td>Modulates up 1 whole step (up to +3 times).</td></tr>
-          <tr><td><kbd>7</kbd></td><td><b>KEY DOWN</b></td><td>Modulates down 1 whole step.</td></tr>
-          <tr><td><kbd>8</kbd></td><td><b>HOME KEY</b></td><td>Resets all bends: returns to original scene key, scale, and tempo.</td></tr>
-          <tr><td><kbd>10</kbd></td><td><b>DOUBLE TIME</b></td><td>Drums accelerate to 2&times; speed.</td></tr>
-          <tr><td><kbd>11</kbd></td><td><b>HALF TIME</b></td><td>Drums drop into slow half-time march.</td></tr>
-          <tr><td><kbd>12</kbd></td><td><b>BREAKDOWN</b></td><td>Drops melodic tracks, leaving only drums and drone.</td></tr>
-          <tr><td><kbd>14</kbd></td><td><b>FULL HOST</b></td><td>Restores all 4 tracks to 100% full intensity.</td></tr>
-          <tr><td><kbd>15</kbd></td><td><b>STINGER</b></td><td>Dramatic gong, war drum, and brass hit on the next downbeat.</td></tr>
-          <tr><td><kbd>16</kbd></td><td><b>SWELL</b></td><td>Cathedral Swell: launches huge Sanctuary reverb space.</td></tr>
+          <tr><td>Tap <kbd>SEQ</kbd></td><td><b>FREESTYLE</b> on: every key plays a note, live, over the scene; tap again to return to the scenes</td></tr>
+          <tr><td>Hold <kbd>SEQ</kbd> (over &frac12; s)</td><td>Freestyle only while held</td></tr>
         </tbody>
       </table>
     </div>
+    <ul>
+      <li><b>Every key is in key:</b> the scene's scale as it sounds now (mood and key changes included), or the Scale Lock. No wrong notes.</li>
+      <li>The loop keeps playing and its lead steps aside for your melody. <kbd>PRESETS</kbd> picks your instrument; <kbd>OCT-</kbd> / <kbd>OCT+</kbd> move an octave.</li>
+      <li>The glass turns pink and says <b>FREESTYLE</b>. MIDI notes play your freestyle voice too.</li>
+    </ul>
 
     <h3>Knobs &amp; Controls in Battle</h3>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Control</th><th>Effect in Encounter</th></tr></thead>
         <tbody>
-          <tr><td><kbd>K1</kbd> / <kbd>OCT&plusmn;</kbd></td><td><b>Intensity:</b> Drone only &rarr; + Drums &rarr; + Strings &rarr; Full Host</td></tr>
-          <tr><td><kbd>K2</kbd> / <kbd>ALGORITHM</kbd></td><td><b>Tempo:</b> Smoothly adjust speed from 70% to 140%</td></tr>
-          <tr><td><kbd>K3</kbd></td><td><b>The Hall:</b> Reverb size and mix depth</td></tr>
-          <tr><td><kbd>K4</kbd></td><td><b>Music Volume:</b> Sub-mix level under the analog MASTER knob</td></tr>
-          <tr><td><kbd>SELECT</kbd></td><td><b>Crossfade Length:</b> 0 to 8 beats (0 = instant cut)</td></tr>
-          <tr><td><kbd>PRESETS</kbd></td><td><b>Quantization:</b> Changes land on Beat, Bar, 2 Bars, or 4 Bars</td></tr>
-          <tr><td><kbd>ARP</kbd></td><td><b>Duck:</b> Lowers music volume so spoken LARP roleplay is heard clearly</td></tr>
-          <tr><td><kbd>HOME</kbd> + <kbd>REC</kbd> (0.4 s)</td><td><b>Silence:</b> Complete instant silence across all audio engines</td></tr>
+          <tr><td><kbd>K1</kbd> / <kbd>OCT&plusmn;</kbd></td><td><b>Intensity:</b> Drone only &rarr; + Drums &rarr; + Strings &rarr; Full Host (in freestyle OCT moves your octave)</td></tr>
+          <tr><td><kbd>K2</kbd> / <kbd>ALGORITHM</kbd></td><td><b>Tempo:</b> 70% to 140%</td></tr>
+          <tr><td><kbd>K3</kbd></td><td><b>The Hall:</b> how much Sanctuary</td></tr>
+          <tr><td><kbd>K4</kbd></td><td><b>Music Volume:</b> under the MASTER knob</td></tr>
+          <tr><td><kbd>SELECT</kbd></td><td><b>Crossfade Length:</b> 0 to 8 beats (0 = hard cut)</td></tr>
+          <tr><td><kbd>PRESETS</kbd></td><td><b>Quantize:</b> Beat, Bar, 2 Bars or 4 Bars (in freestyle: your instrument)</td></tr>
+          <tr><td><kbd>ARP</kbd></td><td><b>Duck:</b> the music drops so speech can be heard; again, it rises</td></tr>
+          <tr><td><kbd>FX</kbd></td><td><b>Cathedral Swell:</b> the hall grows huge; again, back</td></tr>
+          <tr><td><kbd>SEQ</kbd></td><td><b>Freestyle</b> (above)</td></tr>
+          <tr><td><kbd>PLAY</kbd></td><td>Fade out over a bar; again, play the last scene</td></tr>
+          <tr><td><kbd>HOME</kbd> + <kbd>REC</kbd> (0.4 s)</td><td><b>Silence:</b> everything stops at once, with no click</td></tr>
+          <tr><td>Hold <kbd>GLO</kbd> + a key</td><td><b>Scale Lock</b> (Chapter III)</td></tr>
         </tbody>
       </table>
     </div>
@@ -339,11 +417,17 @@ HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
           <tr><td>White Keys (Crafting)</td><td>Soft Glow</td><td>Key belongs to active modal scale</td></tr>
           <tr><td>White Keys (Crafting)</td><td>Half-Lit</td><td>Root note of current scale</td></tr>
           <tr><td>White Keys (Crafting)</td><td>Dark</td><td>Key is outside current scale</td></tr>
-          <tr><td>White Keys 1, 5, 9, 13 (Encounter)</td><td>Half-Lit</td><td>Idle: The four scene mood groups</td></tr>
-          <tr><td>Group Key (Encounter)</td><td>Solid Lit</td><td>A scene in this group is currently playing</td></tr>
-          <tr><td>Black Sharps (Encounter)</td><td>Solid Lit</td><td>Active playing variation</td></tr>
-          <tr><td>Any Scene Key</td><td>Fast Blink</td><td>Queued: will crossfade at next bar boundary</td></tr>
-          <tr><td>Modifier Keys (2&ndash;16)</td><td>Solid Lit</td><td>Battle modifier active (dark when disengaged)</td></tr>
+          <tr><td>Encounter White Keys</td><td>Solid Lit</td><td>The scene <b>playing</b></td></tr>
+          <tr><td>Encounter White Keys</td><td>Fast Blink</td><td><b>Queued:</b> crossfades at the next bar</td></tr>
+          <tr><td>Encounter White Keys 1, 5, 9, 13</td><td>Half-Lit</td><td>Landmarks: the first scene of each mood</td></tr>
+          <tr><td>Encounter White Keys</td><td>Soft Glow</td><td>The other scenes</td></tr>
+          <tr><td>Encounter Sharps</td><td>Dark</td><td>No scene chosen yet: nothing to vary</td></tr>
+          <tr><td>Encounter Sharps</td><td>Soft Glow</td><td>A scene is chosen: its variations are ready</td></tr>
+          <tr><td>Encounter Sharps</td><td>Solid Lit</td><td>That variation is in effect</td></tr>
+          <tr><td><kbd>SEQ</kbd> (Encounter)</td><td>Solid Lit</td><td><b>Freestyle:</b> keys glow as in Crafting (scale, roots half-lit)</td></tr>
+          <tr><td><kbd>FX</kbd> (Encounter)</td><td>Solid Lit</td><td>Cathedral swell</td></tr>
+          <tr><td><kbd>GLO</kbd></td><td>Half-Lit</td><td>The <b>Scale Lock</b> is on</td></tr>
+          <tr><td>Holding <kbd>GLO</kbd></td><td>Glow / Lit</td><td>The lock picker: root keys F3&ndash;E4, scale keys F4&ndash;G5, the chosen ones lit</td></tr>
         </tbody>
       </table>
     </div>
@@ -353,7 +437,7 @@ HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
     <ul>
       <li><b>GLOW (Default):</b> Full reactive scale lighting and ambient cues.</li>
       <li><b>LIT:</b> Removes ambient background glow; only active functional keys illuminate.</li>
-      <li><b>DARK (Stealth):</b> Blackout for covert night raids. Only playing scene, queue blink, beat pulse, and active modifiers shine.</li>
+      <li><b>DARK (Stealth):</b> Blackout for covert night raids. Only playing scene, queue blink, beat pulse, and active variations shine.</li>
     </ul>
   </section>
 
@@ -368,12 +452,18 @@ HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
           <tr><td><kbd>HOME</kbd> + <kbd>REC</kbd> (0.4 s)</td><td>Purge current track loop</td><td>Instant silence</td></tr>
           <tr><td><kbd>HOME</kbd> + <kbd>SAVE</kbd></td><td>Undo track purge</td><td>&mdash;</td></tr>
           <tr><td><kbd>EDIT</kbd> + <kbd>GLO</kbd></td><td>Pipe organ &harr; Tonewheel + Leslie</td><td>&mdash;</td></tr>
-          <tr><td><kbd>OCT-</kbd> + <kbd>OCT+</kbd></td><td>Reset octave to 0</td><td>Restore Full Host intensity</td></tr>
+          <tr><td><kbd>HOME</kbd> + <kbd>FX</kbd> + <kbd>GLO</kbd></td><td><b>Modern Mode</b> on / off</td><td><b>Modern Mode</b> on / off</td></tr>
+          <tr><td>Hold <kbd>GLO</kbd> + key</td><td><b>Scale Lock:</b> F3&ndash;E4 root (again: next scale), F4&ndash;G5 scale, F#5 off</td><td>Same</td></tr>
+          <tr><td><kbd>GLO</kbd> + <kbd>ENV</kbd></td><td><b>Scale Lock off:</b> the normal scale again</td><td>Same</td></tr>
+          <tr><td><kbd>OCT-</kbd> + <kbd>OCT+</kbd></td><td>Reset octave to 0</td><td>Full Host (in freestyle: octave 0)</td></tr>
           <tr><td><kbd>OCT-</kbd> + <kbd>OCT+</kbd> (5 s)</td><td>Chip UBOOT update mode</td><td>Chip UBOOT update mode</td></tr>
-          <tr><td><kbd>SAVE</kbd> (hold 1 s)</td><td>Save workbench &amp; settings to flash</td><td>Save settings to flash</td></tr>
-          <tr><td><kbd>SAVE</kbd> + Scene Key</td><td>Bind workbench into that scene slot</td><td>Copy that scene into workbench</td></tr>
+          <tr><td><kbd>SAVE</kbd> (hold 1 s)</td><td>Keep everything now (autosave also runs every 30 s)</td><td>Same</td></tr>
+          <tr><td><kbd>SAVE</kbd> + white key (hold)</td><td>Bind workbench into that scene</td><td>Copy that scene into workbench</td></tr>
           <tr><td><kbd>ARP</kbd></td><td>Drone latch on / off</td><td>Dialogue Duck on / off</td></tr>
-          <tr><td><kbd>FX</kbd></td><td>Open Sanctuary reverb page</td><td>Trigger Cathedral Swell</td></tr>
+          <tr><td><kbd>FX</kbd></td><td>Open Sanctuary reverb page</td><td>Cathedral Swell</td></tr>
+          <tr><td><kbd>SEQ</kbd></td><td>Steps page</td><td><b>Freestyle:</b> tap on / off, hold for momentary</td></tr>
+          <tr><td>White key</td><td>Note / step</td><td>Cue that scene (1&ndash;16)</td></tr>
+          <tr><td>Black key</td><td>Note / step page</td><td>A variation of the chosen scene</td></tr>
         </tbody>
       </table>
     </div>
@@ -383,14 +473,19 @@ HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
       <table>
         <thead><tr><th>Message</th><th>Effect</th></tr></thead>
         <tbody>
-          <tr><td>Program Change 1&ndash;16</td><td>Cue scenes 1 to 16 (REST I through CLIMAX IV)</td></tr>
+          <tr><td>Program Change 1&ndash;16</td><td>Cue scenes 1 to 16</td></tr>
           <tr><td>Notes 36&ndash;51 (Encounter)</td><td>Cue scenes 1 to 16</td></tr>
-          <tr><td>Notes 52&ndash;63 (Encounter)</td><td>Trigger the 12 battle modifiers</td></tr>
+          <tr><td>Notes 52&ndash;63 (Encounter)</td><td>52 DARK, 53 HOME, 54 TENSE, 55 BRIGHT, 56 KEY UP, 57 KEY DOWN, 58 DOUBLE, 59 HALF, 60 BREAKDOWN, 61 FULL HOST, 62 STINGER, 63 SWELL</td></tr>
+          <tr><td>Notes (Crafting)</td><td>Play the chosen track (held in the Scale Lock, if on)</td></tr>
+          <tr><td>Notes (Encounter freestyle)</td><td>Play your freestyle voice</td></tr>
           <tr><td>CC 7</td><td>Music sub-volume</td></tr>
           <tr><td>MIDI Start / Stop</td><td>Controls master transport</td></tr>
         </tbody>
       </table>
     </div>
+
+    <h3>On a Computer (USB Audio + MIDI)</h3>
+    <p>Plug the FM-1 into a computer with a data cable. It appears as a <b>USB audio input</b> and a <b>USB MIDI port</b>, class compliant: no driver on Windows, macOS or Linux. In a DAW or Audacity, choose it as the recording input and you record exactly what the Box plays (16-bit stereo, 44.1 or 48 kHz). MASTER and the OUTPUT ceiling apply to the recording too. The port is named <i>Felucca</i>, after the hardware layer the Box is built on.</p>
   </section>
 
   <!-- Chapter VII -->
@@ -416,6 +511,10 @@ HOME  SAVE  ARP   SEQ   PLAY   REC</pre>
             <td>Corrupted loop in battle</td>
             <td>Hold <kbd>HOME</kbd> + <kbd>REC</kbd> for 0.4 s to purge. Tap <kbd>HOME</kbd> + <kbd>SAVE</kbd> to undo if needed.</td>
           </tr>
+          <tr><td>Notes you did not expect</td><td>A <b>Scale Lock</b> may be on (<kbd>GLO</kbd> half-lit): <kbd>GLO</kbd> + <kbd>ENV</kbd> frees the keys.</td></tr>
+          <tr><td>A sharp does nothing in Encounter</td><td>Choose a scene first (a white key): the sharps are its variations.</td></tr>
+          <tr><td>An instrument you did not expect</td><td>Modern Mode may be on: <kbd>HOME</kbd> + <kbd>FX</kbd> + <kbd>GLO</kbd> turns it off.</td></tr>
+          <tr><td>The computer does not see the audio</td><td>Use a data cable; in the DAW pick the FM-1 (<i>Felucca</i>) as the input; try 44.1 kHz.</td></tr>
           <tr>
             <td>Pink diagnostic line at boot</td>
             <td>Appears only when USB-connected to diagnose past crashes: <i>LOW VOLTAGE</i> (recharge battery), <i>WATCHDOG</i> or <i>CRASHED</i> (report with current activity), or <i>STOPPED AT STEP n</i>. (Hidden on battery power).</td>

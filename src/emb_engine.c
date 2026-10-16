@@ -4,11 +4,17 @@
  * sequencer with microtiming and parameter locks, live looping, the Encounter modifiers, the mixer.
  * Audio side: everything here runs inside emb_render, fed by the command ring. */
 
-const uint8_t emb_scale[M_COUNT][7] = {
+const uint8_t emb_scale[M_COUNT][8] = {
     {0, 2, 4, 5, 7, 9, 11}, {0, 2, 3, 5, 7, 9, 10}, {0, 1, 3, 5, 7, 8, 10}, {0, 2, 4, 6, 7, 9, 11},
-    {0, 2, 4, 5, 7, 9, 10}, {0, 2, 3, 5, 7, 8, 10}, {0, 2, 3, 5, 7, 8, 11}, {0, 1, 4, 5, 7, 8, 10}};
+    {0, 2, 4, 5, 7, 9, 10}, {0, 2, 3, 5, 7, 8, 10}, {0, 2, 3, 5, 7, 8, 11}, {0, 1, 4, 5, 7, 8, 10},
+    {0, 2, 3, 5, 6, 8, 9, 11},                      /* diminished (whole-half) */
+    {0, 2, 4, 7, 9}, {0, 3, 5, 7, 10}};             /* the pentatonics */
+const uint8_t emb_scale_n[M_COUNT] = {7, 7, 7, 7, 7, 7, 7, 7, 8, 5, 5};
 const char *const emb_mode_name[M_COUNT] = {"IONIAN", "DORIAN", "PHRYGIAN", "LYDIAN",
-                                            "MIXOLYDIAN", "AEOLIAN", "HARM MINOR", "PHRYG DOM"};
+                                            "MIXOLYDIAN", "AEOLIAN", "HARM MINOR", "PHRYG DOM",
+                                            "DIMINISHED", "PENTA MAJOR", "PENTA MINOR"};
+const char *const emb_scale_name[M_COUNT] = {"MAJOR", "DORIAN", "PHRYGIAN", "LYDIAN", "MIXOLYDIAN", "MINOR",
+                                             "HARM MINOR", "PHRYG DOM", "DIMINISHED", "PENTA MAJOR", "PENTA MINOR"};
 const char *const emb_temper_name[T_COUNT] = {"EQUAL", "PYTHAGOREAN", "MEANTONE", "JUST"};
 /* cents x 10 from equal temperament, by interval above the playing root */
 static const int16_t TEMPER[T_COUNT][12] = {
@@ -51,7 +57,9 @@ void emb_post(uint32_t op, uint32_t a, uint32_t b, uint32_t c, int32_t v)
 int emb_in_scale(int note, uint32_t root, uint32_t mode)
 {
     uint32_t pc = (uint32_t)(note - (int)root + 120) % 12u, d;
-    for (d = 0; d < 7u; d++)
+    if (mode >= M_COUNT)
+        mode = M_IONIAN;
+    for (d = 0; d < emb_scale_n[mode]; d++)
         if (emb_scale[mode][d] == pc)
             return 1;
     return 0;
@@ -62,15 +70,36 @@ int emb_snap(int note, uint32_t root, uint32_t mode)
         note--;
     return note;
 }
-/* a note of a song in (r0, m0), heard in (r1, m1): the same scale degree, the same chromatic offset */
+/* a note of a song in (r0, m0), heard in (r1, m1): the same scale degree, the same chromatic offset. Between
+ * scales of different sizes (a pentatonic, the diminished) the degree is scaled to the nearest one */
 static int remap(int note, uint32_t r0, uint32_t m0, int r1, uint32_t m1)
 {
-    uint32_t rel = (uint32_t)(note - (int)r0 + 120), o = rel / 12u, pc = rel % 12u, d = 6;
+    uint32_t rel = (uint32_t)(note - (int)r0 + 120), o = rel / 12u, pc = rel % 12u, d, d1, n0, n1;
     if ((int)r0 == r1 && m0 == m1)
         return note;
+    if (m0 >= M_COUNT)
+        m0 = M_IONIAN;
+    if (m1 >= M_COUNT)
+        m1 = M_IONIAN;
+    n0 = emb_scale_n[m0];
+    n1 = emb_scale_n[m1];
+    d = n0 - 1u;
     while (d && emb_scale[m0][d] > pc)
         d--;
-    return r1 + (int)o * 12 - 120 + emb_scale[m1][d] + (int)(pc - emb_scale[m0][d]);
+    d1 = n0 == n1 ? d : emb_udiv(d * n1 + n0 / 2u, n0);
+    if (d1 >= n1)
+        d1 = n1 - 1u;
+    return r1 + (int)o * 12 - 120 + emb_scale[m1][d1] + (int)(pc - emb_scale[m0][d]);
+}
+/* SCALE LOCK (emb_set.lock_*): the lock's root in the octave nearest r0, so a locked song keeps its register */
+static int lock_root_near(int r0)
+{
+    int r = emb_set.lock_root % 12;
+    while (r - r0 > 5)
+        r -= 12;
+    while (r0 - r > 6)
+        r += 12;
+    return r;
 }
 static int32_t temper_cents(int note, int root, uint32_t temper)
 {
@@ -106,8 +135,17 @@ static int32_t bus[EMB_NTRK][EMB_CTL], les_bus[EMB_NTRK][EMB_CTL];
 static int32_t mix_l[EMB_CTL], mix_r[EMB_CTL], send_l[EMB_CTL], send_r[EMB_CTL];
 static int32_t chime_bus[EMB_CTL];
 
-static int deck_root(const deck_t *d) { return (int)d->song->root + key_shift; }
-static uint32_t deck_mode(const deck_t *d) { return mode_over >= 0 ? (uint32_t)mode_over : d->song->mode; }
+static uint8_t fs_on, fs_inst;                      /* Encounter freestyle: the bard plays over the loop */
+static emb_track_t fs_trk;
+/* the key a deck sounds in: the song's, bent by the Encounter modifiers; under SCALE LOCK, the lock's */
+static int deck_root(const deck_t *d)
+{
+    return emb_set.lock_on ? lock_root_near((int)d->song->root) : (int)d->song->root + key_shift;
+}
+static uint32_t deck_mode(const deck_t *d)
+{
+    return emb_set.lock_on ? emb_set.lock_mode : mode_over >= 0 ? (uint32_t)mode_over : d->song->mode;
+}
 
 static void voices_release(int deck_id, int trk, int fast)   /* -1: any */
 {
@@ -165,13 +203,15 @@ static int play_note(uint32_t deck_id, uint32_t trk, const emb_track_t *t, int n
     int32_t cents = emb_set.tune;
     if (!v)
         return -1;
-    if (inst < I_FIRST_MELODIC) {                   /* drums: note is the piece + 1 */
+    if (emb_inst_is_drum(inst)) {                   /* drums: note is the piece + 1 */
         uint32_t piece = (uint32_t)(note - 1) & 7u;
         v->piece = (uint8_t)piece;
         note = root + 36 + (piece == DR_GONG ? -12 : 0);   /* timpani and gong sound the root */
         while (note < 30)
             note += 12;
     } else {
+        if (emb_set.lock_on && deck_id != 3u)      /* SCALE LOCK: no note leaves the scale (the boot chime may) */
+            note = emb_snap(note, emb_set.lock_root, emb_set.lock_mode);
         cents += temper_cents(note, root, temper);
     }
     voice_start(v, t, inst, (uint32_t)clampi(note, 0, 127), cents, (int32_t)vel * 258, tone);
@@ -204,7 +244,7 @@ static void fire_step(uint32_t d_id, uint32_t trk)
         int n = s->note[k], vi;
         if (!n)
             continue;
-        if (t->inst >= I_FIRST_MELODIC)
+        if (!emb_inst_is_drum(t->inst))
             n = remap(n, d->song->root, d->song->mode, root, deck_mode(d));
         vi = play_note(d_id, trk, t, n, s->vel ? s->vel : 100u, s->lock != 255u ? s->lock : t->tone, root,
                        d->song->temper, gate ? gate : 0u);
@@ -398,7 +438,8 @@ static void clock_block(void)
 }
 
 /* ------------------------------------------------------------------ commands (from the UI side) */
-static uint8_t live_note[EMB_NTRK][128];             /* voice + 1 of a held live key */
+static uint8_t live_note[EMB_NTRK + 1][128];         /* voice + 1 of a held live key (TRK_FREE: freestyle) */
+static uint32_t live_age[EMB_NTRK + 1][128];         /* and that voice's age then (a stolen voice is not ours) */
 static uint32_t rec_start[EMB_NTRK][128];           /* the step a recorded note began, for its gate */
 
 static void record_note(uint32_t trk, uint32_t note, uint32_t vel)
@@ -447,29 +488,52 @@ static void command(const emb_cmd_t *c)
 {
     switch (c->op) {
     case C_NOTE_ON: {
-        const emb_track_t *t = &emb_bench.t[c->a & 3u];
-        int note = c->b, root = (int)emb_bench.root;
+        uint32_t tr = c->a == TRK_FREE ? TRK_FREE : c->a & 3u;
+        const emb_track_t *t = tr == TRK_FREE ? &fs_trk : &emb_bench.t[tr];
+        int note = c->b, root = emb_set.lock_on ? lock_root_near((int)emb_bench.root) : (int)emb_bench.root;
+        uint32_t temper = emb_bench.temper;
         int vi;
-        if (live_note[c->a & 3u][c->b & 127u])
+        if (live_note[tr][c->b & 127u])
             break;
-        vi = play_note(2, c->a & 3u, t, note, c->c, t->tone, root, emb_bench.temper, 0);
-        if (vi >= 0)
-            live_note[c->a & 3u][c->b & 127u] = (uint8_t)(vi + 1);
-        if (rec_on && playing)
-            record_note(c->a & 3u, c->b, c->c);
+        if (tr == TRK_FREE && deck[act].on && deck[act].song) {   /* over a scene: its key, its tuning */
+            root = deck_root(&deck[act]);
+            temper = deck[act].song->temper;
+        }
+        vi = play_note(2, tr == TRK_FREE ? 0u : tr, t, note, c->c, t->tone, root, temper, 0);
+        if (vi >= 0) {
+            live_note[tr][c->b & 127u] = (uint8_t)(vi + 1);
+            live_age[tr][c->b & 127u] = vox[vi].age;
+        }
+        if (rec_on && playing && tr != TRK_FREE)
+            record_note(tr, c->b, c->c);
         break;
     }
     case C_NOTE_OFF: {
-        uint32_t tr = c->a & 3u, n = c->b & 127u, vi = live_note[tr][n];
-        if (rec_on && playing)
+        uint32_t tr = c->a == TRK_FREE ? TRK_FREE : c->a & 3u, n = c->b & 127u, vi = live_note[tr][n];
+        if (rec_on && playing && tr != TRK_FREE)
             record_off(tr, n);
-        if (!vi || ((hold_mask >> tr) & 1u))
+        if (!vi || (tr < EMB_NTRK && ((hold_mask >> tr) & 1u)))
             break;
         live_note[tr][n] = 0;
-        if (vox[vi - 1u].on && vox[vi - 1u].note == n && vox[vi - 1u].deck == 2u)
+        if (vox[vi - 1u].on && vox[vi - 1u].age == live_age[tr][n])
             voice_release(&vox[vi - 1u]);
         break;
     }
+    case C_FREESTYLE:                               /* a: on, b: the instrument */
+        fs_on = (uint8_t)(c->a != 0u);
+        if (fs_inst != c->b || !fs_trk.level) {
+            fs_inst = c->b < I_COUNT ? c->b : I_RECORDER;
+            emb_track_defaults(&fs_trk, fs_inst);
+        }
+        if (!fs_on) {
+            uint32_t n;
+            for (n = 0; n < 128u; n++)
+                if (live_note[TRK_FREE][n]) {
+                    voice_release(&vox[live_note[TRK_FREE][n] - 1u]);
+                    live_note[TRK_FREE][n] = 0;
+                }
+        }
+        break;
     case C_PLAY:                                    /* a: the slot (255 workbench) */
         if (!playing || !deck[act].on) {
             playing = 1;
@@ -542,7 +606,7 @@ static void command(const emb_cmd_t *c)
         hold_mask = 0;
         {
             uint32_t t, n;
-            for (t = 0; t < EMB_NTRK; t++)
+            for (t = 0; t <= EMB_NTRK; t++)
                 for (n = 0; n < 128u; n++)
                     live_note[t][n] = 0;
         }
@@ -554,7 +618,7 @@ static void command(const emb_cmd_t *c)
             for (n = 0; n < 128u; n++)
                 if (live_note[c->a & 3u][n]) {
                     voice_t *v = &vox[live_note[c->a & 3u][n] - 1u];
-                    if (v->on && v->deck == 2u && v->note == n)
+                    if (v->on && v->age == live_age[c->a & 3u][n])
                         voice_release(v);
                     live_note[c->a & 3u][n] = 0;
                 }
@@ -612,6 +676,8 @@ static void track_gains(deck_t *d)
             if (intensity < ON_AT[k])
                 t = 0;
             if (breakdown && (k == 0u || k == 2u))
+                t = 0;
+            if (fs_on && k == 0u)                   /* freestyle: the bard's melody takes the lead's place */
                 t = 0;
         } else if ((emb_mutes >> k) & 1u) {
             t = 0;
@@ -816,5 +882,13 @@ void emb_render(int32_t *lr, uint32_t frames)
     emb_st.rate_t1 = rate_t1;
     emb_st.hold = hold_mask | (uint8_t)(rec_on << 7) | (uint8_t)(breakdown << 6);
     emb_st.leslie = leslie_fast;
+    emb_st.freestyle = fs_on;
+    if (deck[act].on && deck[act].song) {
+        emb_st.play_root = (int8_t)deck_root(&deck[act]);
+        emb_st.play_mode = (uint8_t)deck_mode(&deck[act]);
+    } else {
+        emb_st.play_root = (int8_t)(emb_set.lock_on ? emb_set.lock_root : emb_bench.root);
+        emb_st.play_mode = emb_set.lock_on ? emb_set.lock_mode : emb_bench.mode;
+    }
     emb_st.swell = swell;
 }

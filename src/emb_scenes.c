@@ -150,6 +150,22 @@ void emb_track_defaults(emb_track_t *t, uint32_t inst)
         t->att = 6; t->sus = 127; t->rel = inst == I_CATHEDRAL ? 72 : 34;
         t->rev = inst == I_CATHEDRAL ? 96 : inst == I_TONEWHEEL ? 26 : 64;
         break;
+    case ENG_SYNTH: {                               /* TONE: the filter's cutoff, CHARACTER: its envelope */
+        static const uint8_t SYN[5][6] = {          /* att dec sus rel tone chr */
+            {2, 70, 100, 30, 70, 50}, {2, 60, 105, 28, 80, 30}, {8, 80, 110, 50, 75, 40},
+            {72, 90, 115, 82, 60, 20}, {0, 50, 70, 20, 30, 100}};
+        const uint8_t *p = SYN[inst - I_SAW_LEAD];
+        t->att = p[0]; t->dec = p[1]; t->sus = p[2]; t->rel = p[3]; t->tone = p[4]; t->chr = p[5];
+        t->rev = inst == I_SYNTH_PAD ? 80 : 36;
+        break;
+    }
+    case ENG_FM:                                    /* TONE: the FM depth */
+        t->att = 0;
+        t->dec = inst == I_FM_BELL ? 100 : 80;
+        t->sus = inst == I_FM_BELL ? 0 : inst == I_FM_BASS ? 90 : 60;
+        t->rel = inst == I_FM_BELL ? 90 : inst == I_FM_BASS ? 25 : 50;
+        t->rev = inst == I_FM_BELL ? 70 : 40;
+        break;
     }
 }
 
@@ -203,7 +219,7 @@ static void parse_lane(emb_track_t *t, const char *p, uint32_t n, uint32_t lane,
             t->s[last].gate = 255;
             continue;
         }
-        if (t->inst < I_FIRST_MELODIC) {
+        if (emb_inst_is_drum(t->inst)) {
             uint32_t pc = drum_piece(c);
             if (pc) {
                 s->note[lane] = (uint8_t)pc;

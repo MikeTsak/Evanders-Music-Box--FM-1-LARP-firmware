@@ -10,8 +10,33 @@
 #include <string.h>
 #include "../emb.c"
 
-int emb_hal_store(uint32_t slot, const void *p, uint32_t n) { (void)slot; (void)p; (void)n; return 0; }
-int emb_hal_load(uint32_t slot, void *p, uint32_t n) { (void)slot; (void)p; (void)n; return -1; }
+/* the flash, simulated: 22 slots of 4 KiB, blank 0xFF; a write can only clear bits, as on the FM-1's NOR */
+static uint8_t nor[ST_AUTO0 + ST_AUTO_N][4096];
+static uint32_t erases;
+int emb_hal_erase(uint32_t slot)
+{
+    if (slot >= ST_AUTO0 + ST_AUTO_N)
+        return -1;
+    memset(nor[slot], 0xFF, sizeof nor[slot]);
+    erases++;
+    return 0;
+}
+int emb_hal_write(uint32_t slot, const void *p, uint32_t n)
+{
+    uint32_t i;
+    if (slot >= ST_AUTO0 + ST_AUTO_N || n > sizeof nor[slot])
+        return -1;
+    for (i = 0; i < n; i++)
+        nor[slot][i] &= ((const uint8_t *)p)[i];
+    return 0;
+}
+int emb_hal_load(uint32_t slot, void *p, uint32_t n)
+{
+    if (slot >= ST_AUTO0 + ST_AUTO_N || n > sizeof nor[slot])
+        return -1;
+    memcpy(p, nor[slot], n);
+    return 0;
+}
 
 static int fails;
 #define CHECK(c, ...) do { if (!(c)) { fails++; printf("FAIL %s:%d: ", __FILE__, __LINE__); printf(__VA_ARGS__); printf("\n"); } } while (0)
@@ -288,52 +313,287 @@ static void test_boot(void)
     CHECK(!emb_booting(), "boot over after BOOT_MS");
 }
 
-/* Encounter: the group keys, the sharps' variations, the held group key, the modifier keys */
+/* Encounter 2.0: white keys the sixteen scenes, the sharps the chosen scene's variations */
 static void test_encounter_keys(void)
 {
-    uint32_t s, k, seen = 0;
-    for (k = 0; k < EMB_NKEY; k++) {
-        int sl = enc_slot(k);
-        if (sl >= 0) {
-            CHECK(!((seen >> sl) & 1u), "slot %d reached by two keys", sl);
-            seen |= 1u << sl;
-        }
-    }
-    CHECK(seen == 0x7FFFu, "keys reach slots 0..14 (got %04X); 15 is the CLIMAX key held", seen);
-    for (s = 0; s < 4u; s++)
-        CHECK(enc_slot((uint32_t)CAT_KEY[s]) == (int)s * 4 && emb_white_of[CAT_KEY[s]] == (int)s * 4,
-              "group %u: white key %u", s, s * 4u + 1u);
-    CHECK(enc_slot(1) == 1 && enc_slot(3) == 2 && enc_slot(5) == 3, "REST's sharps: II III IV");
-    CHECK(enc_slot(13) == 7 && enc_slot(20) == 11 && enc_slot(25) == 14, "the last sharp of each row");
+    uint8_t lv[EMB_NLED];
+    uint32_t k;
     ui.mode = 1;
     emb_post(C_PANIC, 0, 0, 0, 0);
     run(EMB_CTL * 2u, 0);
-    emb_key(21, 1, 100);                            /* hold CLIMAX: BOSS at once, REQUIEM after 0.6 s */
-    run(EMB_CTL * 4u, 0);
-    CHECK(emb_st.deck_slot[emb_st.active] == 12u, "CLIMAX key: BOSS");
-    run(EMB_FS * 7u / 10u, 0);
-    emb_key(21, 0, 0);
-    CHECK(emb_st.queued == 16u, "held: REQUIEM queued (%u)", emb_st.queued);
-    emb_key(22, 1, 100);                            /* D#5: CLIMAX II */
-    emb_key(22, 0, 0);
-    run(EMB_CTL * 2u, 0);
-    CHECK(emb_st.queued == 14u, "D#5 queues LAST STAND (%u)", emb_st.queued);
-    emb_key(emb_key_of_white[1], 1, 100);           /* white 2: PHRYGIAN, waiting for LAST STAND, then on it */
-    emb_key(emb_key_of_white[1], 0, 0);
-    for (k = 0; k < 400u && emb_st.deck_slot[emb_st.active] != 13u; k++)
+    emb_leds(lv);
+    CHECK(lv[B_COUNT + emb_key_of_black[0]] == LED_OFF, "no scene yet: the sharps are dark");
+    emb_key(emb_key_of_black[0], 1, 100);           /* a sharp before any scene: nothing */
+    emb_key(emb_key_of_black[0], 0, 0);
+    run(EMB_FS, 0);
+    CHECK(emb_st.mod_mode == 255u && !emb_st.playing, "a sharp alone does nothing");
+    for (k = 0; k < 16u; k++) {                     /* every white key reaches its scene */
+        emb_post(C_PANIC, 0, 0, 0, 0);
+        run(EMB_CTL * 2u, 0);
+        emb_key(emb_key_of_white[k], 1, 100);
+        emb_key(emb_key_of_white[k], 0, 0);
         run(EMB_CTL * 4u, 0);
-    CHECK(emb_st.deck_slot[emb_st.active] == 13u, "LAST STAND took over");
-    CHECK(emb_st.mod_mode == M_PHRYGIAN, "white 2: Phrygian, on the new scene");
-    {
-        uint8_t lv[EMB_NLED];
-        emb_leds(lv);
-        CHECK(lv[B_COUNT + emb_key_of_white[1]] == LED_LIT, "the modifier's key lit while in effect");
-        CHECK(lv[B_COUNT + emb_key_of_white[2]] == LED_OFF, "an idle modifier key dark");
+        CHECK(emb_st.deck_slot[emb_st.active] == k, "white key %u: scene %u (got %u)", k + 1u, k, emb_st.deck_slot[emb_st.active]);
     }
+    emb_key(emb_key_of_white[13], 1, 100);          /* key 14 queued, then OP1 (DARK): it lands on LAST STAND */
+    emb_key(emb_key_of_white[13], 0, 0);
+    emb_key(emb_key_of_black[0], 1, 100);
+    emb_key(emb_key_of_black[0], 0, 0);
+    for (k = 0; k < 3000u && emb_st.deck_slot[emb_st.active] != 13u; k++)   /* (REQUIEM: 56 BPM, a bar is 4 s) */
+        run(EMB_CTL * 4u, 0);
+    run(EMB_FS / 2u, 0);
+    CHECK(emb_st.deck_slot[emb_st.active] == 13u, "LAST STAND took over");
+    CHECK(emb_st.mod_mode == M_PHRYGIAN, "OP1: DARK (Phrygian), on the new scene");
+    emb_leds(lv);
+    CHECK(lv[B_COUNT + emb_key_of_black[0]] == LED_LIT, "the variation's sharp lit while in effect");
+    CHECK(lv[B_COUNT + emb_key_of_black[3]] == LED_GLOW, "an idle variation: available, a glow");
+    emb_key(emb_key_of_black[8], 1, 100);           /* MONO: HOME, every variation undone */
+    emb_key(emb_key_of_black[8], 0, 0);
+    run(EMB_FS, 0);
+    CHECK(emb_st.mod_mode == 255u, "MONO: home");
     emb_post(C_PANIC, 0, 0, 0, 0);
-    emb_post(C_MOD, 1, 0, 0, 0);
     run(EMB_CTL * 2u, 0);
     ui.mode = 0;
+}
+
+/* every melodic voice sounding now is in (root, mode) */
+static int voices_in_scale(uint32_t root, uint32_t mode, int *count)
+{
+    uint32_t i;
+    int ok = 1;
+    *count = 0;
+    for (i = 0; i < EMB_NVOICE; i++)
+        if (vox[i].on && vox[i].deck != 3u && !emb_inst_is_drum(vox[i].inst)) {
+            (*count)++;
+            ok &= emb_in_scale(vox[i].note, root, mode);
+        }
+    return ok;
+}
+
+static void test_scale_lock(void)
+{
+    int n, ok = 1;
+    uint32_t t;
+    ui.page = P_HOME;
+    emb_post(C_PANIC, 0, 0, 0, 0);
+    run(EMB_CTL * 2u, 0);
+    emb_button(B_GLO, 1);                           /* GLO + C4 (key 7): root C; GLO + F4 (key 12): MAJOR */
+    emb_key(7, 1, 100);
+    emb_key(7, 0, 0);
+    emb_key(12, 1, 100);
+    emb_key(12, 0, 0);
+    emb_button(B_GLO, 0);
+    CHECK(emb_set.lock_on && emb_set.lock_root == 0u && emb_set.lock_mode == M_IONIAN, "GLO: lock C MAJOR");
+    CHECK(ui.page != P_MODE, "GLO used as a modifier: no page change");
+    emb_button(B_GLO, 1);                           /* the same root again and again: MINOR, DORIAN; another: kept */
+    emb_key(7, 1, 100);
+    emb_key(7, 0, 0);
+    CHECK(emb_set.lock_root == 0u && emb_set.lock_mode == M_AEOLIAN, "C again: C MINOR");
+    emb_key(7, 1, 100);
+    emb_key(7, 0, 0);
+    CHECK(emb_set.lock_mode == M_DORIAN, "C a third time: C DORIAN");
+    emb_key(9, 1, 100);
+    emb_key(9, 0, 0);
+    CHECK(emb_set.lock_root == 2u && emb_set.lock_mode == M_DORIAN, "a new root keeps the scale: D DORIAN");
+    emb_key(7, 1, 100);                             /* back to C MAJOR for the rest */
+    emb_key(7, 0, 0);
+    emb_key(12, 1, 100);
+    emb_key(12, 0, 0);
+    emb_button(B_GLO, 0);
+    CHECK(emb_set.lock_root == 0u && emb_set.lock_mode == M_IONIAN, "back to C MAJOR");
+    emb_button(B_GLO, 1);                           /* GLO + ENV: lock off, no page change; then on again */
+    emb_button(B_ENV, 1);
+    emb_button(B_ENV, 0);
+    emb_button(B_GLO, 0);
+    CHECK(!emb_set.lock_on && ui.page == P_HOME, "GLO + ENV: lock off, page kept");
+    emb_button(B_GLO, 1);
+    emb_key(7, 1, 100);
+    emb_key(7, 0, 0);
+    emb_button(B_GLO, 0);
+    CHECK(emb_set.lock_on && emb_set.lock_root == 0u && emb_set.lock_mode == M_IONIAN, "GLO + C: C MAJOR again");
+    ui.trk = 0;
+    emb_key(1, 1, 100);                             /* F#3 on a C major lock: F */
+    CHECK(ui.key_note[1] == 53u, "F#3 snapped to F3 (%u)", ui.key_note[1]);
+    emb_key(1, 0, 0);
+    ui.mode = 1;                                    /* scenes in other keys, all of them in C major now */
+    for (t = 0; t < 16u; t += 3u) {
+        emb_post(C_PANIC, 0, 0, 0, 0);
+        emb_post(C_QUEUE, t, 0, 0, 0);
+        run(EMB_FS * 2u, 0);
+        ok &= voices_in_scale(0, M_IONIAN, &n);
+    }
+    CHECK(ok, "every scene's notes in C major under the lock");
+    emb_button(B_GLO, 1);                           /* G4 (14): MINOR; A4 (16) DORIAN; F#4 (13) DIMINISHED */
+    emb_key(13, 1, 100);
+    emb_key(13, 0, 0);
+    emb_button(B_GLO, 0);
+    CHECK(emb_set.lock_mode == M_DIMINISHED, "F#4: DIMINISHED");
+    emb_post(C_PANIC, 0, 0, 0, 0);
+    run(EMB_FS / 2u, 0);                            /* (the scene's last notes die away) */
+    emb_post(C_STINGER, 0, 0, 0, 0);
+    run(EMB_FS / 2u, 0);
+    CHECK(voices_in_scale(0, M_DIMINISHED, &n) && n > 0, "the stinger too stays in the lock (%d voices)", n);
+    emb_button(B_GLO, 1);                           /* F#5 (25): off */
+    emb_key(25, 1, 100);
+    emb_key(25, 0, 0);
+    emb_button(B_GLO, 0);
+    CHECK(!emb_set.lock_on, "F#5: lock off");
+    emb_post(C_PANIC, 0, 0, 0, 0);
+    run(EMB_CTL * 2u, 0);
+    ui.mode = 0;
+}
+
+static void test_modern(void)
+{
+    uint32_t i, seen_modern = 0;
+    int32_t peak = 0;
+    ui.trk = 0;
+    ui.page = P_HOME;
+    for (i = 0; i < 40u; i++) {                     /* PRESETS: medieval only */
+        emb_encoder(E_PRESETS, 1);
+        seen_modern |= emb_bench.t[0].inst >= I_FIRST_MODERN;
+    }
+    CHECK(!seen_modern, "locked: PRESETS never reaches the modern bank");
+    emb_button(B_GLO, 1);                           /* HOME + FX + GLO, in any order */
+    emb_button(B_HOME, 1);
+    emb_button(B_FX, 1);
+    emb_button(B_FX, 0);
+    emb_button(B_HOME, 0);
+    emb_button(B_GLO, 0);
+    CHECK(emb_set.modern, "HOME + FX + GLO: modern mode");
+    CHECK(ui.page == P_HOME && !emb_st.swell, "and nothing else happened (no page, no swell)");
+    for (i = 0; i < 40u && emb_bench.t[0].inst != I_SAW_LEAD; i++)
+        emb_encoder(E_PRESETS, 1);
+    CHECK(emb_bench.t[0].inst == I_SAW_LEAD, "PRESETS reaches SAW LEAD");
+    for (i = I_FIRST_MODERN; i < I_COUNT; i++) {    /* every modern instrument sounds */
+        emb_track_t tr;
+        voice_t *v = &vox[0];
+        int32_t out[EMB_CTL], p = 0;
+        uint32_t b, j;
+        emb_track_defaults(&tr, i);
+        v->slot = 0;
+        v->piece = 1;
+        voice_start(v, &tr, i, 57, 0, 32767, tr.tone);
+        for (b = 0; b < 300u; b++) {
+            for (j = 0; j < EMB_CTL; j++)
+                out[j] = 0;
+            if (v->on && voice_env_step(v))
+                voice_run(v, out, 32767);
+            for (j = 0; j < EMB_CTL; j++)
+                if (abs(out[j]) > p)
+                    p = abs(out[j]);
+        }
+        CHECK(p > 1500 && p < 200000, "%s sounds (peak %d)", emb_inst_name[i], p);
+        if (p > peak)
+            peak = p;
+    }
+    ui.trk = TRACK_DRUM;
+    for (i = 0; i < 6u && emb_bench.t[TRACK_DRUM].inst != I_ELECTRO_KIT; i++)
+        emb_encoder(E_PRESETS, 1);
+    CHECK(emb_bench.t[TRACK_DRUM].inst == I_ELECTRO_KIT, "the drum track reaches the ELECTRO KIT");
+    emb_button(B_HOME, 1);                          /* again: back; no modern sound stays */
+    emb_button(B_FX, 1);
+    emb_button(B_GLO, 1);
+    emb_button(B_GLO, 0);
+    emb_button(B_FX, 0);
+    emb_button(B_HOME, 0);
+    CHECK(!emb_set.modern && emb_bench.t[0].inst < I_FIRST_MODERN && emb_bench.t[TRACK_DRUM].inst == I_TAVERN_KIT,
+          "modern off: the medieval instruments back");
+    ui.trk = 0;
+}
+
+static void test_freestyle(void)
+{
+    uint32_t i, live = 0;
+    int n;
+    ui.mode = 1;
+    emb_post(C_PANIC, 0, 0, 0, 0);
+    emb_post(C_QUEUE, 0, 0, 0, 0);                  /* TAVERN, D Dorian */
+    run(EMB_FS, 0);
+    press(B_SEQ);                                   /* tap: freestyle on */
+    run(EMB_CTL * 2u, 0);
+    CHECK(emb_st.freestyle, "SEQ: freestyle");
+    for (i = 0; i < EMB_NKEY; i++) {                /* every key: a note, in the scene's key */
+        emb_key(i, 1, 100);
+        run(EMB_CTL * 2u, 0);
+        emb_key(i, 0, 0);
+    }
+    for (i = 0; i < EMB_NVOICE; i++)
+        live += vox[i].on && vox[i].deck == 2u;
+    CHECK(live > 0u, "freestyle notes sound");
+    {
+        int ok = 1;
+        for (i = 0; i < EMB_NVOICE; i++)
+            if (vox[i].on && vox[i].deck == 2u)
+                ok &= emb_in_scale(vox[i].note, 2, M_DORIAN);
+        CHECK(ok, "all in D Dorian");
+    }
+    CHECK(emb_st.deck_slot[emb_st.active] == 0u && emb_st.playing, "the loop plays on");
+    press(B_SEQ);
+    run(EMB_CTL * 2u, 0);
+    CHECK(!emb_st.freestyle, "SEQ again: off");
+    emb_button(B_SEQ, 1);                           /* held: only while held */
+    run(EMB_FS * 7u / 10u, 0);
+    CHECK(emb_st.freestyle, "held: on");
+    emb_button(B_SEQ, 0);
+    run(EMB_CTL * 2u, 0);
+    CHECK(!emb_st.freestyle, "let go: off");
+    (void)n;
+    emb_post(C_PANIC, 0, 0, 0, 0);
+    run(EMB_CTL * 2u, 0);
+    ui.mode = 0;
+}
+
+static void test_hud(void)
+{
+    kinfo_t ki;
+    ui.mode = 0;
+    ui.page = P_FX;
+    emb_encoder(E_K2, 1);
+    CHECK(ui.hud_k == 1 && (int32_t)(ui.now - ui.hud_t) < 0, "K2 turned: the HUD shows");
+    knob_info(1, &ki);
+    CHECK(!strcmp(ki.name, "REVERB DECAY"), "it says REVERB DECAY (%s)", ki.name);
+    ui.page = P_HOME;
+    knob_info(2, &ki);
+    CHECK(!strcmp(ki.name, "TRACK 3 LEVEL"), "home K3: TRACK 3 LEVEL (%s)", ki.name);
+    emb_bench.t[0].inst = I_SAW_LEAD;
+    ui.trk = 0;
+    ui.page = P_VOICE;
+    knob_info(0, &ki);
+    CHECK(!strcmp(ki.name, "FILTER CUTOFF"), "a synth's K1: FILTER CUTOFF (%s)", ki.name);
+    emb_bench.t[0].inst = I_RECORDER;
+    run(EMB_FS * 12u / 10u, 0);
+    CHECK((int32_t)(ui.now - ui.hud_t) > 0, "a second later: gone");
+    ui.page = P_HOME;
+}
+
+static void test_autosave(void)
+{
+    uint32_t seq, e;
+    emb_post(C_PANIC, 0, 0, 0, 0);
+    run(EMB_FS * 3u, 0);                            /* stopped and untouched: the ring is made blank */
+    CHECK(ui.as.erased == (uint8_t)(((1u << ST_AUTO_N) - 1u) & ~(1u << ui.as.slot)), "quiet: the other slots blank (%02X)",
+          ui.as.erased);
+    emb_bench.t[1].s[5].note[0] = 66;              /* a change, then playing: saved without an erase */
+    emb_set.lock_on = 1;
+    emb_set.lock_root = 9;
+    emb_set.lock_mode = M_AEOLIAN;
+    ui.mode = 1;
+    emb_post(C_QUEUE, 4, 0, 0, 0);
+    seq = ui.as.seq;
+    e = erases;
+    run(EMB_FS * 31u, 0);
+    CHECK(ui.as.seq == seq + 1u, "30 s: a snapshot (seq %u)", ui.as.seq);
+    CHECK(erases == e, "while playing, into a blank slot: no erase (%u)", erases - e);
+    run(EMB_FS * 31u, 0);
+    CHECK(ui.as.seq == seq + 1u, "nothing changed: no snapshot");
+    emb_init(3);                                    /* power off and on */
+    CHECK(emb_bench.t[1].s[5].note[0] == 66, "the melody is back");
+    CHECK(ui.mode == 1u, "and the mode (Encounter)");
+    CHECK(emb_set.lock_on && emb_set.lock_root == 9u && emb_set.lock_mode == M_AEOLIAN, "and the scale lock");
+    emb_set.lock_on = 0;
+    ui.mode = 0;
+    run(EMB_FS * 4u, 0);                            /* (past the boot animation) */
 }
 
 static void test_volume_card(void)
@@ -400,12 +660,43 @@ static int shots(const char *dir)
     ui.msg[0] = 0;
     emb_draw(fb, dirty);
     ppm(dir, "encounter", fb);
+    emb_post(C_MOD, 0, 0, 0, 0);                    /* a variation in effect */
+    run(EMB_FS, 0);
+    ui.msg[0] = 0;
+    emb_draw(fb, dirty);
+    ppm(dir, "encounter_variation", fb);
+    press(B_SEQ);                                   /* freestyle */
+    run(EMB_CTL * 4u, 0);
+    ui.msg[0] = 0;
+    emb_draw(fb, dirty);
+    ppm(dir, "encounter_freestyle", fb);
+    press(B_SEQ);
+    run(EMB_CTL * 4u, 0);
+    emb_set.lock_on = 1;                            /* the scale lock picker, GLO held */
+    emb_set.lock_root = 2;
+    emb_set.lock_mode = M_DORIAN;
+    ui.btn |= 1u << B_GLO;
+    ui.msg[0] = 0;
+    emb_draw(fb, dirty);
+    ppm(dir, "scale_lock", fb);
+    ui.btn &= ~(1u << B_GLO);
+    emb_set.lock_on = 0;
+    ui.mode = 0;                                    /* the knob HUD on a synth's voice page */
+    ui.trk = 0;
+    emb_bench.t[0].inst = I_SAW_LEAD;
+    ui.page = P_VOICE;
+    ui.hud_k = 0;
+    ui.hud_t = ui.now + 500u;
+    emb_draw(fb, dirty);
+    ppm(dir, "knob_hud", fb);
+    ui.hud_k = -1;
     printf("screenshots in %s\n", dir);
     return 0;
 }
 
 int main(int argc, char **argv)
 {
+    memset(nor, 0xFF, sizeof nor);                  /* a fresh chip */
     emb_init(1);
     if (argc > 4 && !strcmp(argv[1], "wav"))
         return wav((uint32_t)atoi(argv[2]), (uint32_t)atoi(argv[3]), argv[4]);
@@ -420,7 +711,12 @@ int main(int argc, char **argv)
     test_purge_undo();
     test_ui();
     test_encounter_keys();
+    test_scale_lock();
+    test_modern();
+    test_freestyle();
+    test_hud();
     test_volume_card();
+    test_autosave();
     test_boot();
     printf(fails ? "%d CHECKS FAILED\n" : "all checks passed\n", fails);
     return fails != 0;
