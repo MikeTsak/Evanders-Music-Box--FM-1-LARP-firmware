@@ -351,6 +351,7 @@ static void boot_frame(uint32_t t, const char *note)
             text_csh(120, Y[k], b, 2, k ? COL_YELLOW : COL_PAPER, k ? COL_ORANGE : COL_BLUE);
         }
     }
+    text(EMB_W - 4 - text_w("V" EMB_VERSION, 1), 4, "V" EMB_VERSION, 1, COL_GREY);   /* which firmware this is */
     if (note && note[0]) {                          /* why the last run ended, if it did not end well */
         fill(0, 230, EMB_W, 10, COL_PINK);
         text_c(120, 231, note, 1, COL_INK);

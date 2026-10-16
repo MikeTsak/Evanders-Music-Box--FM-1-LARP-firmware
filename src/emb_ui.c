@@ -1252,7 +1252,9 @@ static void draw_page(void)
         cat(b, " / ");
         cat(b, emb_temper_name[emb_bench.temper]);
         text_c(120, 204, b, 1, COL_PAPER);
-    } else if (ui.page == P_MOTION && t->inst == I_TONEWHEEL)
+    } else if (ui.page == P_MODE)
+        text_c(120, 204, "EVANDER'S BOX V" EMB_VERSION, 1, COL_GREY);
+    else if (ui.page == P_MOTION && t->inst == I_TONEWHEEL)
         text_c(120, 204, emb_st.leslie ? "LESLIE: FAST" : "LESLIE: SLOW", 1, COL_PAPER);
 }
 

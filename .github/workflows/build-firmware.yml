@@ -40,11 +40,14 @@ jobs:
           python3 tools/build.py test
           python3 tools/build.py check
 
+      - name: Read the version
+        run: echo "EMB_VERSION=$(cat VERSION)" >> "$GITHUB_ENV"
+
       - name: Build Firmware and Web Bundle
         run: |
           export JIELI_TOOLCHAIN="$HOME/.jieli/toolchain"
           export AC79_SDK="$HOME/fw-AC79_AIoT_SDK"
-          python3 tools/build.py all --version 1.0
+          python3 tools/build.py all --version "$EMB_VERSION"
 
       - name: Upload Firmware and Web Artifacts
         uses: actions/upload-artifact@v4
@@ -58,8 +61,8 @@ jobs:
       - name: Publish Release Assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0
-          name: "Evander's Music Box v1.0"
+          tag_name: v${{ env.EMB_VERSION }}
+          name: "Evander's Music Box v${{ env.EMB_VERSION }}"
           files: |
             build/fw/emb.fwsc
             build/fw/emb.json

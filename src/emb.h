@@ -20,6 +20,9 @@
 #ifndef EMB_POOL
 #define EMB_POOL                     /* fm1.c: __attribute__((section(".pool"))) */
 #endif
+#ifndef EMB_VERSION
+#define EMB_VERSION "DEV"            /* tools/build.py passes the VERSION file */
+#endif
 
 #define EMB_FS 44100u
 #define EMB_CTL 32u                  /* control-rate block, frames (0.73 ms) */

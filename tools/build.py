@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 UP = ROOT / "upstream" / "felucca"
 FW = UP / "firmware"
 BUILD = ROOT / "build"
+VERSION = (ROOT / "VERSION").read_text().strip()   # the one place the version is set (CI tags v<VERSION>)
 PRODUCT = "FM-1_777"                     # the package identity; the installer and the device compare it
 DOCKER_IMAGE = os.environ.get("JIELI_DOCKER_IMAGE", "debian:bookworm-slim")
 CFLAGS_FW = ["-Os", "-ffunction-sections", "-fno-builtin", "-Wall", "-Wno-unused-function"]
@@ -116,7 +117,8 @@ def cmd_web(a):
     target = "wasm32-freestanding" if "ziglang" in cc else "wasm32"   # zig's name / clang's (and WASI SDK's)
     run([*cc, "-target", target, "-O2", "-std=c99", "-Wall",
          "-Wno-unused-function", "-nostdlib", "-fvisibility=hidden", "-Wl,--no-entry", "-Wl,--export-dynamic",
-         "-Wl,-z,stack-size=131072", "-o", site / "emu" / "emb.wasm", ROOT / "src" / "platform" / "wasm.c"])
+         "-Wl,-z,stack-size=131072", f'-DEMB_VERSION="{getattr(a, "version", VERSION)}"',
+         "-o", site / "emu" / "emb.wasm", ROOT / "src" / "platform" / "wasm.c"])
     pkg = BUILD / "fw" / "emb.fwsc"
     if getattr(a, "with_fw", False) and pkg.exists():
         fdir = site / "firmware"
@@ -210,9 +212,9 @@ def build_loader(fb, out):
     return fb.ldr_wrap(image)
 
 
-def build_app(out):
+def build_app(out, version):
     flags = [*CFLAGS_FW, "-I" + str((FW / "hal").relative_to(ROOT)).replace("\\", "/"),
-             "-I" + str((FW / "src").relative_to(ROOT)).replace("\\", "/"), f'-DFELUCCA_ID="{PRODUCT}"']
+             "-I" + str((FW / "src").relative_to(ROOT)).replace("\\", "/"), f'-DFELUCCA_ID="{PRODUCT}"', f'-DEMB_VERSION="{version}"']
     for s, o in ((FW / "crt0.S", "crt0.o"), (FW / "hal" / "fm1_vec.S", "fm1_vec.o"), (FW / "hal" / "fm1_isr.S", "fm1_isr.o")):
         tc("cc", "-c", s, "-o", out / o)
     tc("cc", *flags, "-c", ROOT / "src" / "platform" / "fm1.c", "-o", out / "emb.o")
@@ -250,7 +252,7 @@ def cmd_fw(a):
         if hashlib.sha256(fm1pkg_make.sdk_file(rel)).hexdigest() != sha:
             print(f"warning: SDK {rel} differs from AC79NN_SDK_V1.2.1 (the tested one)")
     ota = build_loader(fb, out)
-    img = build_app(out)
+    img = build_app(out, a.version)
     if len(img) > fm1pkg_make.APP_SLOT:
         raise SystemExit(f"app: {len(img)} B, the slot holds {fm1pkg_make.APP_SLOT}")
     (out / "emb.bin").write_bytes(img)
@@ -276,10 +278,11 @@ def main():
     sub.add_parser("check").set_defaults(fn=cmd_check)
     w = sub.add_parser("web")
     w.add_argument("--with-fw", action="store_true", help="put build/fw/emb.fwsc on the site for the installer")
+    w.add_argument("--version", default=VERSION)
     w.set_defaults(fn=cmd_web)
     for name, fn in (("fw", cmd_fw), ("all", cmd_all)):
         p = sub.add_parser(name)
-        p.add_argument("--version", default="1.0")
+        p.add_argument("--version", default=VERSION)
         p.set_defaults(fn=fn)
     p = sub.add_parser("wav")
     p.add_argument("slot", type=lambda s: int(s) - 1, help="1..16")
