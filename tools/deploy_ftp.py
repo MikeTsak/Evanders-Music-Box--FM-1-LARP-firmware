@@ -19,6 +19,20 @@ from pathlib import Path
 SITE = Path(__file__).resolve().parents[1] / "build" / "web"
 
 
+def load_dotenv(path):
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        k = k.strip()
+        v = v.strip().strip("'\"")
+        if k:
+            os.environ.setdefault(k, v)
+
+
 def connect(a, password):
     if a.plain:
         ftp = ftplib.FTP(a.host, timeout=30)
@@ -47,9 +61,10 @@ def mkdirs(ftp, path):
 
 
 def main():
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--host", default="fm1.miketsak.gr")
-    ap.add_argument("--user", default="fm1")
+    ap.add_argument("--host", default=os.environ.get("FM1_FTP_HOST", "fm1.miketsak.gr"))
+    ap.add_argument("--user", default=os.environ.get("FM1_FTP_USER", "fm1"))
     ap.add_argument("--dir", help="remote folder of the site (default: found automatically)")
     ap.add_argument("--plain", action="store_true", help="unencrypted FTP (only if the server has no TLS)")
     a = ap.parse_args()
