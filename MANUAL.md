@@ -2,6 +2,8 @@
 
 # The Field Manual of Evander's Music Box
 
+*(Evander's Box, for short.)*
+
 *Set down for Evander of the Elves, Bard of Mother Melody, and for whoever carries the Box after him.*
 
 > Mother Melody gave the First Song no words, only a rhythm and a key. Whoever holds this Box holds a sliver of
@@ -52,6 +54,9 @@ gives way to the **Blue Rose** opening, and then the words appear:
 A light runs across the keys while this happens. Press any button after the first half-second to skip the
 rest. The Box always wakes in **Bardic Crafting**, with its last saved songs.
 
+If the last run ended badly (a crash, a hang, a battery too low), a **pink line** at the foot of the boot screen
+says how. See Chapter VII.
+
 ---
 
 ## II. The Two Ways of the Box
@@ -67,8 +72,8 @@ keeps playing.
 
 | Mode | The glass | HOME's light |
 | --- | --- | --- |
-| Bardic Crafting | **BARDIC CRAFTING** with a cyan seal | **solid** on the home page |
-| Encounter | **ENCOUNTER** with an ember seal | **half-lit**: a steady, soft glow |
+| Bardic Crafting | an orange **BARDIC** chip, top left | **solid** on the home page |
+| Encounter | a blue **ENCOUNTER** chip, top left | **half-lit**: a steady, soft glow |
 
 ---
 
@@ -139,7 +144,7 @@ Each page sets what the four knobs **K1 to K4** do. Press a page's button to ope
 | **LFO** | **Motion** | vibrato rate | vibrato depth | swing | pan |
 | **EDIT** | **Voice** | tone | character | level | reverb send |
 | **GLO** | **Modes** | root | mode | tuning | snap on / off |
-| **GLO** again | **Box** | A4 calibration (±50 cents) | MIDI channel | lights: GLOW / LIT ONLY / STEALTH | crossfade (beats) |
+| **GLO** again | **The Box** | A4 calibration (±50 cents) | MIDI channel | LEDS: GLOW / LIT / DARK | OUTPUT: LOUD / NORM / SAFE |
 | **SEQ** | **Steps** | length (1 to 64) | swing | level | reverb send |
 
 **What CHARACTER does** depends on the instrument:
@@ -226,7 +231,7 @@ A single brush of a button does nothing. Letting go before the ring closes does 
 | Gesture | Effect |
 | --- | --- |
 | hold **SAVE** for one second | keep the workbench and all settings; the glass says *MOTHER MELODY KEEPS IT* |
-| hold **SAVE** + a **white key** for a moment | **bind** the workbench to that key as an Encounter scene |
+| hold **SAVE** + a **scene's key** for a moment | **bind** the workbench to that Encounter scene (Chapter IV: a group key or one of its sharps) |
 
 A bound song can be played in battle (Chapter IV). The sixteen factory scenes can always be restored from the
 Preset Console.
@@ -235,60 +240,90 @@ Preset Console.
 
 ## IV. Encounter: the Herald
 
-*When the Box is strapped to the forearm, Evander does not compose. He calls. Each white key is a mood of the
-field. The Box waits for the end of the bar, then turns the music toward it the way a minstrel band would.*
+*When the Box is strapped to the forearm, Evander does not compose. He calls. Four keys hold the four moods of
+the field, and the sharps beside each one hold its shades. The Box waits for the end of the bar, then turns the
+music the way a minstrel band would.*
 
-### The sixteen scenes
+### The four groups
 
-The keys run from rest to climax in four groups of four. The first key of each group is half-lit, so you can
-count in the dark.
+Only **four white keys are lit**: the first of each row of four. These are the four **scene groups**. Each group
+holds four scenes: the group's first scene, which is its key, and three variations.
 
-| Key | Scene | What it is | Mode | Tuning |
-| --- | --- | --- | --- | --- |
-| **1** | TAVERN | harp, hurdy-gurdy, bodhrán, hearth crackle | D Dorian | Pythagorean |
-| **2** | CAMPFIRE | lute, slow bodhrán pulse, low drone, fire | A Aeolian | Pythagorean |
-| **3** | SANCTUARY | choir, portative organ, harp | D Dorian | just |
-| **4** | LAMENT | koto, cello, a lone pan flute, wind | E Aeolian | meantone |
-| **5** | WILDERNESS | distant flute calls, bagpipe drone, wind | E Dorian | Pythagorean |
-| **6** | FEY FOREST | psaltery cascades, choir, recorder | G Lydian | just |
-| **7** | DUNGEON | war drum and anvil, cello, organetto | C Phrygian | meantone |
-| **8** | SEA ROAD | a rolling 6/8 feel, shawm and gurdy | D Mixolydian | Pythagorean |
-| **9** | SKIRMISH | driving war drums, a tense low cello ostinato | D Aeolian | equal |
-| **10** | BATTLE | galloping drums, buzzing gurdy, brass | E Phrygian | equal |
-| **11** | AMBUSH | clacks and silence, plucked koto | C harmonic minor | equal |
-| **12** | SIEGE | timpani, choir, cathedral organ, brass | A Aeolian | equal |
-| **13** | BOSS | full cathedral organ, galloping percussion, brass stabs | D harmonic minor | equal |
-| **14** | LAST STAND | war drums, gurdy, shawm, the organ behind | E Aeolian | Pythagorean |
-| **15** | VICTORY | fanfare, positive organ, harp | D Ionian | just |
-| **16** | REQUIEM | gong, choir, cathedral organ | D Aeolian | just |
+| Group key | Group | I (the key) | II | III | IV |
+| --- | --- | --- | --- | --- | --- |
+| white **1** | **REST** (green) | TAVERN | CAMPFIRE | SANCTUARY | LAMENT |
+| white **5** | **EXPLORE** (yellow) | WILDERNESS | FEY FOREST | DUNGEON | SEA ROAD |
+| white **9** | **COMBAT** (orange) | SKIRMISH | BATTLE | AMBUSH | SIEGE |
+| white **13** | **CLIMAX** (pink) | BOSS | LAST STAND | VICTORY | REQUIEM |
 
-The groups are: keys **1-4 REST**, **5-8 EXPLORE**, **9-12 COMBAT**, **13-16 CLIMAX**.
+**To reach a variation:** press the **sharps that follow the group key**, in order, as the keys lie:
+
+| Group | II | III | IV |
+| --- | --- | --- | --- |
+| REST | **OP1** | **OP2** | **OP3** |
+| EXPLORE | **OP4** | **OP5** | **OP6** |
+| COMBAT | **PIT** | **GLO** | **MONO** |
+| CLIMAX | **POLY** | **TOP** | *hold* white 13 |
+
+Each group's sharps sit just to the right of its group key. To find them, slide a finger right from the lit key,
+over the raised keys. For any group, **holding the group key for 0.6 s** cues its variation **IV**. It first
+cues variation I, then changes its mind. That is the only way to reach REQUIEM, because CLIMAX has only two
+sharps after it.
+
+The glass shows the groups as four coloured rows, one per key, with the scene playing filled in.
+
+| Scene | What it is | Mode | Tuning |
+| --- | --- | --- | --- |
+| TAVERN | harp, hurdy-gurdy, bodhrán, recorder | D Dorian | Pythagorean |
+| CAMPFIRE | lute, a slow bodhrán pulse, low cello drone, pan flute | A Aeolian | Pythagorean |
+| SANCTUARY | choir, portative organ, harp | D Dorian | just |
+| LAMENT | koto, cello, a lone pan flute | E Aeolian | meantone |
+| WILDERNESS | distant flute calls over a bagpipe drone | E Dorian | Pythagorean |
+| FEY FOREST | psaltery cascades, choir, recorder | G Lydian | just |
+| DUNGEON | war drum and anvil, cello, organetto | C Phrygian | meantone |
+| SEA ROAD | a rolling 6/8 feel, shawm and gurdy | D Mixolydian | Pythagorean |
+| SKIRMISH | driving war drums, a tense low cello ostinato | D Aeolian | equal |
+| BATTLE | galloping drums, buzzing gurdy, brass | E Phrygian | equal |
+| AMBUSH | clacks and silence, plucked koto | C harmonic minor | equal |
+| SIEGE | timpani, choir, cathedral organ, brass | A Aeolian | equal |
+| BOSS | full cathedral organ, galloping percussion, brass stabs | D harmonic minor | equal |
+| LAST STAND | war drums, gurdy, shawm, the organ behind | E Aeolian | Pythagorean |
+| VICTORY | fanfare, positive organ, harp | D Ionian | just |
+| REQUIEM | gong, choir, cathedral organ | D Aeolian | just |
+
+There is no fire, wind or forest in the music. You will be standing in the real ones.
 
 **How cueing works:**
 
-- **Press a white key.** It blinks fast and the glass counts down to the change.
+- **Press a scene's key.** It blinks fast and the glass counts down to the change (*NEXT*).
 - **On the next bar** the new scene fades in over two beats and the old one fades away beneath it.
 - **Press the blinking key again** to cancel.
 - **Program change 1-16** over MIDI does the same thing. A game master can also press *Cue* in the Preset
   Console.
 
-### The battle modifiers (black keys)
+### The battle modifiers (the other white keys)
 
-Modifiers take hold on the next beat. A modifier's key stays **lit** while it is in effect.
+The twelve white keys that are not group keys bend the battle. They stay **dark** until a modifier is in effect,
+then they light. Modifiers take hold on the next beat. A modifier pressed while a scene is queued waits for that
+scene and lands on it, because a new scene brings its own key.
 
-| Key | Modifier | Effect |
+| White key | Modifier | Effect |
 | --- | --- | --- |
-| **OP1** | **PHRYGIAN** | the music darkens into Phrygian tension |
-| **OP2** | **HOME KEY** | undo every bend: home key, home mode, normal time |
-| **OP3** | **HARMONIC** | harmonic minor: menace, the villain's theme |
-| **OP4** | **TRIUMPH** | major (Ionian): the tide turns |
-| **OP5** | **KEY UP** | up a whole tone (up to three times) |
-| **OP6** | **KEY DOWN** | down a whole tone |
-| **PIT** | **DOUBLE TIME** | the drums run twice as fast (again: back) |
-| **GLO** | **HALF TIME** | the drums run half as fast (again: back) |
-| **MONO** | **BREAKDOWN** | only drums and drone remain (again: back) |
-| **POLY** | **FULL HOST** | everything back in, at full intensity |
-| **TOP** | **STINGER** | a gong, a war drum and a brass chord, on the beat |
+| **2** | **PHRYGIAN** | the music darkens into Phrygian tension |
+| **3** | **HARMONIC** | harmonic minor: menace, the villain's theme |
+| **4** | **TRIUMPH** | major (Ionian): the tide turns |
+| **6** | **KEY UP** | up a whole tone (up to three times) |
+| **7** | **KEY DOWN** | down a whole tone |
+| **8** | **HOME KEY** | undo every bend: home key, home mode, normal time |
+| **10** | **DOUBLE TIME** | the drums run twice as fast (again: back) |
+| **11** | **HALF TIME** | the drums run half as fast (again: back) |
+| **12** | **BREAKDOWN** | only drums and drone remain (again: back) |
+| **14** | **FULL HOST** | everything back in, at full intensity |
+| **15** | **STINGER** | a gong, a war drum and a brass chord, on the beat |
+| **16** | **SWELL** | the cathedral swell (as **FX**) |
+
+The modes come first and the reset last in each row: three modes, then two key changes and *home*, then three
+time changes, then *full*, *stinger* and *swell*.
 
 Modal shifts keep each note's place in the scale. The tune stays the tune and only its colour turns: the same
 melody in Phrygian sounds like the same melody turned dangerous.
@@ -332,19 +367,30 @@ The other buttons belong to the workshop. In Encounter they only say so on the g
 | **REC** | solid | weaving a loop |
 | **REC** | blinking | armed, stopped |
 | **OCT** | half-lit / blinking / solid | ±1 / ±2 / ±3 octaves (as on the stock firmware) |
-| Encounter white keys | lit | the scene **playing** |
-| Encounter white keys | fast blink | **queued** |
-| Encounter white keys | half-lit | the first key of each group of four |
-| Encounter black keys | lit | that modifier is **in effect** |
+| Encounter group keys (1, 5, 9, 13) | half-lit | waiting: the four groups, the only white keys lit |
+| Encounter group key | lit | a scene of **its group is playing** |
+| Encounter sharps | lit | **that variation** is playing |
+| Encounter: any scene key | fast blink | **queued** |
+| Encounter: other white keys | lit | that **modifier** is in effect (dark otherwise) |
 | **FX** (Encounter) | lit | the cathedral swell |
 
-**For a night ambush:** set *lights* on the Box page (GLO, GLO, K3).
+**For a night ambush:** set *LEDS* on the Box page (GLO, GLO, K3).
 
 | Setting | Effect |
 | --- | --- |
 | GLOW (default) | everything above |
-| LIT ONLY | no soft glow; only what matters shines |
-| STEALTH | only the playing scene, the queue, the beat and active modifiers |
+| LIT | no soft glow; only what matters shines |
+| DARK | stealth: only the playing scene, the queue, the beat and active modifiers |
+
+### The glass
+
+| Where | What it shows |
+| --- | --- |
+| top left | the mode chip: **BARDIC** (orange) or **ENCOUNTER** (blue) |
+| top right | the **battery**: four bars, pink when nearly empty, a yellow bolt on USB power |
+| above the footer | four chips in the knobs' own colours: what **K1** (blue), **K2** (green), **K3** (grey) and **K4** (orange) do now |
+| the paper footer | a **tip** that changes every few seconds with what you're doing; button names are drawn as black keycaps |
+| over everything | turn **MASTER**: a **VOLUME** card shows the level, and leaves a second after you stop |
 
 ---
 
@@ -359,7 +405,7 @@ The other buttons belong to the workshop. In Encounter they only say so on the g
 | **OCT- + OCT+** | octave 0 | full host |
 | **OCT- + OCT+** held **5 s** | the chip's update mode (UBOOT): for repairs | same |
 | **SAVE** (hold 1 s) | keep everything | keep everything |
-| **SAVE + white key** (hold) | bind the workbench to that scene key | copy that scene to the workbench |
+| **SAVE + a scene's key** (hold) | bind the workbench to that scene | copy that scene to the workbench |
 | **SEL + OP1-OP4** | choose a track | — |
 | **SEL + white 1-4** | mute or unmute | — |
 | **ARP** | drone latch | duck |
@@ -367,16 +413,19 @@ The other buttons belong to the workshop. In Encounter they only say so on the g
 | **LFO** twice | Leslie fast ⇄ slow | — |
 | **PLAY** | start or stop the workbench | fade out / play again |
 | **REC** | live-loop on/off | — |
-| white key | note / step | cue a scene |
-| black key | note / step page | battle modifier |
+| white 1, 5, 9, 13 | note / step | a scene group (held: its variation IV) |
+| black key | note / step page | the variation after the group key |
+| other white keys | note / step | battle modifier |
+
+A scene's key is its group key or one of its sharps; for CLIMAX IV, the group key held.
 
 **MIDI** (on the channel set on the Box page):
 
 | Message | Effect |
 | --- | --- |
-| program change 1-16 | cue a scene |
+| program change 1-16 | cue a scene (REST I .. CLIMAX IV) |
 | Encounter: notes 36-51 | cue scenes 1-16 |
-| Encounter: notes 52-62 | the eleven modifiers |
+| Encounter: notes 52-63 | the twelve modifiers (52 PHRYGIAN, 53 HOME KEY, 54 HARMONIC, 55 TRIUMPH, 56 KEY UP, 57 KEY DOWN, 58 DOUBLE, 59 HALF, 60 BREAKDOWN, 61 FULL HOST, 62 STINGER, 63 SWELL) |
 | Bardic: notes | play the chosen track |
 | CC 7 | music volume |
 | Start / Stop | start or stop the transport |
@@ -387,10 +436,13 @@ The other buttons belong to the workshop. In Encounter they only say so on the g
 
 | Trouble | Remedy |
 | --- | --- |
+| Too quiet outdoors | Turn **MASTER** up: past halfway it adds gain, up to +9.5 dB, and the limiter keeps the peaks clean. Set **OUTPUT** to **LOUD** (GLO, GLO, K4). |
+| Crackles at full volume | Set **OUTPUT** to **NORM** or **SAFE**. |
 | Silence after a fall | Turn **MASTER** up. Press **PLAY**. **OCT- + OCT+** brings Encounter to full host. |
 | A loop gone wrong in battle | **HOME + REC**, hold. **HOME + SAVE** if you regret it. |
 | A red band on the glass | The Box stumbled and is restarting itself. It wakes with your last kept songs. |
-| It will not wake twice in a row | It enters its own update mode by itself. Use the Installer to write it again. |
+| A pink line under the rose at boot | The last run ended badly, and the line says how. *LOW VOLTAGE*: charge the Box. *WATCHDOG* or *CRASHED*: please report it, with what you were doing. *STOPPED AT STEP n*: the boot halted at that step; please report the number. |
+| Dark on battery, fine on USB | Charge it fully, then switch on again. If it stays dark, power on with USB, read the pink line, and report it. |
 | To return it to the stock firmware | The Installer's *Return to official V15*, or M-VAVE's updater. |
 | Deeper trouble | **OCT- + OCT+** held five seconds enters the chip's update mode. The README's recovery section names the tools. |
 

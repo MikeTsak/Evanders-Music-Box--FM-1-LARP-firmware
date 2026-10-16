@@ -13,7 +13,7 @@
  * Kept from the stock firmware, so an FM-1 can always be updated or rescued:
  *   - the M-UPGRADE protocol (ota.c): the web installer, tools/fm1_install.py and M-VAVE's updater all work
  *   - SysEx F0 22 24 35 7D F7 and OCT- + OCT+ held 5 s: the chip's UBOOT (mask ROM) for jl-uboot-tool
- *   - two failed boots in a row (a crash in the first 30 s): UBOOT on its own */
+ *   - the boot breadcrumbs: a run that ends badly is named on the next boot screen (boot_diagnose) */
 #define FELUCCA_FLASH 1
 #define FELUCCA_OTA 1
 #define FELUCCA_OTA_DRYRUN 0
@@ -48,6 +48,14 @@
 static struct { uint32_t magic, failed, pending; } bootguard __attribute__((section(".noinit")));
 static uint8_t flash_ok;
 
+/* boot breadcrumbs: how far the last run got. A run that dies before BS_RUNNING (or reboots out of it through a
+ * crash, a hang or low voltage) is named on the next boot's screen, so a black screen leaves a clue behind */
+enum { BS_START = 1, BS_PANEL, BS_CORE, BS_AUDIO, BS_USB, BS_IRQ, BS_FRAME, BS_RUNNING };
+#define CRUMB_MAGIC 0x43524D42u                      /* "CRMB" */
+static struct { uint32_t magic, stage, crash_count; } crumb __attribute__((section(".noinit")));
+static char boot_note[40];
+static void crumb_set(uint32_t s) { crumb.stage = s; }
+
 /* ------------------------------------------------------------------ audio: ALNK0 I2S, double-buffered DMA */
 #define HALF_FRAMES 128u
 #define HALF_WORDS (HALF_FRAMES * 2u)
@@ -72,7 +80,11 @@ void fm1_alnk0_irq(void)                            /* via isr_alnk0 (hal/fm1_is
     fm1_audio_ack_aux(p);
     if (p & FM1_AUDIO_HALF) {
         uint32_t half = fm1_audio_free_half(), us;
-        emb_render(&abuf[half * HALF_WORDS], HALF_FRAMES);   /* interleaved L R, Q15: what the codec takes */
+        int32_t *o = &abuf[half * HALF_WORDS];
+        uint32_t k;
+        emb_render(o, HALF_FRAMES);                 /* interleaved L R, Q15, peaks under the OUTPUT ceiling */
+        for (k = 0; k < HALF_WORDS; k++)            /* Q15 -> the codec's 24 bits: full scale (Felucca: << 7, -6 dB) */
+            o[k] *= 1 << 8;
         fm1_audio_ack_half();
         us = (fm1_ticks() - t0) / FM1_TICKS_PER_US;
         if (us > audio_us_max)
@@ -265,6 +277,26 @@ static void master_poll(void)                       /* the MASTER pot (ADC ch 4,
     emb_master((uint32_t)v >> 2);
 }
 
+/* the battery (ADC ch 3, PB1 divider), slowly smoothed. Felucca's (stock) bars are at 531 / 561 / 591: 505 is
+ * taken as empty and 610 as full, a calibration to check against a meter on a real unit */
+#define BATT_EMPTY 505
+#define BATT_FULL 610
+static void battery_poll(uint32_t now)
+{
+    static int32_t v = -1;
+    static uint32_t last;
+    int32_t r, pct;
+    if (now - last < 250u && v >= 0)
+        return;
+    last = now;
+    r = fm1_adc_read(FM1_ADC_BATT);
+    if (r < 0)
+        return;
+    v = v < 0 ? r << 4 : v + ((r << 4) - v) / 16;
+    pct = ((v >> 4) - BATT_EMPTY) * 100 / (BATT_FULL - BATT_EMPTY);
+    emb_power((uint32_t)(pct < 0 ? 0 : pct > 100 ? 100 : pct), usb.config && !usb.suspended);
+}
+
 static void midi_poll(void)                         /* USB-MIDI in: notes, program changes, clock start / stop */
 {
     while (mi_r != mi_w) {
@@ -302,6 +334,26 @@ static void sysex_poll(void)                        /* the preset console (emb_s
 /* ------------------------------------------------------------------ the screen */
 static uint16_t fb[EMB_W * EMB_H] EMB_POOL;
 static uint16_t strip[16u * EMB_W] EMB_POOL;
+
+/* The panel's wake-up again, without its reset (no flash on screen): SLPOUT, colour mode, scan, inversion, normal,
+ * on. Each is harmless to a panel already awake; a panel that was still in its own power-on reset when lcd_init
+ * spoke (on battery the switch raises every rail at once) hears them now. */
+static void lcd_reassert(void)
+{
+    static const uint8_t COLMOD = 0x55, MADCTL = 0x00;
+    lcd_cmd(0x11);                                  /* SLPOUT */
+    fm1_delay_ms(10);
+    lcd_cmd(0x3A);
+    lcd_small[0] = COLMOD;
+    lcd_data(lcd_small, 1);
+    lcd_cmd(0x36);
+    lcd_small[1] = MADCTL;
+    lcd_data(lcd_small + 1, 1);
+    lcd_cmd(0x21);                                  /* INVON (IPS) */
+    lcd_cmd(0x13);                                  /* NORON */
+    lcd_cmd(0x29);                                  /* DISPON */
+    fm1_lcd_backlight(1);
+}
 
 static void screen_frame(void)
 {
@@ -382,29 +434,65 @@ static inline void halt_core1(void)
     __asm__ volatile("csync" ::: "memory");
 }
 
+/* the last run's end, in a line for the boot screen (empty: a clean power-on or a deliberate reset) */
+static void boot_diagnose(uint32_t p3)
+{
+    const char *why = 0;
+    char n[4];
+    if (fm1_crash.magic == FM1_CRASH_MAGIC && crumb.magic == CRUMB_MAGIC && fm1_crash.count != crumb.crash_count)
+        why = "LAST RUN CRASHED";
+    else if (crumb.magic == CRUMB_MAGIC && crumb.stage && crumb.stage < BS_RUNNING) {
+        str_cpy(boot_note, "LAST BOOT STOPPED AT STEP ", sizeof boot_note);
+        n[0] = (char)('0' + crumb.stage);
+        n[1] = 0;
+        str_cpy(boot_note + str_len(boot_note), n, 4);
+    } else if (!(p3 & 1u) && (p3 & 2u))
+        why = "LAST RESET: LOW VOLTAGE";
+    else if (!(p3 & 1u) && (p3 & 4u))
+        why = "LAST RESET: WATCHDOG";
+    if (why)
+        str_cpy(boot_note, why, sizeof boot_note);
+    crumb.magic = CRUMB_MAGIC;
+    crumb.crash_count = fm1_crash.magic == FM1_CRASH_MAGIC ? fm1_crash.count : 0;
+    crumb.stage = BS_START;
+    emb_boot_note(boot_note);
+}
+
 static void fm1_main(void)
 {
-    uint32_t f = irq_save(), last_frame = 0, oct_t0 = 0;
+    uint32_t f, last_frame = 0, oct_t0 = 0, reasserted = 0;
+    /* Let the rails settle before anything draws current or talks to the panel: on battery the power switch
+     * raises everything at once, and the ST7789 ignores commands for up to 120 ms after its supply comes up. */
+    fm1_delay_ms(150);
+    f = irq_save();
     flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u; /* the FM-1's 1 MiB part; anything else: RAM only */
     irq_restore(f);
     if (flash_ok)
         ota_boot_cleanup();                         /* the staging area an update left */
+    crumb_set(BS_PANEL);
     lcd_init();
-    lcd_fill(0, 0, 240, 240, COL_NAVY);             /* immediate feedback: panel is alive */
+    lcd_fill(0, 0, 240, 240, COL_INK);              /* the panel answers: a dark screen, not a black one */
+    crumb_set(BS_CORE);
     fm1_input_init();
     fm1_adc_init();
     leds_init();
     emb_init(fm1_ticks());
+    boot_diagnose(fm1_boot.p3_rst);
     master_poll();
+    screen_frame();                                 /* the crest's first stroke, before the loads come on */
+    crumb_set(BS_AUDIO);
     audio_silence();
     fm1_audio_init(abuf, HALF_WORDS, isr_alnk0, 3);
+    crumb_set(BS_USB);
     usb_start();
     fm1_led_dim_level(0);
     fm1_led_anim_start(1);                          /* Felucca's power-on light sweep under the boot animation */
+    crumb_set(BS_IRQ);
     fm1_timer5_start(isr_timer5, 4);                /* above ALNK0: the scan nests into the render */
     fm1_guard_lock_top();
     fm1_irq_enable_all();
-    leds_write();                                   /* render first frame immediately */
+    crumb_set(BS_FRAME);
+    leds_write();
     screen_frame();
     bootguard.pending = 0;                          /* boot succeeded: clear pending immediately */
     bootguard.failed = 0;
@@ -412,6 +500,13 @@ static void fm1_main(void)
         uint32_t now = fm1_ms;
         fm1_wdt_feed();
         usb_retry(now);
+        if (!reasserted && now > 600u) {            /* half a second in: the panel's wake-up once more, and a */
+            reasserted = 1;                         /* whole frame, for a panel that missed the first */
+            lcd_reassert();
+            emb_redraw();
+        }
+        if (crumb.stage != BS_RUNNING && now > 3000u)
+            crumb_set(BS_RUNNING);
         {   /* OCT- + OCT+ held 5 s: the chip's UBOOT (jl-uboot-tool, unbrickers); letting go cancels */
             uint32_t both = (1u << BTN_ID[B_OCTDN]) | (1u << BTN_ID[B_OCTUP]);
             if ((fm1_in.buttons & both) != both)
@@ -435,6 +530,7 @@ static void fm1_main(void)
         midi_poll();
         input_poll();
         master_poll();
+        battery_poll(now);
         emb_tick(now);
         if (now - last_frame >= 33u) {              /* ~30 frames a second: LEDs and the changed rows */
             last_frame = now;

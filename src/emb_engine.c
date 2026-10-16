@@ -367,20 +367,8 @@ static void clock_block(void)
         deck_tick(act);
         if (a->gtw != 0u)
             continue;
-        /* a step boundary of the front deck */
-        if ((a->gstep & 1u) == 0u)
-            coup_n = 0;                             /* an eighth: the hurdy-gurdy's coup */
-        if ((a->gstep & 3u) == 0u) {                /* a beat */
-            uint32_t k;
-            emb_st.beats++;
-            for (k = 0; k < pend_mods_n; k++)
-                apply_mod(pend_mods[k]);
-            pend_mods_n = 0;
-            if (stinger_pending) {
-                stinger_pending = 0;
-                stinger();
-            }
-        }
+        /* a step boundary of the front deck: first the queued scene (it brings its own key and mode), then what
+         * waits for the beat, so a bend pressed while a scene was queued lands on the new scene, not before it */
         qmask = emb_set.quant == 0u ? 3u : emb_set.quant == 1u ? 15u : emb_set.quant == 2u ? 31u : 63u;   /* beat .. 4 bars */
         emb_st.bar_left = (uint8_t)((qmask + 1u - (a->gstep & qmask)) & qmask);
         if (queue_slot != 0xFFFFu && (a->gstep & qmask) == 0u) {
@@ -388,6 +376,21 @@ static void clock_block(void)
             queue_slot = 0xFFFFu;
             launch(s);
             a = &deck[act];
+        }
+        if ((a->gstep & 1u) == 0u)
+            coup_n = 0;                             /* an eighth: the hurdy-gurdy's coup */
+        if ((a->gstep & 3u) == 0u) {                /* a beat */
+            uint32_t k;
+            emb_st.beats++;
+            if (queue_slot == 0xFFFFu) {            /* (a scene on its way: the bends wait to land on it) */
+                for (k = 0; k < pend_mods_n; k++)
+                    apply_mod(pend_mods[k]);
+                pend_mods_n = 0;
+            }
+            if (stinger_pending) {
+                stinger_pending = 0;
+                stinger();
+            }
         }
     }
 }
@@ -606,17 +609,47 @@ static void track_gains(deck_t *d)
     }
 }
 
-static int32_t softclip(int32_t x)                  /* gentle above -6 dBFS, hard at the rail */
+/* The master bus: MASTER as makeup gain (up to +9.5 dB, for a forest), then a peak limiter with one block (0.73 ms)
+ * of look-ahead, so peaks are turned down smoothly instead of squared off. Each block's gain ramps from the last
+ * block's to one that holds both the block going out and the one coming in under the ceiling, so no sample passes
+ * it; the envelope releases over ~190 ms. The ceiling is the OUTPUT setting: LOUD -0.5 dBFS, NORMAL -3, SAFE -6
+ * (Felucca's own level, for a speaker or amplifier that crackles near full scale). */
+static const int32_t OUT_CEIL[3] = {30920, 23197, 16422};
+static int32_t lim_dl[2 * EMB_CTL], lim_env, lim_g = 32768;
+
+static int32_t master_gain(void)                    /* Q15, may exceed 1: vol^2 x 3 (0 .. +9.5 dB) */
 {
-    int32_t a = x < 0 ? -x : x, s = x < 0 ? -1 : 1;
-    if (a > 16384) {
-        a = 16384 + ((a - 16384) >> 1);
-        if (a > 28000)
-            a = 28000 + ((a - 28000) >> 2);
-        if (a > 32767)
-            a = 32767;
+    uint32_t v = emb_master_vol;
+    return (int32_t)((v * v * 3u) >> 1);            /* 255: 97537 (x 2.98) */
+}
+
+static void master_block(int32_t *lr, int32_t g)
+{
+    int32_t ceil = OUT_CEIL[emb_set.out_level < 3u ? emb_set.out_level : 0], in[2 * EMB_CTL], pk = 0, pd = 0, gn, i;
+    for (i = 0; i < (int32_t)EMB_CTL; i++) {
+        int64_t l = ((int64_t)mix_l[i] * g) >> 15, r = ((int64_t)mix_r[i] * g) >> 15;
+        in[2 * i] = (int32_t)(l > (1 << 28) ? (1 << 28) : l < -(1 << 28) ? -(1 << 28) : l);
+        in[2 * i + 1] = (int32_t)(r > (1 << 28) ? (1 << 28) : r < -(1 << 28) ? -(1 << 28) : r);
     }
-    return a * s;
+    for (i = 0; i < (int32_t)(2 * EMB_CTL); i++) {
+        int32_t a = in[i] < 0 ? -in[i] : in[i], b = lim_dl[i] < 0 ? -lim_dl[i] : lim_dl[i];
+        if (a > pk)
+            pk = a;
+        if (b > pd)
+            pd = b;
+    }
+    if (pd > pk)
+        pk = pd;
+    lim_env = pk > lim_env ? pk : lim_env + ((pk - lim_env) >> 8);
+    gn = lim_env > ceil ? (int32_t)emb_udiv((uint32_t)ceil << 15, (uint32_t)lim_env) : 32768;
+    for (i = 0; i < (int32_t)EMB_CTL; i++) {
+        int32_t gi = lim_g + (((gn - lim_g) * i) >> 5);
+        lr[2 * i] = clampi((int32_t)(((int64_t)lim_dl[2 * i] * gi) >> 15), -32767, 32767);
+        lr[2 * i + 1] = clampi((int32_t)(((int64_t)lim_dl[2 * i + 1] * gi) >> 15), -32767, 32767);
+    }
+    lim_g = gn;
+    for (i = 0; i < (int32_t)(2 * EMB_CTL); i++)
+        lim_dl[i] = in[i];
 }
 
 void emb_audio_init(void)
@@ -726,22 +759,18 @@ void emb_render(int32_t *lr, uint32_t frames)
                 }
             }
         }
-        for (k = 0; k < 2u; k++)                    /* the beds: the hearth, the wind */
-            if (deck[k].on && deck[k].song && deck[k].song->amb)
-                amb_run(&amb_st[k], deck[k].song->amb, mix_l, mix_r, mul15(deck[k].gain, 12000));
         rv_run(send_l, send_r, mix_l, mix_r);
         music_gain += (music_gain_t - music_gain) >> 5;
         {
-            int32_t g = (int32_t)emb_master_vol * 128;
+            int32_t g = master_gain();
             if (duck)
                 g = mul15(g, 9000);
-            g = mul15(g, music_gain);
-            for (i = 0; i < EMB_CTL; i++) {
-                int32_t l = softclip(mul15(mix_l[i], g)), r = softclip(mul15(mix_r[i], g));
-                lr[2u * (f + i)] = l;
-                lr[2u * (f + i) + 1u] = r;
-                if (l > peak)
-                    peak = l;
+            g = (int32_t)(((int64_t)g * music_gain) >> 15);
+            master_block(lr + 2u * f, g);
+            for (i = 0; i < 2u * EMB_CTL; i++) {
+                int32_t a = lr[2u * f + i] < 0 ? -lr[2u * f + i] : lr[2u * f + i];
+                if (a > peak)
+                    peak = a;
             }
         }
         emb_st.peak = (int16_t)peak;

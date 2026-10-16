@@ -1,22 +1,30 @@
 /* SPDX-License-Identifier: GPL-3.0-only
- * Evander's Music Box: drawing. A 240x240 RGB565 frame (native byte order; the FM-1 port swaps for the
- * panel), primitives, a 5x7 font, the Mother Melody crest and the Blue Rose, the boot animation. */
+ * Evander's Music Box: drawing. A 240x240 RGB565 frame (native byte order; the FM-1 port swaps for the panel).
+ * The look: flat blocks of bold colour on ink, hard offset shadows, a 5x7 pixel font, little 1-bit sprites
+ * (a pocket synth's screen crossed with a party game). Primitives, sprites, the crest, the Blue Rose, the boot. */
 
 #define RGB(r, g, b) (uint16_t)((((r) & 0xF8) << 8) | (((g) & 0xFC) << 3) | ((b) >> 3))
-#define COL_NAVY RGB(0x0A, 0x11, 0x28)              /* deep mystical navy */
-#define COL_NAVY2 RGB(0x16, 0x22, 0x48)             /* a panel on the navy */
-#define COL_CYAN RGB(0x00, 0xE5, 0xFF)              /* luminous ice-cyan */
-#define COL_CYAN_D RGB(0x00, 0x5A, 0x70)
-#define COL_PARCH RGB(0xE8, 0xD9, 0xB0)             /* parchment */
-#define COL_WOOD RGB(0x6B, 0x44, 0x23)              /* the frame's wood */
-#define COL_ROSE RGB(0x1E, 0x4F, 0xD8)              /* the Blue Rose */
-#define COL_ROSE_D RGB(0x0D, 0x2A, 0x80)
-#define COL_WHITE RGB(0xF2, 0xF2, 0xF2)
-#define COL_INK RGB(0x00, 0x00, 0x00)
-#define COL_RED RGB(0xC0, 0x39, 0x2B)
-#define COL_GOLD RGB(0xD4, 0xAF, 0x37)
-#define COL_DIM RGB(0x5A, 0x6A, 0x90)
-#define COL_EMBER RGB(0xFF, 0x7A, 0x2E)
+#define COL_INK RGB(0x10, 0x10, 0x10)               /* the ground */
+#define COL_INK2 RGB(0x26, 0x26, 0x26)              /* a panel on it */
+#define COL_GREY RGB(0x6E, 0x6E, 0x6E)
+#define COL_PAPER RGB(0xF2, 0xEE, 0xE4)             /* text, cards */
+#define COL_BLUE RGB(0x2E, 0x5B, 0xFF)              /* the Blue Rose; K1; Encounter */
+#define COL_GREEN RGB(0x19, 0xC3, 0x7D)             /* K2; REST */
+#define COL_LIGHT RGB(0xDC, 0xDC, 0xD8)             /* K3 */
+#define COL_ORANGE RGB(0xFF, 0x5A, 0x1F)            /* K4; Bardic; COMBAT */
+#define COL_YELLOW RGB(0xFF, 0xD2, 0x1F)            /* EXPLORE */
+#define COL_PINK RGB(0xFF, 0x4F, 0x9A)              /* CLIMAX; warnings */
+#define COL_PURPLE RGB(0x7B, 0x4D, 0xFF)
+#define COL_BLUE_D RGB(0x16, 0x2E, 0x96)
+#define COL_RED RGB(0xE8, 0x33, 0x3A)
+/* (names the FM-1 port's update and crash screens use) */
+#define COL_NAVY COL_INK
+#define COL_CYAN COL_BLUE
+
+static const uint16_t KNOB_COL[4] = {COL_BLUE, COL_GREEN, COL_LIGHT, COL_ORANGE};   /* K1..K4, as the knobs on a
+                                                                                    * certain Swedish synth */
+static const uint16_t TRACK_COL[4] = {COL_ORANGE, COL_PURPLE, COL_BLUE, COL_YELLOW};
+static const uint16_t FAMILY_COL[4] = {COL_GREEN, COL_YELLOW, COL_ORANGE, COL_PINK};
 
 static uint16_t *G;                                 /* the frame being drawn */
 
@@ -146,15 +154,6 @@ static int text_w(const char *s, int sc)
     return n ? n * 6 * sc - sc : 0;
 }
 static void text_c(int cx, int y, const char *s, int sc, uint16_t c) { text(cx - text_w(s, sc) / 2, y, s, sc, c); }
-static void text_glow(int cx, int y, const char *s, int sc, uint16_t c, uint16_t glow)   /* a halo, then the ink */
-{
-    int x = cx - text_w(s, sc) / 2;
-    text(x - 1, y, s, sc, glow);
-    text(x + 1, y, s, sc, glow);
-    text(x, y - 1, s, sc, glow);
-    text(x, y + 1, s, sc, glow);
-    text(x, y, s, sc, c);
-}
 
 static void num(char *b, int32_t v)                 /* a short decimal */
 {
@@ -193,6 +192,58 @@ static void note_name(char *b, int n)
     }
 }
 
+static void text_sh(int x, int y, const char *s, int sc, uint16_t c, uint16_t sh)   /* a hard drop shadow */
+{
+    text(x + sc, y + sc, s, sc, sh);
+    text(x, y, s, sc, c);
+}
+static void text_csh(int cx, int y, const char *s, int sc, uint16_t c, uint16_t sh)
+{
+    text_sh(cx - text_w(s, sc) / 2, y, s, sc, c, sh);
+}
+static void card(int x, int y, int w, int h, uint16_t c, uint16_t edge_c)   /* a flat card, a hard shadow */
+{
+    fill(x + 3, y + 3, w, h, COL_INK);
+    fill(x, y, w, h, edge_c);
+    fill(x + 2, y + 2, w - 4, h - 4, c);
+}
+
+/* ------------------------------------------------------------------ sprites: 1-bit, 9 wide, row bit 8 = left */
+enum { SP_FIRE, SP_TREE, SP_SWORDS, SP_CROWN, SP_ROSE, SP_NOTE, SP_SPEAKER, SP_BOLT, SP_DRUM, SP_COUNT };
+static const uint16_t SPRITE[SP_COUNT][9] = {
+    {0x010, 0x018, 0x038, 0x078, 0x07C, 0x0EE, 0x0C6, 0x1FF, 0x0AA},   /* a campfire: REST */
+    {0x010, 0x038, 0x07C, 0x038, 0x07C, 0x0FE, 0x1FF, 0x010, 0x038},   /* a tree: EXPLORE */
+    {0x101, 0x082, 0x044, 0x028, 0x010, 0x028, 0x0C6, 0x082, 0x101},   /* crossed swords: COMBAT */
+    {0x000, 0x111, 0x1BB, 0x1FF, 0x1FF, 0x155, 0x1FF, 0x000, 0x000},   /* a crown: CLIMAX */
+    {0x028, 0x07C, 0x0EE, 0x0D6, 0x0EE, 0x07C, 0x038, 0x010, 0x008},   /* the Blue Rose */
+    {0x01C, 0x01E, 0x013, 0x010, 0x010, 0x070, 0x0F0, 0x0F0, 0x060},   /* a note */
+    {0x008, 0x018, 0x03A, 0x1F9, 0x1F9, 0x1F9, 0x03A, 0x018, 0x008},   /* a speaker */
+    {0x00C, 0x018, 0x030, 0x07C, 0x018, 0x030, 0x060, 0x040, 0x000},   /* a bolt: USB power */
+    {0x07C, 0x0FE, 0x1FF, 0x1FF, 0x183, 0x1FF, 0x1FF, 0x0FE, 0x07C},   /* a drum */
+};
+static void sprite(int x, int y, uint32_t id, int sc, uint16_t c)
+{
+    int r, k;
+    for (r = 0; r < 9; r++)
+        for (k = 0; k < 9; k++)
+            if ((SPRITE[id][r] >> (8 - k)) & 1u)
+                fill(x + k * sc, y + r * sc, sc, sc, c);
+}
+
+/* the battery, 22 x 11 at x, y: pct 0..100 (255 unknown), ext: on USB (a bolt over it) */
+static void battery(int x, int y, uint32_t pct, uint32_t ext)
+{
+    int bars = pct > 100u ? 4 : (int)((pct + 12u) / 25u);
+    uint16_t c = pct <= 15u ? COL_PINK : COL_PAPER, k;
+    fill(x, y, 20, 11, c);
+    fill(x + 20, y + 3, 2, 5, c);
+    fill(x + 1, y + 1, 18, 9, COL_INK);
+    for (k = 0; k < 4 && (int)k < bars; k++)
+        fill(x + 2 + k * 4, y + 2, 3, 7, ext ? COL_GREEN : c);
+    if (ext)
+        sprite(x + 6, y + 1, SP_BOLT, 1, COL_YELLOW);
+}
+
 /* ------------------------------------------------------------------ the crest and the rose */
 /* The Mother Melody crest: two sharp gothic M's sharing their middle stroke, a crown above, wings
  * flaring from the outer legs. p: how much is drawn, 0..256 (the stroke reveal); s: scale /256 */
@@ -218,8 +269,8 @@ static void crest(int cx, int cy, int p, int s, uint16_t c)
         return;
     for (k = 0; k + 1 < 7; k++)                     /* the crown */
         line(cx + ((CROWN[k][0] * s) >> 8), cy + ((CROWN[k][1] * s) >> 8), cx + ((CROWN[k + 1][0] * s) >> 8),
-             cy + ((CROWN[k + 1][1] * s) >> 8), (2 * s) >> 8, COL_GOLD);
-    disc(cx, cy + ((-62 * s) >> 8), (3 * s) >> 8, COL_GOLD);
+             cy + ((CROWN[k + 1][1] * s) >> 8), (2 * s) >> 8, COL_YELLOW);
+    disc(cx, cy + ((-62 * s) >> 8), (3 * s) >> 8, COL_YELLOW);
     for (k = 0; k < 4; k++) {                       /* the wings: feathers flaring out and up, longer outward */
         int len = ((22 + k * 9) * s) >> 8, side, a = 40 + k * 26;
         for (side = -1; side <= 1; side += 2) {
@@ -230,66 +281,63 @@ static void crest(int cx, int cy, int p, int s, uint16_t c)
     }
 }
 
-/* the Blue Rose (the heraldic five-petal rose of assets/bluerose.png): s scale /256, rot in 1024ths */
+/* the Blue Rose (the heraldic five-petal rose of assets/bluerose.png), flat: s scale /256, rot in 1024ths */
 static void rose(int cx, int cy, int s, int rot)
 {
     int k;
     if (s <= 0)
         return;
-    for (k = 0; k < 5; k++) {                       /* white sepal points between the petals, outlined */
+    for (k = 0; k < 5; k++) {                       /* the paper sepal points between the petals */
         int a = rot + 102 + k * 205, b0 = a - 80, b1 = a + 80;
-        int tx = cx + pol_x(a, (96 * s) >> 8), ty = cy + pol_y(a, (96 * s) >> 8);
-        tri(tx, ty, cx + pol_x(b0, (40 * s) >> 8), cy + pol_y(b0, (40 * s) >> 8), cx + pol_x(b1, (40 * s) >> 8),
-            cy + pol_y(b1, (40 * s) >> 8), COL_INK);
-        tx = cx + pol_x(a, (88 * s) >> 8);
-        ty = cy + pol_y(a, (88 * s) >> 8);
-        tri(tx, ty, cx + pol_x(b0 + 10, (42 * s) >> 8), cy + pol_y(b0 + 10, (42 * s) >> 8),
-            cx + pol_x(b1 - 10, (42 * s) >> 8), cy + pol_y(b1 - 10, (42 * s) >> 8), COL_WHITE);
+        tri(cx + pol_x(a, (92 * s) >> 8), cy + pol_y(a, (92 * s) >> 8), cx + pol_x(b0, (40 * s) >> 8),
+            cy + pol_y(b0, (40 * s) >> 8), cx + pol_x(b1, (40 * s) >> 8), cy + pol_y(b1, (40 * s) >> 8), COL_PAPER);
     }
-    for (k = 0; k < 5; k++)                         /* the petals' black outlines */
-        disc(cx + pol_x(rot + k * 205, (34 * s) >> 8), cy + pol_y(rot + k * 205, (34 * s) >> 8), (34 * s) >> 8, COL_INK);
+    for (k = 0; k < 5; k++)                         /* a hard shadow under the petals */
+        disc(cx + 4 + pol_x(rot + k * 205, (34 * s) >> 8), cy + 4 + pol_y(rot + k * 205, (34 * s) >> 8),
+             (32 * s) >> 8, COL_BLUE_D);
     for (k = 0; k < 5; k++) {
         int px0 = cx + pol_x(rot + k * 205, (34 * s) >> 8), py0 = cy + pol_y(rot + k * 205, (34 * s) >> 8);
-        disc(px0, py0, (30 * s) >> 8, COL_ROSE);
-        disc(px0 + pol_x(rot + k * 205, (8 * s) >> 8), py0 + pol_y(rot + k * 205, (8 * s) >> 8), (14 * s) >> 8,
-             COL_ROSE_D);                           /* the inner fold */
-        disc(px0 + pol_x(rot + k * 205, (11 * s) >> 8), py0 + pol_y(rot + k * 205, (11 * s) >> 8), (12 * s) >> 8,
-             COL_ROSE);
+        disc(px0, py0, (31 * s) >> 8, COL_BLUE);
+        disc(px0 + pol_x(rot + k * 205, (10 * s) >> 8), py0 + pol_y(rot + k * 205, (10 * s) >> 8), (11 * s) >> 8,
+             COL_BLUE_D);                           /* the inner fold */
+        disc(px0 + pol_x(rot + k * 205, (13 * s) >> 8), py0 + pol_y(rot + k * 205, (13 * s) >> 8), (9 * s) >> 8,
+             COL_BLUE);
     }
-    for (k = 0; k < 5; k++)                         /* the black seams between the petals */
-        line(cx, cy, cx + pol_x(rot + 102 + k * 205, (50 * s) >> 8), cy + pol_y(rot + 102 + k * 205, (50 * s) >> 8),
+    for (k = 0; k < 5; k++)                         /* the seams between the petals */
+        line(cx, cy, cx + pol_x(rot + 102 + k * 205, (46 * s) >> 8), cy + pol_y(rot + 102 + k * 205, (46 * s) >> 8),
              (s >> 8) + 1, COL_INK);
-    disc(cx, cy, (22 * s) >> 8, COL_INK);
-    disc(cx, cy, (19 * s) >> 8, COL_WHITE);
+    disc(cx, cy, (21 * s) >> 8, COL_INK);
+    disc(cx, cy, (18 * s) >> 8, COL_PAPER);
     for (k = 0; k < 14; k++)                        /* the ring of red beads */
-        disc(cx + pol_x(k * 73, (14 * s) >> 8), cy + pol_y(k * 73, (14 * s) >> 8), (s * 3) >> 9, COL_RED);
+        disc(cx + pol_x(k * 73, (13 * s) >> 8), cy + pol_y(k * 73, (13 * s) >> 8), (s * 3) >> 9, COL_RED);
 }
 
-/* the boot animation at t ms: the crest is written, it yields to the rose blooming, the proclamation */
-static void boot_frame(uint32_t t)
+/* the boot animation at t ms: the crest is written, it yields to the rose blooming, the proclamation.
+ * note: a line under it (the last reset's cause, from the FM-1 port), or 0 */
+#define BOOT_MS 3600u
+static void boot_frame(uint32_t t, const char *note)
 {
     static const char *const L[3] = {"EVANDER'S MUSIC BOX", "MOTHER MELODY", "HEARS THY SONG"};
+    static const uint16_t CONF[5] = {COL_BLUE, COL_GREEN, COL_ORANGE, COL_YELLOW, COL_PINK};
     int i;
-    fill(0, 0, EMB_W, EMB_H, COL_NAVY);
-    for (i = 0; i < 40; i++) {                      /* a few fixed stars */
+    fill(0, 0, EMB_W, EMB_H, COL_INK);
+    for (i = 0; i < 28; i++) {                      /* pixel confetti, twinkling */
         uint32_t h = (uint32_t)i * 2654435761u;
         int x = (int)((h >> 8) & 255u), y = (int)((h >> 16) & 255u);
-        if (x < EMB_W && y < EMB_H && ((t >> 7) + (uint32_t)i) % 7u)
-            px(x, y, (h & 1u) ? COL_DIM : COL_CYAN_D);
+        if (x < EMB_W - 4 && y < 170 && ((t >> 7) + (uint32_t)i) % 5u)
+            fill(x, y, 3, 3, CONF[h % 5u]);
     }
-    frame(3, 3, EMB_W - 6, EMB_H - 6, COL_WOOD);
-    frame(5, 5, EMB_W - 10, EMB_H - 10, COL_PARCH);
     if (t < 1100u) {                                /* the crest, written stroke by stroke */
         int p = (int)emb_udiv(t * 256u, 900u);
-        crest(120, 94, p > 256 ? 256 : p, 300, COL_CYAN);
+        crest(120, 94, p > 256 ? 256 : p, 300, COL_PAPER);
     } else if (t < 1900u) {                         /* the crest gives way to the rose */
         int f = (int)emb_udiv((t - 1100u) * 256u, 800u);
         if (f < 160)
-            crest(120, 94 - (f >> 3), 256, 300 - f, f < 80 ? COL_CYAN : COL_CYAN_D);
+            crest(120, 94 - (f >> 3), 256, 300 - f, f < 80 ? COL_PAPER : COL_GREY);
         rose(120, 88, (f * 200) >> 8, 512 - (f * 2));
     } else {
+        static const uint8_t Y[3] = {174, 196, 213};
         int k;
-        static const uint8_t Y[3] = {176, 199, 216};
         rose(120, 88, 200, 0);
         for (k = 0; k < 3; k++) {                   /* the proclamation, a letter every 30 ms */
             uint32_t start = 1950u + (uint32_t)k * 420u, n;
@@ -300,12 +348,11 @@ static void boot_frame(uint32_t t)
             for (i = 0; L[k][i] && (uint32_t)i < n && i < 23; i++)
                 b[i] = L[k][i];
             b[i] = 0;
-            text_glow(120, Y[k], b, 2, k ? COL_PARCH : COL_CYAN, COL_NAVY2);
-            if (k == 0 && n > 19u) {                /* the em dash: a runic bar with a diamond */
-                fill(40, 194, 160, 1, COL_CYAN_D);
-                tri(120, 191, 116, 194, 120, 197, COL_CYAN);
-                tri(120, 191, 124, 194, 120, 197, COL_CYAN);
-            }
+            text_csh(120, Y[k], b, 2, k ? COL_YELLOW : COL_PAPER, k ? COL_ORANGE : COL_BLUE);
         }
+    }
+    if (note && note[0]) {                          /* why the last run ended, if it did not end well */
+        fill(0, 230, EMB_W, 10, COL_PINK);
+        text_c(120, 231, note, 1, COL_INK);
     }
 }

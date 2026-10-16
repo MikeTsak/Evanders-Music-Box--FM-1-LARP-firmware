@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Evander's Music Box: the sound. Fixed-point voices (strings, bowed, choir, winds, organs, drums),
- * the SANCTUARY reverb, the Leslie rotor and the ambience beds. Audio side only (see emb.h).
+ * the sympathetic strings, the SANCTUARY reverb and the Leslie rotor. Audio side only (see emb.h).
  * Part of the unity build (src/emb.c). */
 
 /* ------------------------------------------------------------------ helpers */
@@ -219,13 +219,13 @@ static const drum_t DRUM[DR_COUNT] = {
     {110, {256, 353, 538, 727}, {12000, 9000, 7000, 5000}, {6000, 4500, 3500, 2500}, 3000, 900, 12000, 400, 0, 1},
 };
 /* loudness, Q13 (8192 = as rendered): measured so one voice sits near -14 dBFS RMS (drums: peaks near 24000),
- * so a track's LEVEL means the same on every instrument (tools: the probes in BUILDING.md) */
+ * so a track's LEVEL means the same on every instrument (averaged over four notes) */
 static const uint16_t INST_GAIN[I_COUNT] = {
     8192, 8192, 8192,
-    16630, 23600, 17100, 16630, 15800,             /* strings: a pluck's energy is all at the start */
-    5650, 4100, 3040, 3660,                         /* choir, gurdy, bagpipe, cello */
-    2610, 2610, 4280, 3340,                         /* pan flute, recorder, shawm, brass */
-    6360, 7060, 6360, 3790};                        /* organs */
+    14115, 24122, 16788, 15458, 12988,             /* strings: a pluck's energy is all at the start */
+    6753, 4969, 3214, 3933,                         /* choir, gurdy, bagpipe, cello */
+    2624, 2609, 5057, 3328,                         /* pan flute, recorder, shawm, brass */
+    6339, 7041, 6361, 3732};                        /* organs */
 static const uint16_t DRUM_GAIN[DR_COUNT] = {7800, 7000, 5700, 5700, 6100, 7000, 20480, 4900};
 
 /* per kit: base pitch (x/256) and decay (x/256) */
@@ -246,8 +246,10 @@ typedef struct {
     int32_t pa[9];                                  /* partial amplitude, Q24 (drums) or rank gain Q15 */
     uint32_t pk[4];                                 /* drum partial decay per block, Q16 */
     uint32_t r;                                     /* polyBLEP reciprocal */
-    svf_t f1, f2;
-    int32_t f1f, f1q, f2f, f2q, lp;
+    svf_t f1, f2, f3;
+    int32_t f1f, f1q, f2f, f2q, f3f, f3q, lp;
+    uint32_t wob_ph, wob_inc;                       /* a slow wander: an organ's bellows, a player's breath */
+    int32_t wob_amt;                                /* its depth, cents */
     uint32_t base_inc;                              /* without vibrato / pitch env */
     int32_t pdrop, pdrop_k;                         /* pitch drop Q16 of an octave, decay per block Q16 */
     int32_t nz_a;                                   /* noise / chiff level, Q24 */
@@ -338,23 +340,38 @@ static void voice_start(voice_t *v, const emb_track_t *t, uint32_t inst, uint32_
             v->pdrop = cents_oct(40);               /* the twang: starts 40 cents sharp, settles */
             v->pdrop_k = (int32_t)decay_k(120);
         }
+        {   /* the body: two resonances of the instrument's box or soundboard (Hz), and the quill's click */
+            static const uint16_t BODY[5][2] = {{190, 480}, {105, 290}, {100, 235}, {165, 700}, {330, 1250}};
+            const uint16_t *bd = BODY[inst - I_HARP];
+            v->f1f = svf_f(bd[0]);
+            v->f2f = svf_f(bd[1]);
+            v->f1q = 5000;
+            v->f2q = 7000;
+            v->nz_a = (int32_t)(1800 + tone * 40) << 9;   /* the plectrum (a quill, a nail): a few ms of bright noise */
+            v->nz_k = decay_k(inst == I_HARP ? 3 : 6);
+        }
         break;
     }
     case ENG_BOW:
     case ENG_CHOIR:
         v->r = emb_udiv(0x80000000u, (v->base_inc >> 16) | 1u);
         v->ph[1] = v->nz;                           /* the second (detuned) oscillator, free phase */
+        v->ph[2] = v->nz * 7u;                      /* a third: the choir's third singer, the gurdy's chanterelle */
         if (inst == I_CHOIR) {                      /* vowels: TONE moves ah -> oh -> oo */
             int32_t m = (int32_t)tone;
             v->f1f = svf_f(730 - m * 3);
             v->f2f = svf_f(1100 - m * 2);
+            v->f3f = svf_f(2550 - m * 2);
             v->f1q = 9000;
             v->f2q = 9000;
+            v->f3q = 12000;
         } else if (inst == I_BAGPIPE) {
             v->f1f = svf_f(950);
             v->f2f = svf_f(2600);
             v->f1q = 7000;
-            v->f2q = 11000;
+            v->f2q = 9000;
+            v->pdrop = cents_oct(200);              /* the skirl: a grace note a tone above, gone in ~30 ms */
+            v->pdrop_k = (int32_t)decay_k(30);
         } else if (inst == I_CELLO) {
             v->f1f = svf_f(280);
             v->f2f = svf_f(1100 + (int32_t)tone * 6);
@@ -363,8 +380,10 @@ static void voice_start(voice_t *v, const emb_track_t *t, uint32_t inst, uint32_
         } else {                                    /* hurdy-gurdy: the nasal wheel string */
             v->f1f = svf_f(520);
             v->f2f = svf_f(1700 + (int32_t)tone * 8);
+            v->f3f = svf_f(2300);                   /* the rosin on the wheel */
             v->f1q = 9000;
             v->f2q = 10000;
+            v->f3q = 9000;
         }
         break;
     case ENG_WIND:
@@ -378,9 +397,16 @@ static void voice_start(voice_t *v, const emb_track_t *t, uint32_t inst, uint32_
         v->f1q = 4000;
         v->f2f = svf_f(inst == I_SHAWM ? 1300 : 600 + (int32_t)tone * 40);
         v->f2q = inst == I_SHAWM ? 6000 : 20000;
+        v->f3f = svf_f(2800);                       /* the shawm's second, nasal formant */
+        v->f3q = 8000;
         if (inst == I_BRASS) {
             v->pdrop = cents_oct(-25);              /* the blat: starts flat */
             v->pdrop_k = (int32_t)decay_k(60);
+        } else {
+            v->pdrop = cents_oct(inst == I_SHAWM ? -30 : -18);   /* the breath scoops up into the note */
+            v->pdrop_k = (int32_t)decay_k(inst == I_SHAWM ? 40 : 55);
+            v->wob_inc = (5u + (v->nz & 3u)) * 97391u * EMB_CTL;   /* the player's breath: 5..8 Hz */
+            v->wob_amt = inst == I_SHAWM ? 4 : 3;
         }
         break;
     case ENG_ORGAN: {
@@ -393,6 +419,14 @@ static void voice_start(voice_t *v, const emb_track_t *t, uint32_t inst, uint32_
             v->inc[i] = inc < 0x7FFFFFFFull ? (uint32_t)inc : 0;
             v->pa[i] = v->inc[i] ? g : 0;
             v->ph[i] = o == 3u ? (uint32_t)i * 0x1C71C71Cu : 0;   /* tonewheels never start in step */
+        }
+        if (o == 2u)                                /* a cathedral's mixture: the upper ranks beat gently */
+            for (i = 4u; i < 9u; i++)
+                v->inc[i] += (i & 1u) ? v->inc[i] >> 11 : (uint32_t)-(int32_t)(v->inc[i] >> 11);
+        if (o < 2u) {                               /* a small organ's bellows: the wind is never quite steady */
+            v->wob_inc = (o ? 20000u : 26000u) * EMB_CTL + (v->nz & 0x3FFFu) * EMB_CTL;
+            v->wob_ph = v->nz << 7;
+            v->wob_amt = o ? 2 : 5;
         }
         v->nz_a = o == 3u ? 1 << 22 : 1 << 24;      /* key click / pipe chiff */
         v->nz_k = decay_k(o == 3u ? 12 : 90);
@@ -478,6 +512,10 @@ static uint32_t voice_inc(voice_t *v, int32_t vib_q15)
     }
     if (v->eng == ENG_BOW || v->eng == ENG_CHOIR || v->eng == ENG_WIND)
         x += cents_oct((vib_q15 * vib_depth) >> 15);
+    if (v->wob_amt) {
+        v->wob_ph += v->wob_inc;
+        x += cents_oct((sin_ph(v->wob_ph) * v->wob_amt) >> 15);
+    }
     return x ? inc_oct(v->base_inc, x) : v->base_inc;
 }
 
@@ -507,27 +545,41 @@ static void voice_run(voice_t *v, int32_t *out, int32_t gain_q15)
             y = mul15(y, v->ks_g);
             b[w & (KS_MAX - 1u)] = (int16_t)clampi(y, -32767, 32767);
             w++;
-            out[i] += mul15(mul15(x, e0 + de * (int32_t)i), g);
+            {
+                int32_t n = noise(&v->nz), body, click;
+                body = svf_bp(&v->f1, x >> 3, v->f1f, v->f1q) + svf_bp(&v->f2, x >> 3, v->f2f, v->f2q);
+                v->lp += (n - v->lp) >> 2;          /* the click: noise above ~1.5 kHz */
+                click = (int32_t)(((int64_t)(n - v->lp) * (v->nz_a >> 9)) >> 15);
+                out[i] += mul15(mul15(x + (body >> 1) + click, e0 + de * (int32_t)i), g);
+            }
         }
+        v->nz_a = (int32_t)(((int64_t)v->nz_a * v->nz_k) >> 16);
         v->w = (uint16_t)(w & (KS_MAX - 1u));
         break;
     }
     case ENG_BOW:
     case ENG_CHOIR: {
-        uint32_t inc2 = inc + (inc >> 9);           /* +3.4 cents: the second string / voice */
-        int32_t buzz = 0, wet;
+        uint32_t inc2 = inc + (inc >> 9), inc3 = inc - (inc >> 10);   /* +3.4 and -1.7 cents: more strings, singers */
+        int32_t buzz = 0, wet, three = v->inst == I_CHOIR || v->inst == I_GURDY;
         uint32_t cp = coup_ph;
         for (i = 0; i < EMB_CTL; i++) {
             int32_t s, f;
             if (v->inst == I_BAGPIPE)
                 s = saw_blep(v->ph[0], inc, v->r) - saw_blep(v->ph[0] + 0x50000000u, inc, v->r);   /* narrow reed */
+            else if (three)
+                s = ((saw_blep(v->ph[0], inc, v->r) + saw_blep(v->ph[1], inc2, v->r) +
+                      saw_blep(v->ph[2], inc3, v->r)) * 10923) >> 15;
             else
                 s = (saw_blep(v->ph[0], inc, v->r) + saw_blep(v->ph[1], inc2, v->r)) >> 1;
             v->ph[0] += inc;
             v->ph[1] += inc2;
-            if (v->inst == I_CHOIR)
-                s += noise(&v->nz) >> 5;            /* breath */
+            v->ph[2] += inc3;
             f = svf_bp(&v->f1, s >> 1, v->f1f, v->f1q) + svf_bp(&v->f2, s >> 1, v->f2f, v->f2q);
+            if (v->inst == I_CHOIR)                 /* the third formant and the breath */
+                f += svf_bp(&v->f3, (s >> 2) + (noise(&v->nz) >> 4), v->f3f, v->f3q);
+            else if (v->inst == I_GURDY)            /* rosin: a scratch that swells with each turn of the wheel */
+                f += mul15(svf_bp(&v->f3, noise(&v->nz) >> 3, v->f3f, v->f3q),
+                           3000 + (int32_t)((cp >> 16) < 9000u ? (9000u - (cp >> 16)) : 0u));
             v->lp += (s - v->lp) >> 3;
             wet = f + (v->lp >> 1);
             if (v->inst == I_GURDY && v->chr > 8u) {   /* the trompette: a buzzing bridge, struck on each coup */
@@ -551,10 +603,11 @@ static void voice_run(voice_t *v, int32_t *out, int32_t gain_q15)
                 s += sin_ph(v->ph[0] * 3u) / 20;
                 s += mul15(svf_bp(&v->f1, n, v->f1f, v->f1q), v->inst == I_PANFLUTE ? breath * 2 : breath);
                 s += svf_bp(&v->f2, ch, v->f1f, 6000) >> 1;   /* chiff at the attack */
-            } else if (v->inst == I_SHAWM) {
+            } else if (v->inst == I_SHAWM) {         /* a double reed: buzzing, two nasal formants, hard-driven */
                 s = saw_blep(v->ph[0], inc, v->r) - saw_blep(v->ph[0] + 0x40000000u, inc, v->r);
-                s = (s >> 1) + svf_bp(&v->f2, s >> 1, v->f2f, v->f2q);
-                s = s > 20000 ? 20000 : s < -20000 ? -20000 : s;   /* the reed saturates */
+                s = (s >> 1) + svf_bp(&v->f2, s >> 1, v->f2f, v->f2q) + (svf_bp(&v->f3, s >> 2, v->f3f, v->f3q) >> 1);
+                s += ch >> 4;
+                s = s > 16000 ? 16000 + ((s - 16000) >> 3) : s < -16000 ? -16000 + ((s + 16000) >> 3) : s;
             } else {                                /* brass: the lowpass opens with the attack */
                 int32_t open = (v->env >> 9) + (int32_t)v->tone * 120;
                 s = saw_blep(v->ph[0], inc, v->r);
@@ -568,14 +621,20 @@ static void voice_run(voice_t *v, int32_t *out, int32_t gain_q15)
         break;
     }
     case ENG_ORGAN: {
-        uint32_t o = v->inst - I_ORGANETTO;
-        int32_t chiff = v->nz_a >> 9;
+        uint32_t o = v->inst - I_ORGANETTO, rinc[9];
+        int32_t chiff = v->nz_a >> 9, k, wob = 0;
+        if (v->wob_amt) {
+            v->wob_ph += v->wob_inc;
+            wob = cents_oct((sin_ph(v->wob_ph) * v->wob_amt) >> 15);
+        }
+        for (k = 0; k < 9; k++)
+            rinc[k] = wob ? inc_oct(v->inc[k], wob) : v->inc[k];
         for (i = 0; i < EMB_CTL; i++) {
-            int32_t s = 0, k;
+            int32_t s = 0;
             for (k = 0; k < 9; k++)
                 if (v->pa[k]) {
                     s += mul15(sin_ph(v->ph[k]), v->pa[k]);
-                    v->ph[k] += v->inc[k];
+                    v->ph[k] += rinc[k];
                 }
             if (chiff)
                 s += o == 3u ? mul15(noise(&v->nz), chiff) :
@@ -760,44 +819,4 @@ static void rv_run(const int32_t *in_l, const int32_t *in_r, int32_t *out_l, int
         out_r[i] += mul15(y[1] + y[3] - (y[2] >> 1), rv.mix);
     }
     rv.w = w & (RV_MAX - 1u);
-}
-
-/* ------------------------------------------------------------------ ambience beds */
-typedef struct {
-    uint32_t nz, lfo;
-    svf_t a, b;
-    int32_t brown, pop, pop_f;
-    svf_t ps;
-} amb_t;
-static amb_t amb_st[2];
-
-static void amb_run(amb_t *a, uint32_t kind, int32_t *l, int32_t *r, int32_t g)
-{
-    uint32_t i;
-    if (!a->nz)
-        a->nz = 0xACE1u + kind * 977u;
-    a->lfo += 14000u * EMB_CTL;                     /* ~0.14 Hz */
-    if (kind == 1u) {                               /* hearth: a low rumble and the crackle of logs */
-        for (i = 0; i < EMB_CTL; i++) {
-            int32_t n = noise(&a->nz), s;
-            a->brown += (n - a->brown) >> 7;
-            if ((a->nz & 0x3FFFu) < 6u) {           /* a pop now and then, sometimes in bursts */
-                a->pop = 26000 + (n & 0x1FFF);
-                a->pop_f = svf_f(900 + (int32_t)(a->nz >> 20));
-            }
-            s = svf_bp(&a->ps, mul15(n, a->pop), a->pop_f, 6000);
-            a->pop = mul15(a->pop, 31500);
-            s += a->brown * 2 + (n >> 7);
-            l[i] += mul15(s, g);
-            r[i] += mul15(s + (a->brown >> 1), g);
-        }
-    } else if (kind == 2u) {                        /* wind: a wandering band of noise, gusting */
-        int32_t ctr = 450 + (sin_ph(a->lfo) >> 7) + (sin_ph(a->lfo * 3u) >> 9);
-        int32_t gust = 9000 + (sin_ph(a->lfo * 2u + 0x40000000u) >> 2), fa = svf_f(ctr), fb = svf_f(ctr + 140);
-        for (i = 0; i < EMB_CTL; i++) {
-            int32_t n = noise(&a->nz);
-            l[i] += mul15(mul15(svf_bp(&a->a, n >> 1, fa, 4500), gust), g);
-            r[i] += mul15(mul15(svf_bp(&a->b, n >> 1, fb, 4500), gust), g);
-        }
-    }
 }

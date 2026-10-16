@@ -8,47 +8,60 @@
 <meta name="description" content="Evander's Music Box: LARP firmware for the M-VAVE FM-1. Emulator, installer and preset console.">
 <link rel="icon" href="rose.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-  .hero { text-align: center; padding: 28px 0 8px; }
-  .hero img { width: min(220px, 50vw); filter: drop-shadow(0 0 30px rgba(0, 229, 255, .35)); }
-  .hero h1 { font: 700 clamp(28px, 6vw, 52px)/1.05 var(--display); color: var(--parch); margin: 14px 0 6px; }
-  .hero p.proc { color: var(--cyan); letter-spacing: .3em; font-size: clamp(11px, 2.2vw, 14px); margin: 0 0 24px; }
-  .card a.go { display: inline-block; margin-top: 6px; }
+  .hero { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; margin: 12px 0 30px; }
+  .hero .rose {
+    width: min(200px, 38vw); padding: 14px; background: var(--card); border: 4px solid var(--line);
+    border-radius: 28px; box-shadow: 8px 8px 0 var(--line); transform: rotate(-5deg);
+  }
+  .hero h1 { font: 400 clamp(40px, 8vw, 84px)/.92 var(--display); margin: 0 0 14px; }
+  .hero h1 span { display: inline-block; background: var(--blue); color: #fff; padding: 0 12px 4px; border: 4px solid var(--line);
+    border-radius: 14px; box-shadow: 5px 5px 0 var(--line); transform: rotate(1.5deg); }
+  .hero p.proc { font: 700 13px/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; margin: 0 0 14px; }
+  .hero p.lede { font-size: 19px; max-width: 560px; margin: 0; }
+  .card .big { font: 400 40px/1 var(--display); margin: 0 0 6px; }
+  @media (max-width: 640px) { .hero { grid-template-columns: 1fr; justify-items: start; } }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <nav class="top">
+    <a href="./" aria-current="page">Home</a><a href="emu/">Emulator</a><a href="installer.html">Installer</a><a href="console.html">Preset Console</a>
+  </nav>
   <section class="hero">
-    <img src="rose.png" alt="The Blue Rose of Mother Melody">
-    <h1>Evander's Music Box</h1>
-    <p class="proc">MOTHER MELODY HEARS THY SONG</p>
+    <img class="rose" src="rose.png" alt="The Blue Rose of Mother Melody">
+    <div>
+      <h1>Evander's <span>Box</span></h1>
+      <p class="proc">Mother Melody hears thy song</p>
+      <p class="lede">Evander's Music Box is firmware for the M-VAVE FM-1. By night it's a four-track medieval
+        workshop. By day it's strapped to your forearm, scoring a live roleplay one key at a time.</p>
+    </div>
   </section>
-  <p style="max-width:720px;margin:0 auto 28px;text-align:center" class="muted">
-    A firmware for the M-VAVE FM-1 that turns it into the relic of Evander, Elven Bard: a four-track medieval
-    workshop by night, and a forearm-strapped soundtrack for live roleplay by day.
-  </p>
   <div class="grid-3">
-    <section class="card">
-      <h2>The Emulator</h2>
-      <p>The firmware itself, compiled to WebAssembly, on a drawn FM-1. Play it before thou flashest anything.</p>
-      <a class="go" href="emu/">Open the emulator &rarr;</a>
+    <section class="card blue">
+      <span class="tag">Try it</span>
+      <p class="big">Emulator</p>
+      <p>The real firmware compiled to WebAssembly, on a drawn FM-1. Play it before you flash anything.</p>
+      <a class="btn" href="emu/">Open the emulator</a>
     </section>
-    <section class="card">
-      <h2>The Installer</h2>
-      <p>Write the Music Box to thy FM-1 over USB from Chrome or Edge. Return to the official V15 any time.</p>
-      <a class="go" href="installer.html">Open the installer &rarr;</a>
+    <section class="card green">
+      <span class="tag">Flash it</span>
+      <p class="big">Installer</p>
+      <p>Write Evander's Box to your FM-1 over USB from Chrome or Edge. You can return to the official V15 at any time.</p>
+      <a class="btn" href="installer.html">Open the installer</a>
     </section>
-    <section class="card">
-      <h2>The Preset Console</h2>
-      <p>Back up thy scenes, share songs as <code>.emb</code> files, and cue scenes from a game master's laptop.</p>
-      <a class="go" href="console.html">Open the console &rarr;</a>
+    <section class="card orange">
+      <span class="tag">Keep it</span>
+      <p class="big">Preset Console</p>
+      <p>Back up your scenes, share songs as <code>.emb</code> files, and cue scenes from a game master's laptop.</p>
+      <a class="btn" href="console.html">Open the console</a>
     </section>
   </div>
   <section class="card">
     <h2>The field manual</h2>
-    <p>Every shortcut, every light: <a href="MANUAL.md">MANUAL.md</a>. Building it thyself: <a href="BUILDING.md">BUILDING.md</a>.</p>
+    <p>Every shortcut and every light are in <a href="MANUAL.md">MANUAL.md</a>. To build it yourself, see <a href="BUILDING.md">BUILDING.md</a>.</p>
   </section>
   <footer>GPL-3.0-only. Built on Felucca's FM-1 hardware layer by Hügelton Instruments. Not affiliated with M-VAVE / Cuvave. · Made by <a href="https://miketsak.gr" target="_blank" rel="noopener">miketsak.gr</a></footer>
 </div>

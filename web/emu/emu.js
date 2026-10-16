@@ -25,7 +25,7 @@ function send(m) { if (node) node.port.postMessage(m); }
 
 function encoder(parent, id, label, isPot) {
   const box = el("div");
-  const k = el("div", isPot ? "pot" : "enc");
+  const k = el("div", isPot ? "pot" : "enc dark");
   k.tabIndex = 0;
   k.setAttribute("role", "slider");
   k.setAttribute("aria-label", label);
@@ -85,7 +85,13 @@ function buildPanel() {
     octs.append(b);
   }
   left.append(octs);
-  for (let i = 0; i < 4; i++) encoder($("knobs"), 3 + i, ENC[3 + i]);
+  const KNOB_COL = ["#2E5BFF", "#19C37D", "#DCDCD8", "#FF5A1F"];   // K1..K4: the colours on the box's screen
+  for (let i = 0; i < 4; i++) {
+    encoder($("knobs"), 3 + i, ENC[3 + i]);
+    const cap = $("knobs").lastChild.querySelector(".enc");
+    cap.style.setProperty("--kc", KNOB_COL[i]);
+    cap.classList.remove("dark");
+  }
   for (let id = 0; id < 12; id++) {
     const b = el("button", "btn-fm", BTN[id]);
     b.setAttribute("aria-label", BTN[id].replace("<br>", "/"));
@@ -94,7 +100,7 @@ function buildPanel() {
     $("btns").append(b);
   }
   for (let w = 0; w < 16; w++) {
-    const k = el("div", "key");
+    const k = el("div", w % 4 === 0 ? "key group" : "key");   // 1, 5, 9, 13: Encounter's scene groups
     k.tabIndex = 0;
     k.setAttribute("aria-label", `white key ${w + 1}`);
     k.append(el("span", "", ""));
@@ -211,7 +217,7 @@ async function fillSlots() {
   sel.innerHTML = "";
   for (let s = 0; s < SONG_SLOTS; s++) {
     const h = songHead(await io.read(s, true));
-    const o = el("option", "", s === WORKBENCH ? `Workbench: ${h.name}` : `${s + 1}. ${h.name}`);
+    const o = el("option", "", s === WORKBENCH ? `Workbench: ${h.name}` : `${["REST", "EXPLORE", "COMBAT", "CLIMAX"][s >> 2]} ${["I", "II", "III", "IV"][s & 3]}: ${h.name}`);
     o.value = s;
     sel.append(o);
   }

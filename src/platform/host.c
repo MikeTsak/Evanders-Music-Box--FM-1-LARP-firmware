@@ -271,19 +271,105 @@ static void ppm(const char *dir, const char *name, const uint16_t *fb)
     fclose(f);
 }
 
+/* the boot animation runs its length whatever the first tick's clock says (an even ms once ended it at once) */
+static void test_boot(void)
+{
+    emb_init(2);
+    emb_tick(1000);
+    CHECK(emb_booting(), "booting after an even first tick");
+    emb_tick(1000 + BOOT_MS / 2u);
+    CHECK(emb_booting(), "still booting halfway");
+    emb_tick(1001 + BOOT_MS);
+    CHECK(!emb_booting(), "boot over after BOOT_MS");
+}
+
+/* Encounter: the group keys, the sharps' variations, the held group key, the modifier keys */
+static void test_encounter_keys(void)
+{
+    uint32_t s, k, seen = 0;
+    for (k = 0; k < EMB_NKEY; k++) {
+        int sl = enc_slot(k);
+        if (sl >= 0) {
+            CHECK(!((seen >> sl) & 1u), "slot %d reached by two keys", sl);
+            seen |= 1u << sl;
+        }
+    }
+    CHECK(seen == 0x7FFFu, "keys reach slots 0..14 (got %04X); 15 is the CLIMAX key held", seen);
+    for (s = 0; s < 4u; s++)
+        CHECK(enc_slot((uint32_t)CAT_KEY[s]) == (int)s * 4 && emb_white_of[CAT_KEY[s]] == (int)s * 4,
+              "group %u: white key %u", s, s * 4u + 1u);
+    CHECK(enc_slot(1) == 1 && enc_slot(3) == 2 && enc_slot(5) == 3, "REST's sharps: II III IV");
+    CHECK(enc_slot(13) == 7 && enc_slot(20) == 11 && enc_slot(25) == 14, "the last sharp of each row");
+    ui.mode = 1;
+    emb_post(C_PANIC, 0, 0, 0, 0);
+    run(EMB_CTL * 2u, 0);
+    emb_key(21, 1, 100);                            /* hold CLIMAX: BOSS at once, REQUIEM after 0.6 s */
+    run(EMB_CTL * 4u, 0);
+    CHECK(emb_st.deck_slot[emb_st.active] == 12u, "CLIMAX key: BOSS");
+    run(EMB_FS * 7u / 10u, 0);
+    emb_key(21, 0, 0);
+    CHECK(emb_st.queued == 16u, "held: REQUIEM queued (%u)", emb_st.queued);
+    emb_key(22, 1, 100);                            /* D#5: CLIMAX II */
+    emb_key(22, 0, 0);
+    run(EMB_CTL * 2u, 0);
+    CHECK(emb_st.queued == 14u, "D#5 queues LAST STAND (%u)", emb_st.queued);
+    emb_key(emb_key_of_white[1], 1, 100);           /* white 2: PHRYGIAN, waiting for LAST STAND, then on it */
+    emb_key(emb_key_of_white[1], 0, 0);
+    for (k = 0; k < 400u && emb_st.deck_slot[emb_st.active] != 13u; k++)
+        run(EMB_CTL * 4u, 0);
+    CHECK(emb_st.deck_slot[emb_st.active] == 13u, "LAST STAND took over");
+    CHECK(emb_st.mod_mode == M_PHRYGIAN, "white 2: Phrygian, on the new scene");
+    {
+        uint8_t lv[EMB_NLED];
+        emb_leds(lv);
+        CHECK(lv[B_COUNT + emb_key_of_white[1]] == LED_LIT, "the modifier's key lit while in effect");
+        CHECK(lv[B_COUNT + emb_key_of_white[2]] == LED_OFF, "an idle modifier key dark");
+    }
+    emb_post(C_PANIC, 0, 0, 0, 0);
+    emb_post(C_MOD, 1, 0, 0, 0);
+    run(EMB_CTL * 2u, 0);
+    ui.mode = 0;
+}
+
+static void test_volume_card(void)
+{
+    int32_t peak = 0;
+    uint32_t i;
+    run(EMB_CTL * 2u, 0);
+    emb_master(128u << 4);
+    emb_master(129u << 4);                          /* one step: the pot's jitter */
+    CHECK(ui.vol_t == 0u || (int32_t)(ui.now - ui.vol_t) > 0, "jitter shows no card");
+    emb_master(140u << 4);
+    CHECK(ui.vol_t && (int32_t)(ui.now - ui.vol_t) < 0, "a turn shows the card");
+    run(EMB_FS * 12u / 10u, 0);
+    CHECK((int32_t)(ui.now - ui.vol_t) > 0, "gone a second later");
+    emb_master(4095);                               /* full MASTER on the loudest scene: never past the ceiling */
+    emb_post(C_QUEUE, 12, 0, 0, 0);
+    for (i = 0; i < 300u; i++)
+        run(1024, &peak);
+    CHECK(peak <= OUT_CEIL[0], "limiter: peak %d over the ceiling %d", peak, OUT_CEIL[0]);
+    CHECK(peak > OUT_CEIL[0] * 9 / 10, "and loud: peak %d", peak);
+    emb_post(C_PANIC, 0, 0, 0, 0);
+    emb_master(200u << 4);
+}
+
 static int shots(const char *dir)
 {
     static uint16_t fb[EMB_W * EMB_H];
     uint32_t dirty[8], t;
     static const uint32_t BOOT_T[4] = {500, 1400, 1800, 3300};
     static const char *const BOOT_N[4] = {"boot1_crest", "boot2_bloom", "boot3_rose", "boot4_proclamation"};
+    emb_power(76, 0);
     for (t = 0; t < 4u; t++) {
         ui.booting = 1;
+        ui.boot_started = 1;
         ui.boot_t0 = 1;
         ui.now = 1u + BOOT_T[t];
+        emb_boot_note(t == 3u ? "LAST RESET: LOW VOLTAGE" : 0);
         emb_draw(fb, dirty);
         ppm(dir, BOOT_N[t], fb);
     }
+    emb_boot_note(0);
     ui.booting = 0;
     run(EMB_FS / 2u, 0);
     emb_post(C_PLAY, 255, 0, 0, 0);
@@ -294,6 +380,12 @@ static int shots(const char *dir)
     ui.page = P_SEQ; ui.trk = 2; emb_draw(fb, dirty); ppm(dir, "bardic_steps", fb);
     ui.page = P_FX; emb_draw(fb, dirty); ppm(dir, "bardic_sanctuary", fb);
     ui.page = P_MODE; emb_draw(fb, dirty); ppm(dir, "bardic_modes", fb);
+    ui.sub = 1; emb_draw(fb, dirty); ppm(dir, "bardic_box", fb);
+    ui.sub = 0;
+    ui.page = P_HOME;
+    ui.vol_t = ui.now + 500u;
+    emb_draw(fb, dirty); ppm(dir, "volume_card", fb);
+    ui.vol_t = 0;
     ui.mode = 1;
     emb_post(C_QUEUE, 12, 0, 0, 0);
     run(EMB_FS * 3u, 0);
@@ -321,6 +413,9 @@ int main(int argc, char **argv)
     test_microtiming();
     test_purge_undo();
     test_ui();
+    test_encounter_keys();
+    test_volume_card();
+    test_boot();
     printf(fails ? "%d CHECKS FAILED\n" : "all checks passed\n", fails);
     return fails != 0;
 }

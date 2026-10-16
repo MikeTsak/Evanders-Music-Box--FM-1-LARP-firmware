@@ -96,7 +96,7 @@ typedef struct {
     uint32_t magic;
     char name[12];
     uint8_t bpm, root, mode, temper; /* bpm 40..240; root 0..11 (0 = C) */
-    uint8_t amb, swing, vib_rate, vib_depth;   /* ambience (0 none, 1 hearth, 2 wind), swing 0..12 ticks */
+    uint8_t _amb, swing, vib_rate, vib_depth;   /* (_amb: reserved, 0; was the ambience beds) swing 0..12 ticks */
     emb_track_t t[EMB_NTRK];
     uint32_t sum;                    /* emb_sum() of everything before it */
 } emb_song_t;
@@ -107,7 +107,7 @@ typedef struct {
     int8_t tune;                     /* A4 calibration, cents -50..+50 (the FM-1's I2S clock runs ~0.7 cent sharp) */
     uint8_t midi_ch, leds, fade_beats;   /* MIDI channel 0..15; LEDs 0 GLOW 1 LIT ONLY 2 STEALTH; crossfade, beats */
     uint8_t quant, rv_size, rv_decay, rv_damp;   /* Encounter quantize 0 beat 1 bar 2 two bars 3 four bars */
-    uint8_t rv_mix, snap, _r[2];
+    uint8_t rv_mix, snap, out_level, _r;   /* out_level: OUTPUT ceiling 0 LOUD (-0.5 dBFS) 1 NORMAL (-3) 2 SAFE (-6) */
     uint32_t sum;
 } emb_settings_t;
 #define EMB_SET_MAGIC 0x54455345u    /* "ESET" */
@@ -134,6 +134,9 @@ void emb_leds(uint8_t lv[EMB_NLED]);              /* LED levels (LED_*), blinkin
 uint32_t emb_draw(uint16_t *fb, uint32_t row_dirty[(EMB_H + 31) / 32]);   /* RGB565 240x240; 1 if any row changed */
 uint32_t emb_sysex(const uint8_t *in, uint32_t n, uint8_t *out);   /* 7-bit body (after F0, before F7) -> reply */
 int emb_booting(void);                            /* the boot animation is still running */
+void emb_power(uint32_t pct, uint32_t ext);       /* battery 0..100 % (255: unknown), ext: running on USB power */
+void emb_boot_note(const char *s);                /* a line shown under the boot animation (the last reset's cause) */
+void emb_redraw(void);                            /* the next emb_draw reports every row (the panel was reset) */
 void emb_shed(void);                              /* audio side: a render ran long, drop the oldest voice (fm1.c) */
 
 /* ---- shared helpers (emb_dsp.c) ---- */
@@ -143,7 +146,7 @@ extern int16_t emb_sine[1024];                    /* Q15, filled by emb_init */
 void emb_song_clear(emb_song_t *s, const char *name);
 void emb_scene_factory(uint32_t slot, emb_song_t *s);   /* emb_scenes.c */
 extern const char *const emb_scene_name[EMB_NSLOT];
-extern const char *const emb_mod_name[11];
+extern const char *const emb_mod_name[12];
 
 /* ---- core internals shared between the core's files (not for platforms) ---- */
 typedef struct {                     /* one command: UI side -> audio side */

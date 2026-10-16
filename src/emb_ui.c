@@ -12,8 +12,11 @@
  *                   EDIT + GLO  the modern organ: tonewheel drawbars and the Leslie rotor
  *                   PRESETS instrument, ALGORITHM tempo, SELECT track / page
  *                   SAVE (hold 1 s) save; SAVE + white key (hold) store the workbench as that scene
- *   ENCOUNTER       white keys 1-16 scenes (crossfade on the next bar), black keys modifiers
- *                   K1 intensity  K2 tempo  K3 Sanctuary  K4 music volume; ARP duck; FX cathedral swell
+ *   ENCOUNTER       white keys 1, 5, 9, 13 (the first of each row of four): the scene groups REST, EXPLORE,
+ *                   COMBAT, CLIMAX, each cueing its first scene (crossfade on the next bar); the sharps after a
+ *                   group key: its variations II, III, IV; a group key held 0.6 s: variation IV; the other white
+ *                   keys: the battle modifiers. K1 intensity  K2 tempo  K3 Sanctuary  K4 music volume;
+ *                   ARP duck; FX cathedral swell
  */
 
 enum { P_HOME, P_FX, P_ENV, P_MOTION, P_VOICE, P_MODE, P_SEQ };
@@ -41,7 +44,39 @@ static struct {
     uint32_t row_hash[EMB_H];
     uint8_t save_due;                               /* bit 0 settings+workbench, 1 slots (mask in save_slots) */
     uint16_t save_slots;
+    uint8_t boot_started, batt, ext, vol_init, vol_ref;
+    int8_t cat_key;                                 /* Encounter: the group key held (for variation IV), -1 none */
+    uint32_t cat_t0, vol_t;                         /* vol_t: the MASTER card shows until then (0 none) */
+    const char *boot_note;
 } ui;
+
+/* ---- Encounter: what each key does ---- */
+static const int8_t CAT_KEY[4] = {0, 7, 14, 21};    /* the first white key of each row of four: F3, C4, G4, D5 */
+static const int8_t MOD_OF_WHITE[16] = {-1, 0, 2, 3, -1, 4, 5, 1, -1, 6, 7, 8, -1, 9, 10, 11};
+#define MOD_SWELL 11
+/* the scene key k cues: a group key its group's first scene, the n-th sharp after it the group's n+1-th; -1 none */
+static int enc_slot(uint32_t k)
+{
+    int c = 3, n = 0;
+    uint32_t j;
+    while (c > 0 && (int)k < CAT_KEY[c])
+        c--;
+    if ((int)k == CAT_KEY[c])
+        return c * 4;
+    if (emb_black_of[k] < 0)
+        return -1;
+    for (j = (uint32_t)CAT_KEY[c] + 1u; j <= k; j++)
+        n += emb_black_of[j] >= 0;
+    return n <= 3 ? c * 4 + n : -1;
+}
+static int enc_key_of_slot(uint32_t s)             /* the key that cues slot s (the group key for a held IV) */
+{
+    uint32_t k;
+    for (k = 0; k < EMB_NKEY; k++)
+        if (enc_slot(k) == (int)s)
+            return (int)k;
+    return CAT_KEY[(s >> 2) & 3u];
+}
 
 static void say(const char *m)
 {
@@ -113,6 +148,8 @@ void emb_init(uint32_t seed)
     ui.booting = 1;
     ui.step_held = -1;
     ui.save_key = -1;
+    ui.cat_key = -1;
+    ui.batt = 255;                                  /* (until the platform says: shown as on USB) */
     ui.music_vol = 127;
     ui.tempo_pm = 1000;
     for (k = 0; k < EMB_NTRK; k++) {
@@ -207,7 +244,7 @@ void emb_button(uint32_t b, int down)
     if (b >= B_COUNT)
         return;
     if (ui.booting) {
-        if (down && ui.now - ui.boot_t0 > 600u)
+        if (down && ui.boot_started && ui.now - ui.boot_t0 > 600u)
             ui.booting = 0;                         /* any button skips the rest of the animation */
         return;
     }
@@ -355,8 +392,10 @@ void emb_key(uint32_t k, int down, uint32_t vel)
     bl = emb_black_of[k];
     if (!down) {
         ui.keys &= ~(1u << k);
-        if (ui.save_key == w)
+        if (ui.save_key >= 0 && ui.save_key == enc_slot(k))
             ui.save_key = -1;
+        if (ui.cat_key == (int)k)
+            ui.cat_key = -1;
         if (ui.mode == 0u && ui.page == P_SEQ && w >= 0 && ui.step_held == ui.seq_page * 16 + w) {
             if (!ui.step_used)
                 step_toggle((uint32_t)ui.step_held);
@@ -369,20 +408,33 @@ void emb_key(uint32_t k, int down, uint32_t vel)
         return;
     }
     ui.keys |= 1u << k;
-    if (held(B_SAVE) && w >= 0) {                   /* SAVE + white key: hold to store / to fetch */
+    if (held(B_SAVE)) {                             /* SAVE + a scene's key: hold to store / to fetch */
         ui.used |= 1u << B_SAVE;
-        ui.save_key = (int8_t)w;
-        ui.save_t0 = ui.now;
+        if (enc_slot(k) >= 0) {
+            ui.save_key = (int8_t)enc_slot(k);
+            ui.save_t0 = ui.now;
+        }
         return;
     }
     if (ui.mode) {                                  /* ---- Encounter ---- */
-        if (w >= 0) {
-            ui.last_scene = (uint8_t)w;
-            emb_post(C_QUEUE, (uint32_t)w, 0, 0, 0);
-        } else {
-            emb_post(C_MOD, (uint32_t)bl, 0, 0, 0);
-            say(emb_mod_name[bl]);
+        int s = enc_slot(k);
+        if (s >= 0) {
+            ui.last_scene = (uint8_t)s;
+            emb_post(C_QUEUE, (uint32_t)s, 0, 0, 0);
+            say(emb_slot[s].name);
+            if ((s & 3) == 0) {                     /* a group key: held, it cues variation IV */
+                ui.cat_key = (int8_t)k;
+                ui.cat_t0 = ui.now;
+            }
+        } else if (w >= 0 && MOD_OF_WHITE[w] >= 0) {
+            int m = MOD_OF_WHITE[w];
+            if (m == MOD_SWELL)
+                emb_post(C_FX, 2, 0, 0, 0);
+            else
+                emb_post(C_MOD, (uint32_t)m, 0, 0, 0);
+            say(emb_mod_name[m]);
         }
+        (void)bl;
         return;
     }
     if (held(B_SEL)) {                              /* ---- Bardic: track select and mutes ---- */
@@ -502,7 +554,7 @@ static void knob(uint32_t k, int d)                 /* K1..K4 = 0..3 */
             if (k == 0) emb_set.tune = (int8_t)clamp_add(emb_set.tune, d, -50, 50);
             if (k == 1) emb_set.midi_ch = (uint8_t)clamp_add(emb_set.midi_ch, d, 0, 15);
             if (k == 2) emb_set.leds = (uint8_t)clamp_add(emb_set.leds, d, 0, 2);
-            if (k == 3) emb_set.fade_beats = (uint8_t)clamp_add(emb_set.fade_beats, d, 0, 8);
+            if (k == 3) emb_set.out_level = (uint8_t)clamp_add(emb_set.out_level, -d, 0, 2);   /* clockwise: louder */
         }
         break;
     case P_SEQ:
@@ -565,7 +617,23 @@ void emb_encoder(uint32_t e, int32_t steps)
     }
 }
 
-void emb_master(uint32_t q12) { emb_master_vol = (uint8_t)(q12 >> 4); }
+/* MASTER: its level, and the volume card when it is turned (2 steps of 255 to show it, so the pot's own jitter
+ * never does; the first reading after power-on is only taken) */
+void emb_master(uint32_t q12)
+{
+    uint32_t v = q12 >> 4 > 255u ? 255u : q12 >> 4;
+    int d = (int)v - (int)ui.vol_ref;
+    emb_master_vol = (uint8_t)v;
+    if (!ui.vol_init || ui.booting) {
+        ui.vol_init = 1;
+        ui.vol_ref = (uint8_t)v;
+        return;
+    }
+    if (d >= 2 || d <= -2 || (v != ui.vol_ref && (v == 0u || v == 255u))) {
+        ui.vol_ref = (uint8_t)v;
+        ui.vol_t = (ui.now + 1000u) | 1u;
+    }
+}
 
 void emb_midi(uint8_t st, uint8_t d1, uint8_t d2)
 {
@@ -586,7 +654,9 @@ void emb_midi(uint8_t st, uint8_t d1, uint8_t d2)
     } else if (ty == 0x90u && d2) {
         if (ui.mode && d1 >= 36u && d1 < 52u)
             emb_post(C_QUEUE, d1 - 36u, 0, 0, 0);
-        else if (ui.mode && d1 >= 52u && d1 < 63u)
+        else if (ui.mode && d1 == 52u + MOD_SWELL)
+            emb_post(C_FX, 2, 0, 0, 0);
+        else if (ui.mode && d1 >= 52u && d1 < 52u + MOD_SWELL)
             emb_post(C_MOD, d1 - 52u, 0, 0, 0);
         else if (!ui.mode)
             emb_post(C_NOTE_ON, ui.trk, d1, d2, 0);
@@ -602,10 +672,19 @@ void emb_midi(uint8_t st, uint8_t d1, uint8_t d2)
 void emb_tick(uint32_t ms)
 {
     ui.now = ms;
-    if (!ui.boot_t0)
-        ui.boot_t0 = ms | 1u;
-    if (ui.booting && ms - ui.boot_t0 > 3400u)
+    if (!ui.boot_started) {                         /* the animation's clock starts at the first tick */
+        ui.boot_started = 1;
+        ui.boot_t0 = ms;
+    }
+    if (ui.booting && ms - ui.boot_t0 > BOOT_MS)
         ui.booting = 0;
+    if (ui.cat_key >= 0 && ms - ui.cat_t0 >= 600u) {   /* a group key held: its variation IV */
+        int s = enc_slot((uint32_t)ui.cat_key) + 3;
+        ui.cat_key = -1;
+        ui.last_scene = (uint8_t)s;
+        emb_post(C_QUEUE, (uint32_t)s, 0, 0, 0);
+        say(emb_slot[s].name);
+    }
     if (emb_st.beats != ui.last_beats) {
         ui.last_beats = emb_st.beats;
         ui.beat_t = ms;
@@ -655,34 +734,36 @@ void emb_leds(uint8_t lv[EMB_NLED])
     }
     lv[B_PLAY] = emb_st.playing ? (beat ? LED_LIT : glow) : LED_OFF;
     if (ui.mode) {                                  /* ---- Encounter ---- */
-        uint32_t w, playing_slot = emb_st.deck_slot[emb_st.active];
+        uint32_t k, cur = emb_st.playing ? emb_st.deck_slot[emb_st.active] : 255u;
+        uint32_t q = emb_st.queued && emb_st.queued != 255u ? emb_st.queued - 1u : 255u;
+        int qk = q < 16u ? enc_key_of_slot(q) : -1;
         lv[B_HOME] = style == 2u ? LED_OFF : LED_MID;   /* the steady half light says "Encounter" */
         lv[B_ARP] = emb_st.duck ? LED_LIT : glow;
         lv[B_FX] = emb_st.swell ? LED_LIT : glow;
-        lv[B_OCTDN] = lv[B_OCTUP] = glow;
-        for (w = 0; w < 16u; w++) {
-            uint8_t l = (w & 3u) == 0u ? LED_MID : glow;   /* the first key of each four: a landmark */
-            if (style == 2u)
-                l = LED_OFF;
-            if (emb_st.playing && playing_slot == w)
-                l = LED_LIT;
-            if (emb_st.queued == w + 1u)
-                l = fast ? LED_LIT : LED_OFF;
-            lv[B_COUNT + emb_key_of_white[w]] = l;
-        }
-        for (w = 0; w < 11u; w++) {
-            uint8_t on = 0;
-            switch (w) {
-            case 0: on = emb_st.mod_mode == M_PHRYGIAN; break;
-            case 2: on = emb_st.mod_mode == M_HARMONIC; break;
-            case 3: on = emb_st.mod_mode == M_IONIAN; break;
-            case 4: on = (int8_t)emb_st.key_shift > 0; break;
-            case 5: on = (int8_t)emb_st.key_shift < 0; break;
-            case 6: on = emb_st.rate_t1 == 4u; break;
-            case 7: on = emb_st.rate_t1 == 1u; break;
-            case 8: on = (emb_st.hold >> 6) & 1u; break;
+        for (k = 0; k < EMB_NKEY; k++) {
+            int s = enc_slot(k), w = emb_white_of[k];
+            uint8_t l = LED_OFF;
+            if (s >= 0 && (s & 3) == 0)             /* a group key: lit while its group plays, else a landmark */
+                l = cur < 16u && cur >> 2 == (uint32_t)s >> 2 ? LED_LIT : style == 2u ? LED_OFF : LED_MID;
+            else if (s >= 0)                        /* a variation: lit while it plays */
+                l = cur == (uint32_t)s ? LED_LIT : LED_OFF;
+            else if (w >= 0 && MOD_OF_WHITE[w] >= 0) {   /* a battle modifier: dark, lit while in effect */
+                switch (MOD_OF_WHITE[w]) {
+                case 0: l = emb_st.mod_mode == M_PHRYGIAN; break;
+                case 2: l = emb_st.mod_mode == M_HARMONIC; break;
+                case 3: l = emb_st.mod_mode == M_IONIAN; break;
+                case 4: l = (int8_t)emb_st.key_shift > 0; break;
+                case 5: l = (int8_t)emb_st.key_shift < 0; break;
+                case 6: l = emb_st.rate_t1 == 4u; break;
+                case 7: l = emb_st.rate_t1 == 1u; break;
+                case 8: l = (emb_st.hold >> 6) & 1u; break;
+                case MOD_SWELL: l = emb_st.swell; break;
+                }
+                l = l ? LED_LIT : LED_OFF;
             }
-            lv[B_COUNT + emb_key_of_black[w]] = on ? LED_LIT : glow;
+            if ((int)k == qk)                       /* queued: blinks fast until the mark */
+                l = fast ? LED_LIT : LED_OFF;
+            lv[B_COUNT + k] = l;
         }
         return;
     }
@@ -743,91 +824,193 @@ void emb_leds(uint8_t lv[EMB_NLED])
     }
 }
 
-/* ------------------------------------------------------------------ screens */
-static void top_bar(const char *left, const char *right, uint16_t accent)
+/* ------------------------------------------------------------------ screens
+ * 240 x 240: a top bar (0..17: the mode chip, the key or page, BPM, the battery), the content, a row of knob
+ * chips (203..216, in the knobs' own colours), and the tips footer (222..239, paper, keycaps in ink). On top:
+ * the toast, the MASTER volume card, the purge ring. */
+#define FOOT_Y 222
+#define CHIP_Y 203
+
+void emb_power(uint32_t pct, uint32_t ext)
 {
-    fill(0, 0, EMB_W, 22, COL_NAVY2);
-    fill(0, 22, EMB_W, 1, COL_WOOD);
-    fill(0, 23, EMB_W, 1, COL_PARCH);
-    disc(11, 11, 6, accent);
-    disc(11, 11, 3, COL_NAVY2);
-    text(22, 7, left, 1, COL_PARCH);
-    text(EMB_W - 4 - text_w(right, 1), 7, right, 1, accent);
+    ui.batt = (uint8_t)(pct > 255u ? 255u : pct);
+    ui.ext = (uint8_t)(ext != 0u);
 }
-static void bottom_bar(const char *const lab[4])
+void emb_boot_note(const char *s) { ui.boot_note = s; }
+void emb_redraw(void)
+{
+    uint32_t y;
+    for (y = 0; y < EMB_H; y++)
+        ui.row_hash[y] = 0x5EEDu ^ y;               /* (no frame hashes to these) */
+}
+
+static void trunc_cpy(char *d, const char *s, uint32_t n)
+{
+    uint32_t i;
+    for (i = 0; i < n && s[i]; i++)
+        d[i] = s[i];
+    d[i] = 0;
+}
+
+static void top_bar(const char *chip, uint16_t chip_c, const char *mid, const char *right)
+{
+    int w = text_w(chip, 1) + 12;
+    fill(0, 0, EMB_W, 18, COL_INK);
+    fill(0, 0, w, 18, chip_c);
+    text(6, 6, chip, 1, COL_INK);
+    if (mid)
+        text(w + 6, 6, mid, 1, COL_PAPER);
+    if (right)
+        text(212 - text_w(right, 1) - 6, 6, right, 1, COL_PAPER);
+    battery(214, 4, ui.batt, ui.ext || ui.batt == 255u);
+    fill(0, 18, EMB_W, 2, COL_INK2);
+}
+
+static void knob_chips(const char *const lab[4])
 {
     int k;
-    fill(0, EMB_H - 20, EMB_W, 1, COL_WOOD);
-    fill(0, EMB_H - 19, EMB_W, 19, COL_NAVY2);
-    for (k = 0; k < 4; k++)
-        text_c(30 + k * 60, EMB_H - 13, lab[k], 1, COL_CYAN);
-}
-static void gauge(int x, int y, const char *label, const char *val, int v, int vmax)   /* one knob */
-{
-    int k, a = (int)emb_udiv((uint32_t)(v * 600), (uint32_t)(vmax ? vmax : 1));   /* 0..600 of 1024: a 210 deg arc */
-    for (k = 0; k <= 600; k += 15) {
-        int ang = 1024 - 300 + k;
-        disc(x + pol_x(ang, 22), y + pol_y(ang, 22), 2, k <= a ? COL_CYAN : COL_CYAN_D);
+    for (k = 0; k < 4; k++) {
+        int x = 3 + k * 59;
+        fill(x, CHIP_Y, 56, 14, KNOB_COL[k]);
+        text_c(x + 28, CHIP_Y + 4, lab[k], 1, COL_INK);
     }
-    disc(x + pol_x(1024 - 300 + a, 14), y + pol_y(1024 - 300 + a, 14), 3, COL_PARCH);
-    text_c(x, y - 4, val, 1, COL_WHITE);
-    text_c(x, y + 28, label, 1, COL_PARCH);
 }
 
-static void draw_message(void)
+/* a tip: plain words, [KEY] drawn as a keycap; centred on the paper footer */
+static int tip_w(const char *s)
 {
-    if (!ui.msg[0] || (int32_t)(ui.now - ui.msg_t) > 0)
-        return;
-    fill(10, 100, 220, 34, COL_NAVY);
-    frame(10, 100, 220, 34, COL_PARCH);
-    frame(12, 102, 216, 30, COL_WOOD);
-    text_c(120, 113, ui.msg, 1, COL_CYAN);
+    int w = 0;
+    for (; *s; s++)
+        w += *s == '[' ? 3 : *s == ']' ? 3 : 6;
+    return w;
+}
+static void footer(const char *tip)
+{
+    int x = (EMB_W - tip_w(tip)) / 2, cap = 0;
+    char ch[2] = {0, 0};
+    fill(0, FOOT_Y, EMB_W, EMB_H - FOOT_Y, COL_PAPER);
+    for (; *tip; tip++) {
+        if (*tip == '[') {
+            cap = 1;
+            fill(x, FOOT_Y + 4, 3, 11, COL_INK);
+            x += 3;
+            continue;
+        }
+        if (*tip == ']') {
+            cap = 0;
+            fill(x - 1, FOOT_Y + 4, 4, 11, COL_INK);
+            x += 3;
+            continue;
+        }
+        if (cap)
+            fill(x - 1, FOOT_Y + 4, 7, 11, COL_INK);
+        ch[0] = *tip;
+        text(x, FOOT_Y + 6, ch, 1, cap ? COL_PAPER : COL_INK);
+        x += 6;
+    }
 }
 
+static const char *const TIP_ENC[] = {
+    "[HOME]+[PLAY] BARDIC MODE", "KEYS 1 5 9 13: SCENE GROUPS", "SHARPS: VARIATIONS II-IV",
+    "HOLD A GROUP KEY: VARIATION IV", "OTHER WHITES: BATTLE MODS", "HOLD [HOME]+[REC]: SILENCE",
+    "[ARP] DUCK FOR A SPEECH", "[FX] CATHEDRAL SWELL", "[SELECT] CROSSFADE LENGTH"};
+static const char *const TIP_HOME[] = {
+    "[HOME]+[PLAY] ENCOUNTER", "[SEL] NEXT TRACK", "[PRESETS] INSTRUMENT", "[REC] LIVE LOOP",
+    "HOLD [HOME]+[REC]: PURGE", "HOLD [SAVE]: KEEP THE SONG", "[EDIT]+[GLO] TONEWHEEL", "[ARP] HOLD A DRONE",
+    "[ALGORITHM] TEMPO"};
+static const char *const TIP_SEQ[] = {
+    "TAP A KEY: SET A STEP", "HOLD KEY + [K1]: NOTE", "HOLD KEY + [K2]: TIMING", "HOLD KEY + [K4]: TONE LOCK",
+    "[OP1]-[OP4] STEP PAGES", "[SEQ] OR [HOME]: BACK"};
+static const char *const TIP_PAGE[] = {"[K1]-[K4] SHAPE THE SOUND", "[HOME] BACK", "[SEL] NEXT TRACK"};
+#define NTIPS(a) (sizeof(a) / sizeof(a[0]))
+
+static const char *tip_now(void)
+{
+    uint32_t r = emb_udiv(ui.now, 3200u);
+    if (ui.mode)
+        return TIP_ENC[r % NTIPS(TIP_ENC)];
+    if (ui.page == P_HOME)
+        return TIP_HOME[r % NTIPS(TIP_HOME)];
+    if (ui.page == P_SEQ)
+        return TIP_SEQ[r % NTIPS(TIP_SEQ)];
+    if (ui.page == P_MOTION && cur_trk()->inst == I_TONEWHEEL && (r & 1u))
+        return "[LFO] AGAIN: LESLIE FAST/SLOW";
+    if (ui.page == P_MODE)
+        return (r & 1u) ? "[GLO] AGAIN: THE BOX PAGE" : "[K4] SNAP KEYS TO THE MODE";
+    return TIP_PAGE[r % NTIPS(TIP_PAGE)];
+}
+
+static const char *const ROMAN[4] = {"I", "II", "III", "IV"};
 static const char *const FAMILY[4] = {"REST", "EXPLORE", "COMBAT", "CLIMAX"};
-static const uint16_t FAMILY_COL[4] = {COL_PARCH, RGB(0x6C, 0xD6, 0x8A), COL_EMBER, RGB(0xE0, 0x40, 0x60)};
 
 static void draw_encounter(void)
 {
     char b[32];
-    uint32_t playing_slot = emb_st.deck_slot[emb_st.active], w, cur = emb_st.playing && playing_slot < 16u ? playing_slot : 255u;
+    uint32_t r, c, cur = emb_st.playing ? emb_st.deck_slot[emb_st.active] : 255u;
+    uint32_t q = emb_st.queued && emb_st.queued != 255u ? emb_st.queued - 1u : 255u, blink = (ui.now >> 7) & 1u;
     static const char *const LAB[4] = {"INTENS", "TEMPO", "HALL", "VOLUME"};
     b[0] = 0;
     num(b, (int32_t)emb_udiv((cur < 16u ? emb_slot[cur].bpm : 96u) * (uint32_t)ui.tempo_pm, 1000u));
     cat(b, " BPM");
-    top_bar("ENCOUNTER", b, COL_EMBER);
-    if (cur < 16u) {
-        text_glow(120, 34, emb_slot[cur].name, 3, COL_WHITE, COL_NAVY2);
-        text_c(120, 60, FAMILY[cur >> 2], 1, FAMILY_COL[cur >> 2]);
-    } else {
-        text_glow(120, 34, emb_st.playing ? "THE BARD PLAYS" : "SILENCE", 2, COL_DIM, COL_NAVY);
-    }
-    for (w = 0; w < 16u; w++) {                     /* the scene tiles, as the keys lie */
-        int x = 6 + (int)(w & 3u) * 58, y = 74 + (int)(w >> 2) * 24;
-        uint16_t c = FAMILY_COL[w >> 2], bg = COL_NAVY2;
-        char t[8];
-        uint32_t i;
-        if (w == cur)
-            bg = c;
-        if (emb_st.queued == w + 1u && ((ui.now >> 7) & 1u))
-            bg = COL_CYAN;
-        fill(x, y, 54, 20, bg);
-        frame(x, y, 54, 20, c);
-        for (i = 0; i < 7u && emb_slot[w].name[i]; i++)
-            t[i] = emb_slot[w].name[i];
-        t[i] = 0;
-        text_c(x + 27, y + 7, t, 1, bg == COL_NAVY2 ? c : COL_NAVY);
-    }
-    if (emb_st.queued) {                            /* the countdown to the switch */
+    top_bar("ENCOUNTER", COL_BLUE, 0, b);
+    if (cur < 16u) {                                /* now playing */
+        uint32_t fam = cur >> 2;
+        card(4, 23, 229, 42, FAMILY_COL[fam], COL_INK);
+        sprite(10, 29, fam, 3, COL_INK);
+        text(46, 28, emb_slot[cur].name, 2, COL_INK);
         b[0] = 0;
-        cat(b, "ON THE MARK: ");
-        {
-            char n[6];
-            num(n, (int32_t)(emb_st.bar_left ? emb_st.bar_left : 16u));
-            cat(b, n);
-        }
-        text_c(120, 174, b, 1, COL_CYAN);
+        cat(b, FAMILY[fam]);
+        cat(b, " ");
+        cat(b, ROMAN[cur & 3u]);
+        text(46, 47, b, 1, COL_INK);
     } else {
+        card(4, 23, 229, 42, COL_INK2, COL_GREY);
+        text_c(118, 33, "SILENCE", 2, COL_GREY);
+        text_c(118, 51, "PRESS 1, 5, 9 OR 13", 1, COL_GREY);
+    }
+    if (q < 16u) {                                  /* what comes on the mark */
+        char n[6];
+        b[0] = 0;
+        cat(b, "NEXT ");
+        num(n, (int32_t)(emb_st.bar_left ? emb_st.bar_left : 16u));
+        cat(b, n);
+        fill(160, 55, 70, 9, COL_INK);
+        text(164, 56, b, 1, blink ? COL_PAPER : COL_YELLOW);
+    }
+    {   /* the keys as they lie: a row per group, the group key, then its sharps */
+        static const char *const HEAD[4] = {"KEY", "#1", "#2", "#3"};
+        for (c = 0; c < 4u; c++)
+            text_c(53 + (int)c * 53, 70, HEAD[c], 1, COL_GREY);
+    }
+    for (r = 0; r < 4u; r++) {
+        int y = 80 + (int)r * 27;
+        fill(3, y, 22, 24, FAMILY_COL[r]);
+        sprite(5, y + 3, r, 2, COL_INK);
+        for (c = 0; c < 4u; c++) {
+            uint32_t s = r * 4u + c;
+            int x = 28 + (int)c * 53;
+            uint16_t bg = COL_INK2, fg = FAMILY_COL[r];
+            char t[8];
+            if (s == cur) {
+                bg = FAMILY_COL[r];
+                fg = COL_INK;
+            }
+            if (s == q && blink) {
+                bg = COL_PAPER;
+                fg = COL_INK;
+            }
+            fill(x, y, 50, 24, bg);
+            if (bg == COL_INK2)
+                fill(x, y, 2, 24, FAMILY_COL[r]);
+            trunc_cpy(t, emb_slot[s].name, 7);
+            text_c(x + 26, y + 9, t, 1, fg);
+        }
+    }
+    {   /* the battle's state: intensity pips, the bends in effect */
+        int x = 4;
+        for (c = 0; c < 4u; c++)
+            fill(x + (int)c * 9, 190, 7, 9, c <= emb_st.intensity ? COL_PAPER : COL_INK2);
+        x = 46;
         b[0] = 0;
         if (emb_st.mod_mode != 255u)
             cat(b, emb_mode_name[emb_st.mod_mode]);
@@ -842,70 +1025,72 @@ static void draw_encounter(void)
             cat(b, emb_st.rate_t1 == 4u ? " DOUBLE" : " HALF");
         if ((emb_st.hold >> 6) & 1u)
             cat(b, " BREAK");
-        text_c(120, 174, b[0] ? b : "MOTHER MELODY HEARS", 1, b[0] ? COL_EMBER : COL_DIM);
+        if (emb_st.duck)
+            cat(b, " DUCK");
+        if (emb_st.swell)
+            cat(b, " SWELL");
+        text(x, 191, b[0] ? b : "MOTHER MELODY HEARS", 1, b[0] ? COL_ORANGE : COL_GREY);
     }
-    for (w = 0; w < 4u; w++)                        /* intensity */
-        fill(60 + (int)w * 31, 188, 28, 10, w <= emb_st.intensity ? FAMILY_COL[w] : COL_NAVY2);
-    if (emb_st.duck)
-        text_c(120, 204, "DUCKED", 1, COL_CYAN);
-    bottom_bar(LAB);
+    knob_chips(LAB);
 }
 
 static void draw_bardic_home(void)
 {
-    char b[32];
-    uint32_t t, i;
+    char b[32], mid[32];
+    uint32_t t, i, live = emb_st.playing && emb_st.deck_slot[emb_st.active] == 255u;
     static const char *const LAB[4] = {"LVL 1", "LVL 2", "LVL 3", "LVL 4"};
-    b[0] = 0;
-    num(b, emb_bench.bpm);
-    cat(b, " BPM");
-    top_bar("BARDIC CRAFTING", b, COL_CYAN);
-    for (t = 0; t < EMB_NTRK; t++) {
-        const emb_track_t *tr = &emb_bench.t[t];
-        int y = 30 + (int)t * 40;
-        uint32_t ph = emb_st.step[emb_st.active][t], live = emb_st.playing && emb_st.deck_slot[emb_st.active] == 255u;
-        uint32_t page = live ? ph >> 4 : 0u;
-        if (t == ui.trk)
-            frame(2, y - 2, 236, 38, COL_PARCH);
-        b[0] = (char)('1' + t);
-        b[1] = 0;
-        text(6, y + 2, b, 2, (emb_mutes >> t) & 1u ? COL_DIM : COL_CYAN);
-        text(22, y + 2, emb_inst_name[tr->inst], 1, (emb_mutes >> t) & 1u ? COL_DIM : COL_PARCH);
-        if ((emb_st.hold >> t) & 1u)
-            text(EMB_W - 40, y + 2, "HOLD", 1, COL_EMBER);
-        for (i = 0; i < 16u; i++) {
-            uint32_t idx = page * 16u + i;
-            const emb_step_t *s = &tr->s[idx];
-            int x = 22 + (int)i * 13;
-            uint16_t c = idx >= tr->len ? COL_NAVY : (s->note[0] || s->note[1] || s->note[2] || s->note[3]) ? COL_CYAN : COL_NAVY2;
-            fill(x, y + 14, 11, 16, c);
-            if (live && idx == ph)
-                frame(x - 1, y + 13, 13, 18, COL_PARCH);
-        }
-    }
-    b[0] = 0;
     {
         char n[8];
         note_name(n, emb_bench.root);
         n[n[1] == '#' ? 2 : 1] = 0;
-        cat(b, n);
+        mid[0] = 0;
+        cat(mid, n);
+        cat(mid, " ");
+        cat(mid, emb_mode_name[emb_bench.mode]);
+        if ((emb_st.hold >> 7) & 1u)
+            cat(mid, " REC");
     }
-    cat(b, " ");
-    cat(b, emb_mode_name[emb_bench.mode]);
-    cat(b, "  ");
-    cat(b, emb_temper_name[emb_bench.temper]);
-    text_c(120, 194, b, 1, COL_PARCH);
-    if ((emb_st.hold >> 7) & 1u)
-        disc(14, 197, 4, (ui.now >> 8) & 1u ? COL_RED : COL_NAVY2);
+    b[0] = 0;
+    num(b, emb_bench.bpm);
+    cat(b, " BPM");
+    top_bar("BARDIC", COL_ORANGE, mid, b);
+    for (t = 0; t < EMB_NTRK; t++) {
+        const emb_track_t *tr = &emb_bench.t[t];
+        int y = 22 + (int)t * 44, muted = (emb_mutes >> t) & 1u;
+        uint32_t ph = emb_st.step[emb_st.active][t], page = live ? ph >> 4 : 0u;
+        uint16_t tc = muted ? COL_GREY : TRACK_COL[t];
+        if (t == ui.trk)
+            fill(0, y - 1, EMB_W, 42, COL_INK2);
+        fill(3, y, 28, 40, tc);
+        b[0] = (char)('1' + t);
+        b[1] = 0;
+        text(10, y + 13, b, 3, COL_INK);
+        text(36, y + 3, emb_inst_name[tr->inst], 1, t == ui.trk ? COL_PAPER : COL_LIGHT);
+        if (muted)
+            text(200, y + 3, "MUTE", 1, COL_GREY);
+        else if ((emb_st.hold >> t) & 1u)
+            text(200, y + 3, "HOLD", 1, COL_YELLOW);
+        for (i = 0; i < 16u; i++) {
+            uint32_t idx = page * 16u + i;
+            const emb_step_t *s = &tr->s[idx];
+            int x = 36 + (int)i * 12;
+            uint16_t c = idx >= tr->len ? COL_INK : (s->note[0] || s->note[1] || s->note[2] || s->note[3]) ? tc : COL_GREY;
+            if (live && idx == ph)
+                c = COL_PAPER;
+            fill(x, y + 15 + ((i & 3u) ? 2 : 0), 10, (i & 3u) ? 18 : 22, c);   /* beats stand taller */
+        }
+        if (t == ui.trk)
+            fill(0, y - 1, 2, 42, COL_PAPER);
+    }
     if (ui.oct) {
         b[0] = 'O';
         b[1] = 'C';
         b[2] = 'T';
         b[3] = ' ';
         num(b + 4, ui.oct);
-        text(EMB_W - 46, 194, b, 1, COL_DIM);
+        text(EMB_W - 48, 196, b, 1, COL_GREY);
     }
-    bottom_bar(LAB);
+    knob_chips(LAB);
 }
 
 static void draw_seq(void)
@@ -915,76 +1100,73 @@ static void draw_seq(void)
     uint32_t i, ph = emb_st.step[emb_st.active][ui.trk], live = emb_st.playing && emb_st.deck_slot[emb_st.active] == 255u;
     static const char *const LAB[4] = {"LENGTH", "SWING", "LEVEL", "REVERB"};
     static const char *const LAB_H[4] = {"NOTE", "TIMING", "VELO", "LOCK"};
+    uint16_t tc = TRACK_COL[ui.trk];
     b[0] = 'T';
     b[1] = (char)('1' + ui.trk);
     b[2] = ' ';
     b[3] = 0;
-    cat(b, "STEPS ");
     {
         char n[4];
         num(n, ui.seq_page + 1);
         cat(b, n);
     }
     cat(b, "/4");
-    top_bar(b, emb_inst_name[t->inst], COL_CYAN);
-    for (i = 0; i < 16u; i++) {
-        uint32_t idx = ui.seq_page * 16u + i;
-        const emb_step_t *s = &t->s[idx];
-        int x = 4 + (int)(i & 3u) * 58, y = 30 + (int)(i >> 2) * 36;
-        uint16_t bg = idx >= t->len ? COL_NAVY : COL_NAVY2;
-        if (s->note[0])
-            bg = COL_ROSE_D;
-        fill(x, y, 54, 32, bg);
-        frame(x, y, 54, 32, (int)idx == ui.step_held ? COL_PARCH : (live && idx == ph) ? COL_CYAN : COL_WOOD);
-        if (s->note[0]) {
-            char n[8];
-            if (ui.trk == 0u) {
-                const char *dn = emb_drum_name[(s->note[0] - 1u) & 7u];
-                n[0] = dn[0];
-                n[1] = dn[1];
-                n[2] = dn[2];
-                n[3] = 0;
-            } else
-                note_name(n, s->note[0]);
-            text(x + 4, y + 4, n, 1, COL_WHITE);
-            if (s->note[1])
-                text(x + 34, y + 4, "+", 1, COL_CYAN);
-            if (s->micro)
-                fill(x + 27 + s->micro, y + 24, 3, 4, COL_EMBER);   /* the nudge */
-            if (s->lock != 255u)
-                disc(x + 47, y + 25, 3, COL_GOLD);
-        }
-    }
     if (ui.step_held >= 0) {
         const emb_step_t *s = &t->s[ui.step_held];
         char n[8];
-        b[0] = 0;
-        cat(b, "VEL ");
+        b[0] = 'V';
+        b[1] = 0;
         num(n, s->vel);
         cat(b, n);
-        cat(b, "  GATE ");
+        cat(b, " G");
         num(n, s->gate);
         cat(b, n);
-        cat(b, "  NUDGE ");
+        cat(b, " N");
         num(n, s->micro);
         cat(b, n);
-        text_c(120, 178, b, 1, COL_PARCH);
     }
-    bottom_bar(ui.step_held >= 0 ? LAB_H : LAB);
+    top_bar("STEPS", tc, ui.step_held >= 0 ? 0 : emb_inst_name[t->inst], b);
+    for (i = 0; i < 16u; i++) {
+        uint32_t idx = ui.seq_page * 16u + i;
+        const emb_step_t *s = &t->s[idx];
+        int x = 3 + (int)(i & 3u) * 59, y = 23 + (int)(i >> 2) * 44;
+        int on = s->note[0] != 0, held_here = (int)idx == ui.step_held;
+        uint16_t bg = idx >= t->len ? COL_INK : on ? tc : COL_INK2;
+        if (held_here)
+            bg = COL_PAPER;
+        fill(x, y, 55, 40, bg);
+        if (live && idx == ph) {
+            fill(x, y, 55, 3, COL_PAPER);
+            fill(x, y + 37, 55, 3, COL_PAPER);
+        }
+        if (on) {
+            char n[8];
+            if (ui.trk == 0u)
+                trunc_cpy(n, emb_drum_name[(s->note[0] - 1u) & 7u], 4);
+            else
+                note_name(n, s->note[0]);
+            text(x + 5, y + 8, n, n[3] ? 1 : 2, COL_INK);
+            if (s->note[1])
+                text(x + 46, y + 4, "+", 1, COL_INK);
+            if (s->micro)
+                fill(x + 26 + s->micro, y + 30, 3, 5, COL_INK);   /* the nudge */
+            if (s->lock != 255u)
+                fill(x + 46, y + 30, 5, 5, COL_INK);
+        } else if (idx < t->len) {
+            char n[4];
+            num(n, (int32_t)idx + 1);
+            text(x + 5, y + 5, n, 1, COL_GREY);
+        }
+    }
+    knob_chips(ui.step_held >= 0 ? LAB_H : LAB);
 }
 
 static void draw_page(void)
 {
     emb_track_t *t = cur_trk();
     const char *lab[4];
-    char val[4][12];
+    char val[4][12], title[16];
     int v[4], vmax[4], k;
-    char title[24];
-    title[0] = 'T';
-    title[1] = (char)('1' + ui.trk);
-    title[2] = ' ';
-    title[3] = 0;
-    cat(title, PAGE_NAME[ui.page]);
     for (k = 0; k < 4; k++) {
         lab[k] = "";
         v[k] = 0;
@@ -994,8 +1176,6 @@ static void draw_page(void)
     case P_FX:
         lab[0] = "SIZE"; lab[1] = "DECAY"; lab[2] = "DAMP"; lab[3] = "MIX";
         v[0] = emb_set.rv_size; v[1] = emb_set.rv_decay; v[2] = emb_set.rv_damp; v[3] = emb_set.rv_mix;
-        title[0] = 0;
-        cat(title, "SANCTUARY REVERB");
         break;
     case P_ENV:
         lab[0] = "ATTACK"; lab[1] = "DECAY"; lab[2] = "SUSTAIN"; lab[3] = "RELEASE";
@@ -1024,44 +1204,86 @@ static void draw_page(void)
             v[0] = emb_bench.root; vmax[0] = 11; v[1] = emb_bench.mode; vmax[1] = M_COUNT - 1;
             v[2] = emb_bench.temper; vmax[2] = T_COUNT - 1; v[3] = emb_set.snap; vmax[3] = 1;
         } else {
-            lab[0] = "A4 CAL"; lab[1] = "MIDI CH"; lab[2] = "LEDS"; lab[3] = "X-FADE";
+            lab[0] = "A4 CAL"; lab[1] = "MIDI CH"; lab[2] = "LEDS"; lab[3] = "OUTPUT";
             v[0] = emb_set.tune + 50; vmax[0] = 100; v[1] = emb_set.midi_ch; vmax[1] = 15;
-            v[2] = emb_set.leds; vmax[2] = 2; v[3] = emb_set.fade_beats; vmax[3] = 8;
+            v[2] = emb_set.leds; vmax[2] = 2; v[3] = 2 - emb_set.out_level; vmax[3] = 2;
         }
         break;
     }
     for (k = 0; k < 4; k++)
         num(val[k], v[k]);
     if (ui.page == P_MODE && ui.sub == 0u) {        /* names instead of numbers */
+        static const char *const MS[M_COUNT] = {"ION", "DOR", "PHR", "LYD", "MIX", "AEO", "HARM", "PDOM"};
+        static const char *const TS[T_COUNT] = {"EQ", "PYTH", "MEAN", "JUST"};
         note_name(val[0], emb_bench.root);
         val[0][val[0][1] == '#' ? 2 : 1] = 0;
-        {
-            static const char *const MS[M_COUNT] = {"ION", "DOR", "PHR", "LYD", "MIX", "AEO", "HARM", "PDOM"};
-            static const char *const TS[T_COUNT] = {"EQ", "PYTH", "MEAN", "JUST"};
-            val[1][0] = val[2][0] = 0;
-            cat(val[1], MS[emb_bench.mode]);
-            cat(val[2], TS[emb_bench.temper]);
-        }
-        val[3][0] = emb_set.snap ? 'O' : '-';
-        val[3][1] = emb_set.snap ? 'N' : 0;
-        val[3][2] = 0;
+        trunc_cpy(val[1], MS[emb_bench.mode], 11);
+        trunc_cpy(val[2], TS[emb_bench.temper], 11);
+        trunc_cpy(val[3], emb_set.snap ? "ON" : "OFF", 11);
     }
-    if (ui.page == P_MODE && ui.sub == 1u)
+    if (ui.page == P_MODE && ui.sub == 1u) {
+        static const char *const LS[3] = {"GLOW", "LIT", "DARK"};
+        static const char *const OS[3] = {"LOUD", "NORM", "SAFE"};
         num(val[0], emb_set.tune);
-    top_bar(title, emb_inst_name[t->inst], COL_CYAN);
-    for (k = 0; k < 4; k++)
-        gauge(60 + (k & 1) * 120, 66 + (k >> 1) * 80, lab[k], val[k], v[k], vmax[k]);
+        num(val[1], emb_set.midi_ch + 1);
+        trunc_cpy(val[2], LS[emb_set.leds % 3u], 11);
+        trunc_cpy(val[3], OS[emb_set.out_level % 3u], 11);
+    }
+    title[0] = 'T';
+    title[1] = (char)('1' + ui.trk);
+    title[2] = ' ';
+    trunc_cpy(title + 3, emb_inst_name[t->inst], 11);
+    top_bar(ui.page == P_MODE && ui.sub ? "THE BOX" : PAGE_NAME[ui.page], COL_ORANGE,
+            ui.page == P_FX || ui.page == P_MODE ? 0 : title, 0);
+    for (k = 0; k < 4; k++) {                       /* a card per knob, in its colour */
+        int x = 4 + (k & 1) * 118, y = 24 + (k >> 1) * 88, bar = (int)emb_udiv((uint32_t)(v[k] * 90), (uint32_t)vmax[k]);
+        char kn[3] = {'K', (char)('1' + k), 0};
+        card(x, y, 110, 80, KNOB_COL[k], COL_INK);
+        text(x + 8, y + 8, lab[k], 1, COL_INK);
+        text(x + 90, y + 8, kn, 1, COL_INK);
+        text(x + 8, y + 26, val[k], text_w(val[k], 1) > 24 ? 2 : 3, COL_INK);   /* up to 4 characters large */
+        fill(x + 8, y + 60, 94, 10, COL_INK);
+        fill(x + 10, y + 62, bar, 6, KNOB_COL[k] == COL_LIGHT ? COL_ORANGE : COL_PAPER);
+    }
     if (ui.page == P_MODE && ui.sub == 0u) {
         char b[40];
         b[0] = 0;
         cat(b, emb_mode_name[emb_bench.mode]);
-        cat(b, " - ");
+        cat(b, " / ");
         cat(b, emb_temper_name[emb_bench.temper]);
-        text_c(120, 202, b, 1, COL_PARCH);
-    }
-    if (ui.page == P_MOTION && t->inst == I_TONEWHEEL)
-        text_c(120, 202, emb_st.leslie ? "LESLIE: TREMOLO (LFO)" : "LESLIE: CHORALE (LFO)", 1, COL_PARCH);
-    bottom_bar(lab);
+        text_c(120, 204, b, 1, COL_PAPER);
+    } else if (ui.page == P_MOTION && t->inst == I_TONEWHEEL)
+        text_c(120, 204, emb_st.leslie ? "LESLIE: FAST" : "LESLIE: SLOW", 1, COL_PAPER);
+}
+
+static void draw_toast(void)
+{
+    int big;
+    uint32_t n = 0;
+    if (!ui.msg[0] || (int32_t)(ui.now - ui.msg_t) > 0)
+        return;
+    while (ui.msg[n])
+        n++;
+    big = n <= 17u;
+    card(10, 98, 217, big ? 34 : 26, COL_PAPER, COL_INK);
+    text_c(118, big ? 108 : 107, ui.msg, big ? 2 : 1, COL_INK);
+}
+
+static void draw_volume(void)                       /* the MASTER card: up while the knob turns, a second after */
+{
+    uint32_t pct = emb_udiv((uint32_t)emb_master_vol * 100u + 127u, 255u), seg, k;
+    char b[8];
+    if (!ui.vol_t || (int32_t)(ui.now - ui.vol_t) > 0)
+        return;
+    card(24, 74, 189, 82, COL_PAPER, COL_INK);
+    sprite(36, 86, SP_SPEAKER, 2, COL_INK);
+    text(62, 89, "VOLUME", 2, COL_INK);
+    num(b, (int32_t)pct);
+    cat(b, "%");
+    text(36, 110, b, 3, COL_INK);
+    seg = emb_udiv(pct * 12u + 50u, 100u);
+    for (k = 0; k < 12u; k++)
+        fill(36 + (int)k * 14, 138, 11, 10, k < seg ? (k >= 10u ? COL_PINK : COL_ORANGE) : COL_LIGHT);
 }
 
 uint32_t emb_draw(uint16_t *fb, uint32_t row_dirty[(EMB_H + 31) / 32])
@@ -1069,9 +1291,9 @@ uint32_t emb_draw(uint16_t *fb, uint32_t row_dirty[(EMB_H + 31) / 32])
     uint32_t y, any = 0;
     G = fb;
     if (ui.booting) {
-        boot_frame(ui.now - ui.boot_t0);
+        boot_frame(ui.boot_started ? ui.now - ui.boot_t0 : 0u, ui.boot_note);
     } else {
-        fill(0, 0, EMB_W, EMB_H, COL_NAVY);
+        fill(0, 0, EMB_W, EMB_H, COL_INK);
         if (ui.mode)
             draw_encounter();
         else if (ui.page == P_HOME)
@@ -1080,15 +1302,16 @@ uint32_t emb_draw(uint16_t *fb, uint32_t row_dirty[(EMB_H + 31) / 32])
             draw_seq();
         else
             draw_page();
+        footer(tip_now());
         if (held(B_HOME) && held(B_REC) && !ui.panic_fired) {   /* the purge ring fills while held */
             uint32_t p = emb_udiv((ui.now - ui.panic_t0) * 1024u, 400u), a;
-            fill(40, 70, 160, 100, COL_NAVY);
-            frame(40, 70, 160, 100, COL_RED);
-            for (a = 0; a < 1024u && a <= p; a += 16u)
-                disc(120 + pol_x((int)a, 30), 112 + pol_y((int)a, 30), 3, COL_RED);
-            text_c(120, 152, ui.mode ? "SILENCE..." : "PURGE LOOP...", 1, COL_WHITE);
+            card(40, 66, 157, 100, COL_PINK, COL_INK);
+            for (a = 0; a < 1024u && a <= p; a += 32u)
+                fill(116 + pol_x((int)a, 26), 104 + pol_y((int)a, 26), 6, 6, COL_INK);
+            text_c(118, 144, ui.mode ? "SILENCE..." : "PURGE LOOP...", 1, COL_INK);
         }
-        draw_message();
+        draw_volume();
+        draw_toast();
     }
     for (y = 0; y < (EMB_H + 31) / 32; y++)
         row_dirty[y] = 0;

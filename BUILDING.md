@@ -143,7 +143,7 @@ These come from `upstream/felucca/firmware/app.ld`, which the build uses unchang
 | NOINIT | `0x01C7C000` | ≈ 15 KiB | the boot guard and crash record (they survive resets) |
 
 - The app must fit the stock app slot of **0x8DFBC bytes**. The build refuses anything bigger.
-- Flash: the boot head `0x0000-0x3FFF` is never written. The app lives in `0x4000-0x93000`. The Music Box keeps
+- Flash: the boot head `0x0000-0x3FFF` is never written. The app lives in `0x4000-0x93000`. Evander's Box keeps
   its data at `0x97000 + slot × 4 KiB` (18 sectors), and updates stage at `0xE0000`.
 - No runtime library is linked. The core uses no float, no heap, and no variable-width 64-bit shifts
   (`tools/build.py check` enforces the last one). Felucca's `libc.c` supplies `memcpy` and `memset`.

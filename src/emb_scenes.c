@@ -16,92 +16,92 @@ typedef struct {
 } tdef_t;
 typedef struct {
     const char *name;
-    uint8_t bpm, root, mode, temper, amb, swing;
+    uint8_t bpm, root, mode, temper, swing;
     tdef_t t[EMB_NTRK];
 } sdef_t;
 
 enum { C_ = 0, D_ = 2, E_ = 4, F_ = 5, G_ = 7, A_ = 9, B_ = 11 };
 static const sdef_t SCENES[EMB_NSLOT] = {
     /* ---- REST ---- */
-    {"TAVERN", 96, D_, M_DORIAN, T_PYTH, 1, 3,
+    {"TAVERN", 96, D_, M_DORIAN, T_PYTH, 3,
      {{I_TAVERN_KIT, 0, 96, 0, "B.....b.B...b...|....T.......T.t."},
       {I_GURDY, 2, 64, 0, "0~..............|4~.............."},
       {I_HARP, 3, 100, 40, "0.2.4.7.4.2.0.2.1.3.5.8.5.3.1.3."},
       {I_RECORDER, 4, 82, 30, "................4-3-2-0---......"}}},
-    {"CAMPFIRE", 72, A_, M_AEOLIAN, T_PYTH, 1, 2,
+    {"CAMPFIRE", 72, A_, M_AEOLIAN, T_PYTH, 2,
      {{I_TAVERN_KIT, 0, 80, 0, "B.......b.......|..........c....."},
       {I_CELLO, 2, 56, 0, "0~..............|4~.............."},
       {I_LUTE, 3, 100, 60, "0.4.7.4.0.4.7.4.b.3.6.3.b.3.6.3."},
       {I_PANFLUTE, 4, 70, 50, "........................2-1-0---"}}},
-    {"SANCTUARY", 60, D_, M_DORIAN, T_JUST, 0, 0,
+    {"SANCTUARY", 60, D_, M_DORIAN, T_JUST, 0,
      {{I_RITUAL_KIT, 0, 60, 0, "P...............|................"},
       {I_CHOIR, 3, 84, 20, "0~..............3~..............|4~..............5~.............."},
       {I_HARP, 4, 70, 30, "0...4...7...4...2...5...9...5..."},
       {I_POSITIVE, 3, 62, 0, "7~..............8~..............|2~..............3~.............."}}},
-    {"LAMENT", 64, E_, M_AEOLIAN, T_MEAN, 2, 0,
+    {"LAMENT", 64, E_, M_AEOLIAN, T_MEAN, 0,
      {{I_RITUAL_KIT, 0, 50, 0, "F...............|................"},
       {I_CELLO, 2, 70, 0, "0~..............e~..............|4~..............3~.............."},
       {I_KOTO, 3, 80, 80, "0.....4.....7...2.....5.....9..."},
       {I_PANFLUTE, 4, 80, 70, "4---3-2-1---0-------2---1-0-----"}}},
     /* ---- EXPLORE ---- */
-    {"WILDERNESS", 84, E_, M_DORIAN, T_PYTH, 2, 0,
+    {"WILDERNESS", 84, E_, M_DORIAN, T_PYTH, 0,
      {{I_TAVERN_KIT, 0, 64, 0, "F.......f.......F.......f...f..."},
       {I_BAGPIPE, 2, 46, 0, "0~..............|4~.............."},
       {I_PSALTERY, 4, 60, 40, "..............7.........4.......|................................"},
       {I_PANFLUTE, 4, 84, 60, "4---2-......................4-7-------..........................."}}},
-    {"FEY FOREST", 100, G_, M_LYDIAN, T_JUST, 2, 4,
+    {"FEY FOREST", 100, G_, M_LYDIAN, T_JUST, 4,
      {{I_TAVERN_KIT, 0, 64, 0, "F...f...F...f.f.|..T...T...T...T."},
       {I_CHOIR, 3, 58, 60, "0~..............|4~.............."},
       {I_PSALTERY, 4, 84, 30, "0247024702470247365836583658a365"},
       {I_RECORDER, 5, 70, 20, "4-..3-..4-6-7---................"}}},
-    {"DUNGEON", 76, C_, M_PHRYGIAN, T_MEAN, 0, 0,
+    {"DUNGEON", 76, C_, M_PHRYGIAN, T_MEAN, 0,
      {{I_WAR_KIT, 0, 80, 0, "W.......w.....W.|....C.........c.|..........A....."},
       {I_CELLO, 2, 72, 0, "0~..............1~..............|4~..............4~.............."},
       {I_KOTO, 3, 62, 90, "......1.....0...........4.......|................................"},
       {I_ORGANETTO, 4, 50, 0, "................0-1-0-6---......"}}},
-    {"SEA ROAD", 112, D_, M_MIXOLYDIAN, T_PYTH, 2, 5,
+    {"SEA ROAD", 112, D_, M_MIXOLYDIAN, T_PYTH, 5,
      {{I_TAVERN_KIT, 0, 90, 0, "B..b..B..b..B.bb|...T.....T.....T"},
       {I_GURDY, 2, 60, 70, "0~..............|4~.............."},
       {I_NYLON, 3, 80, 50, "0.47.40.47.40.476.36.63.36.63.36"},
       {I_SHAWM, 4, 76, 40, "4-5-6-7-6-4-5---3-4-5-6-5-3-4---"}}},
     /* ---- COMBAT ---- */
-    {"SKIRMISH", 132, D_, M_AEOLIAN, T_EQUAL, 0, 0,
+    {"SKIRMISH", 132, D_, M_AEOLIAN, T_EQUAL, 0,
      {{I_WAR_KIT, 0, 110, 0, "W...W...W...W.W.|..c...c...c...cc|B.b.B.b.B.b.B.bb"},
       {I_CELLO, 1, 92, 0, "0.0.0.0.0.0.1.0.0.0.0.0.6.6.5.4."},
       {I_NYLON, 3, 50, 30, "................................"},
       {I_BRASS, 3, 70, 0, "........................0.......|........................4......."}}},
-    {"BATTLE", 144, E_, M_PHRYGIAN, T_EQUAL, 0, 0,
+    {"BATTLE", 144, E_, M_PHRYGIAN, T_EQUAL, 0,
      {{I_WAR_KIT, 0, 120, 0, "W.wW.wW.W.wW.wW.|....C.......C...|T.T.T.T.T.T.T.TT"},
       {I_GURDY, 2, 84, 110, "0~..............|4~.............."},
       {I_CELLO, 2, 90, 0, "0.0.1.0.0.0.1.0.3.3.1.0.e.e.0..."},
       {I_BRASS, 3, 82, 0, "0---..0-1-0-....4---..4-5-4-....|4---..4-5-4-....7---..7-8-7-...."}}},
-    {"AMBUSH", 120, C_, M_HARMONIC, T_EQUAL, 2, 0,
+    {"AMBUSH", 120, C_, M_HARMONIC, T_EQUAL, 0,
      {{I_WAR_KIT, 0, 80, 0, "....c...c.c.....|F.......f.....f.|................"},
       {I_CELLO, 1, 70, 0, "0...0...0...0.1.0...0...0...6.5."},
       {I_KOTO, 3, 72, 100, "......4.......1.......4.....6..."},
       {I_SHAWM, 4, 46, 30, "................................"}}},
-    {"SIEGE", 96, A_, M_AEOLIAN, T_EQUAL, 0, 0,
+    {"SIEGE", 96, A_, M_AEOLIAN, T_EQUAL, 0,
      {{I_WAR_KIT, 0, 120, 0, "W.......W.W.....|P...........P...|....C.......C..."},
       {I_CHOIR, 2, 72, 30, "0~..............e~..............|4~..............3~.............."},
       {I_CATHEDRAL, 2, 78, 0, "0~......f~......d~......e~......|4~......3~......1~......2~......|7~......5~......5~......6~......"},
       {I_BRASS, 3, 76, 0, "0-....0-0-4-....3-....3-3-1-...."}}},
     /* ---- CLIMAX ---- */
-    {"BOSS", 150, D_, M_HARMONIC, T_EQUAL, 0, 0,
+    {"BOSS", 150, D_, M_HARMONIC, T_EQUAL, 0,
      {{I_WAR_KIT, 0, 124, 0, "W.WW.WW.W.WW.WW.|T.T.T.T.T.T.T.T.|....P.......P..."},
       {I_CHOIR, 3, 82, 10, "0~..............1~..............|4~..............4~.............."},
       {I_CATHEDRAL, 2, 90, 0, "0~......1~......f~......6~......|4~......4~......4~......3~......|7~......8~......7~......d~......"},
       {I_BRASS, 3, 92, 0, "0-..0-..0-0-0-..1-..1-..1-1-1-..|4-..4-..4-4-4-..4-..4-..4-4-4-.."}}},
-    {"LAST STAND", 128, E_, M_AEOLIAN, T_PYTH, 2, 0,
+    {"LAST STAND", 128, E_, M_AEOLIAN, T_PYTH, 0,
      {{I_WAR_KIT, 0, 120, 0, "W..W..W.W..W..W.|..T...T...T...TT|B.b.B.b.B.b.B.b."},
       {I_GURDY, 2, 86, 120, "0~..............|4~.............."},
       {I_CATHEDRAL, 3, 70, 0, "0~..............5~..............|4~..............9~.............."},
       {I_SHAWM, 4, 84, 50, "4-3-4-5-4-3-2-0-2-3-4-3-2-1-0---"}}},
-    {"VICTORY", 120, D_, M_IONIAN, T_JUST, 0, 2,
+    {"VICTORY", 120, D_, M_IONIAN, T_JUST, 2,
      {{I_TAVERN_KIT, 0, 100, 0, "B...B...B.B.B...|T.T.T.T.T.T.T.TT"},
       {I_POSITIVE, 3, 66, 0, "0~..............3~..............|4~..............5~..............|7~..............7~.............."},
       {I_HARP, 4, 76, 40, "0247024735873587"},
       {I_BRASS, 4, 92, 0, "0-0-0-4---..2-4-7-------3-4-5-4-"}}},
-    {"REQUIEM", 56, D_, M_AEOLIAN, T_JUST, 0, 0,
+    {"REQUIEM", 56, D_, M_AEOLIAN, T_JUST, 0,
      {{I_RITUAL_KIT, 0, 70, 0, "G...............................|................................"},
       {I_CHOIR, 3, 80, 90, "0~..............................|4~..............................|7~.............................."},
       {I_HARP, 4, 40, 20, "................................"},
@@ -111,8 +111,8 @@ static const sdef_t SCENES[EMB_NSLOT] = {
 const char *const emb_scene_name[EMB_NSLOT] = {
     "TAVERN", "CAMPFIRE", "SANCTUARY", "LAMENT", "WILDERNESS", "FEY FOREST", "DUNGEON", "SEA ROAD",
     "SKIRMISH", "BATTLE", "AMBUSH", "SIEGE", "BOSS", "LAST STAND", "VICTORY", "REQUIEM"};
-const char *const emb_mod_name[11] = {"PHRYGIAN", "HOME KEY", "HARMONIC", "TRIUMPH", "KEY UP", "KEY DOWN",
-                                      "DOUBLE TIME", "HALF TIME", "BREAKDOWN", "FULL HOST", "STINGER"};
+const char *const emb_mod_name[12] = {"PHRYGIAN", "HOME KEY", "HARMONIC", "TRIUMPH", "KEY UP", "KEY DOWN",
+                                      "DOUBLE TIME", "HALF TIME", "BREAKDOWN", "FULL HOST", "STINGER", "SWELL"};
 
 void emb_track_defaults(emb_track_t *t, uint32_t inst)
 {
@@ -244,7 +244,7 @@ void emb_scene_factory(uint32_t slot, emb_song_t *s)
     s->root = d->root;
     s->mode = d->mode;
     s->temper = d->temper;
-    s->amb = d->amb;
+
     s->swing = d->swing;
     for (k = 0; k < EMB_NTRK; k++) {
         const tdef_t *td = &d->t[k];

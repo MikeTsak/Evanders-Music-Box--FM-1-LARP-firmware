@@ -37,7 +37,7 @@ export class SongIO {
 
   async identity() {
     const r = await this.request([...HDR, 1]);
-    if (!r || r[4] !== 0x45 || r[5] !== 0x4D || r[6] !== 0x42) throw new Error("no Music Box answered");
+    if (!r || r[4] !== 0x45 || r[5] !== 0x4D || r[6] !== 0x42) throw new Error("no Evander's Box answered");
     this.info = { version: r[7], chunks: r[8], size: r[9] | (r[10] << 7) };
     return this.info;
   }
@@ -53,7 +53,7 @@ export class SongIO {
   }
   async write(slot, bytes) {
     const { chunks, size } = this.info || await this.identity();
-    if (bytes.length !== size) throw new Error(`a Music Box song is ${size} bytes, this file has ${bytes.length}`);
+    if (bytes.length !== size) throw new Error(`an Evander's Box song is ${size} bytes, this file has ${bytes.length}`);
     const buf = new Uint8Array(chunks * 256);
     buf.set(bytes);
     for (let c = 0; c < chunks; c++) {
@@ -77,7 +77,7 @@ export class SongIO {
   }
   async restore(file, onProgress) {
     const { size } = this.info || await this.identity();
-    if (String.fromCharCode(...file.slice(0, 4)) !== "EMBK" || (file[6] | (file[7] << 8)) !== size) throw new Error("not a Music Box backup");
+    if (String.fromCharCode(...file.slice(0, 4)) !== "EMBK" || (file[6] | (file[7] << 8)) !== size) throw new Error("not an Evander's Box backup");
     for (let s = 0; s < file[5]; s++) {
       await this.write(s, file.slice(8 + s * size, 8 + (s + 1) * size));
       onProgress?.(s + 1, file[5]);
@@ -111,7 +111,7 @@ export async function connectMidi(log = () => {}) {
     try {
       const io = new SongIO(request);
       await io.identity();
-      log(`found the Music Box on "${input.name}"`);
+      log(`found Evander's Box on "${input.name}"`);
       return { io, name: input.name, close: () => { input.onmidimessage = null; } };
     } catch (_) {
       input.onmidimessage = null;

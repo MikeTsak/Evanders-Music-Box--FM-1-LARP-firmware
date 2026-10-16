@@ -4,11 +4,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Music Box Installer</title>
+<title>Evander's Box Installer</title>
 <meta name="description" content="Install Evander's Music Box firmware on an M-VAVE FM-1 over USB from Chrome or Edge.">
 <link rel="icon" href="rose.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
     <img src="rose.png" alt="">
     <div>
       <h1>The Installer</h1>
-      <p>Bind the Music Box to thy FM-1, over a USB cable</p>
+      <p>Flash Evander's Box to your FM-1 over USB</p>
     </div>
   </header>
   <nav class="top">
@@ -25,29 +25,29 @@
   </nav>
 
   <section class="card warn">
-    <h2>Before thou beginnest</h2>
+    <h2>Before you start</h2>
     <ul>
       <li>Use <b>Chrome or Edge</b> on a desktop (WebMIDI with SysEx). Firefox and Safari cannot do this.</li>
       <li>A <b>data</b> USB-C cable, plugged straight into the computer. Close every other music app (DAWs, M-UPGRADE, other tabs that use MIDI).</li>
       <li>Charge the FM-1. Do not unplug it while it writes; if it is interrupted it waits in update mode and this page <b>resumes</b>.</li>
       <li>Coming from another custom firmware? The community advice is to <b>return to official V15 first</b> (below), then install.</li>
-      <li>Already running the Music Box? Save thy scenes with the <a href="console.html">Preset Console</a> (Backup all) first.</li>
-      <li>This is hobby firmware, <b>installed at thine own risk</b>. Recovery paths are in the README.</li>
+      <li>Already running Evander's Box? Save your scenes with the <a href="console.html">Preset Console</a> (Backup all) first.</li>
+      <li>This is hobby firmware, <b>installed at your own risk</b>. Recovery steps are in the README.</li>
     </ul>
     <label class="row"><input type="checkbox" id="agree"> I understand, and the FM-1 is plugged in.</label>
   </section>
 
   <div class="grid-3">
-    <section class="card">
-      <h2>Install the Music Box</h2>
+    <section class="card green">
+      <h2>Install Evander's Box</h2>
       <p id="relInfo" class="muted">Looking for the release package&hellip;</p>
       <div class="row">
-        <button id="goRelease" disabled>Install</button>
+        <button id="goRelease" class="go" disabled>Install</button>
       </div>
-      <p class="muted" style="margin-top:12px">Or a package of thine own (a local build: <code>build/emb.fwsc</code>):</p>
+      <p class="muted" style="margin-top:12px">Or your own package (a local build: <code>build/emb.fwsc</code>):</p>
       <div class="row"><input type="file" id="pkgFile" accept=".fwsc"> <button id="goFile" disabled>Install file</button></div>
     </section>
-    <section class="card">
+    <section class="card pink">
       <h2>Return to official V15</h2>
       <p class="muted">Choose M-VAVE's unmodified <code>FM-1.fwsc</code> (V15). Its SHA-256 is checked before anything is sent.</p>
       <div class="row"><input type="file" id="stockFile" accept=".fwsc"> <button class="ghost" id="goStock" disabled>Restore V15</button></div>

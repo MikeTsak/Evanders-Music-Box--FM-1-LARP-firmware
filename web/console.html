@@ -4,11 +4,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Music Box Preset Console</title>
+<title>Evander's Box Console</title>
 <meta name="description" content="Back up, restore, share and cue the scenes of an FM-1 running Evander's Music Box.">
 <link rel="icon" href="rose.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
   td.actions { white-space: nowrap; }
@@ -23,18 +23,18 @@
     <img src="rose.png" alt="">
     <div>
       <h1>The Preset Console</h1>
-      <p>Thy scenes and thy workbench, kept and shared</p>
+      <p>Your scenes and workbench, backed up and shared</p>
     </div>
   </header>
   <nav class="top">
     <a href="./">Home</a><a href="emu/">Emulator</a><a href="installer.html">Installer</a><a href="console.html" aria-current="page">Preset Console</a>
   </nav>
 
-  <section class="card">
+  <section class="card blue">
     <h2>Connect</h2>
-    <p class="muted">Chrome or Edge, the FM-1 on USB, running Evander's Music Box. Only the device that answers the Music Box's own SysEx is ever written to.</p>
+    <p class="muted">Chrome or Edge, the FM-1 on USB, running Evander's Music Box. Only a device that answers Evander's Box's own SysEx is ever written to.</p>
     <div class="row">
-      <button id="connect">Find the Music Box</button>
+      <button id="connect">Find Evander's Box</button>
       <button class="ghost" id="backup" disabled>Backup all (.embk)</button>
       <button class="ghost" id="restore" disabled>Restore all</button>
       <input type="file" id="restoreFile" accept=".embk" hidden>
@@ -45,11 +45,11 @@
   </section>
 
   <section class="card">
-    <h2>The sixteen keys and the workbench</h2>
+    <h2>The sixteen scenes and the workbench</h2>
     <p class="muted"><b>Cue</b> starts a scene on the box at its next bar: a game master's remote. <b>Upload</b> takes a <code>.emb</code> file (the emulator exports them).</p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Key</th><th>Song</th><th>Tempo</th><th>Mode</th><th>Tuning</th><th></th></tr></thead>
+        <thead><tr><th>Scene</th><th>Song</th><th>Tempo</th><th>Mode</th><th>Tuning</th><th></th></tr></thead>
         <tbody id="slots"><tr><td colspan="6" class="muted">Not connected.</td></tr></tbody>
       </table>
     </div>
@@ -61,7 +61,7 @@ import { connectMidi, songHead, download, fileName, WORKBENCH } from "./embmidi.
 
 const $ = (id) => document.getElementById(id);
 const say = (s) => { $("status").textContent = s; };
-const FAMILY = ["REST", "EXPLORE", "COMBAT", "CLIMAX"];
+const FAMILY = ["REST", "EXPLORE", "COMBAT", "CLIMAX"], ROMAN = ["I", "II", "III", "IV"];
 let dev = null, uploadSlot = 0, busy = false;
 
 function lock(on) {
@@ -75,7 +75,7 @@ async function refresh() {
   for (let s = 0; s <= WORKBENCH; s++) {
     const h = songHead(await dev.io.read(s, true));
     const tr = document.createElement("tr");
-    const key = s === WORKBENCH ? "Workbench" : `${s + 1} <span class="fam muted">${FAMILY[s >> 2]}</span>`;
+    const key = s === WORKBENCH ? "Workbench" : `${FAMILY[s >> 2]} ${ROMAN[s & 3]}`;
     tr.innerHTML = `<td>${key}</td><td>${h.name}</td><td>${h.bpm}</td><td>${h.key}</td><td>${h.tuning}</td><td class="actions"></td>`;
     const act = tr.lastChild;
     const btn = (label, fn, cls = "ghost") => { const b = document.createElement("button"); b.className = cls; b.textContent = label; b.onclick = fn; act.append(b); };
@@ -104,7 +104,7 @@ $("connect").onclick = async () => {
   try {
     dev?.close();
     dev = await connectMidi((s) => say(s));
-    if (!dev) { say("No Music Box answered. Is it plugged in and running the Music Box firmware? Close other MIDI apps."); return; }
+    if (!dev) { say("No Evander's Box answered. Check that it's plugged in and running this firmware, and close other MIDI apps."); return; }
     lock(false);
     await task(`Connected to ${dev.name}`, refresh);
   } catch (e) { say("MIDI access refused: " + e.message); }
