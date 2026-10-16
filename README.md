@@ -1,7 +1,66 @@
-<p align="center"><img src="assets/bluerose.png" width="160" alt="The Blue Rose of Mother Melody"></p>
+<p align="center">
+  <img src="assets/bluerose.png" width="160" alt="The Blue Rose of Mother Melody"><br>
+  <b>v1.4.1</b>
+</p>
 
 <h1 align="center">Evander's Music Box</h1>
-<p align="center"><b>FM-1 LARP Firmware</b> · <i>Mother Melody hears thy song</i></p>
+<p align="center"><b>Medieval LARP Bard Firmware for the M-VAVE (Cuvave) FM-1</b><br>
+<i>"Mother Melody hears thy song"</i></p>
+
+<p align="center">
+  <a href="https://fm1.miketsak.gr/"><img src="https://img.shields.io/badge/Live_Portal-fm1.miketsak.gr-2E5BFF?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Live Site"></a>
+  <a href="https://fm1.miketsak.gr/emu/"><img src="https://img.shields.io/badge/Web_Emulator-Launch_in_Browser-FF5A1F?style=for-the-badge&logo=webassembly&logoColor=white" alt="Web Emulator"></a>
+  <a href="https://fm1.miketsak.gr/installer.html"><img src="https://img.shields.io/badge/Web_Installer-Flash_over_USB-19C37D?style=for-the-badge&logo=usb&logoColor=white" alt="Web Installer"></a>
+  <a href="https://fm1.miketsak.gr/manual.html"><img src="https://img.shields.io/badge/Field_Manual-Read_Guide-7B4DFF?style=for-the-badge&logo=gitbook&logoColor=white" alt="Field Manual"></a>
+  <a href="https://fm1.miketsak.gr/console.html"><img src="https://img.shields.io/badge/Preset_Console-Backup_%26_Cue-FFD21F?style=for-the-badge&logo=googlechrome&logoColor=101010" alt="Preset Console"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/firmware-v1.4.1-blue?style=flat-square" alt="Version 1.4.1">
+  <img src="https://img.shields.io/badge/hardware-M--VAVE%20FM--1-lightgrey?style=flat-square" alt="Hardware M-VAVE FM-1">
+  <img src="https://img.shields.io/badge/license-GPL--3.0--only-orange?style=flat-square" alt="License GPL-3.0">
+  <a href="https://miketsak.gr"><img src="https://img.shields.io/badge/author-Mike%20Tsak-blueviolet?style=flat-square" alt="Made by Mike Tsak"></a>
+</p>
+
+---
+
+## 🌐 Web Suite & Online Tools
+
+Run, configure, and install Evander's Box straight from your browser without installing native toolchains:
+
+| Tool | Description | Direct Link |
+| :--- | :--- | :--- |
+| 🎮 **The Web Emulator** | The real C firmware running in your browser via WebAssembly & AudioWorklet. Supports multi-button chords (<kbd>Ctrl</kbd> + Mouse 1) and MIDI keyboards. | [**Launch Emulator →**](https://fm1.miketsak.gr/emu/) |
+| ⚡ **The Web Installer** | Flash `.fwsc` firmware packages directly over USB in Chrome or Edge using WebMIDI SysEx. Supports resume on drop and one-click return to stock V15. | [**Open Installer →**](https://fm1.miketsak.gr/installer.html) |
+| 📜 **The Field Manual** | Comprehensive handbook covering controls, both operational modes, all 16 battle scenes, and physical modeling details. | [**Read Manual →**](https://fm1.miketsak.gr/manual.html) |
+| 🎛️ **The Preset Console** | Back up and restore scenes/workbench (`.embk` / `.emb`) and cue scenes live over USB as a game master's remote. | [**Open Console →**](https://fm1.miketsak.gr/console.html) |
+| 🏰 **Project Portal** | The official live portal with release information, lore, and hardware guides. | [**Visit fm1.miketsak.gr →**](https://fm1.miketsak.gr/) |
+
+---
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="assets/screenshots/web_emulator.png" width="850" alt="Evander's Box Web Emulator Interface"><br>
+  <i>The Web Emulator running the real C firmware in-browser with interactive hardware controls and multi-button latching.</i>
+</p>
+
+<p align="center">
+  <img src="assets/screenshots/boot_rose.png" width="220" alt="Mother Melody Blue Rose Boot Screen">
+  &nbsp;&nbsp;
+  <img src="assets/screenshots/bardic_home.png" width="220" alt="Bardic Crafting 4-Track Workshop">
+  &nbsp;&nbsp;
+  <img src="assets/screenshots/encounter.png" width="220" alt="Encounter Mode Live Battle Scoring">
+  &nbsp;&nbsp;
+  <img src="assets/screenshots/bardic_steps.png" width="220" alt="64-Step Sequencer & Parameter Locks">
+</p>
+<p align="center">
+  <i>Left to right: Mother Melody sacred boot splash; 4-track Bardic Crafting deck; Encounter 16-scene matrix; 64-step sequencer.</i>
+</p>
+
+---
+
+## Overview
 
 Custom firmware for the **M-VAVE (Cuvave) FM-1** pocket synth that turns it into the relic of Evander, an
 Elven Bard chosen by Mother Melody, patron of harmony, rhythm and song. In short: **Evander's Box**. It has two
@@ -232,6 +291,7 @@ the boss fight to a WAV, and `tools/build.py shots` writes screenshots.
 
 **GPL-3.0-only** (see [LICENSE](LICENSE)), because the FM-1 build includes Felucca.
 
+- **[Mike Tsak](https://miketsak.gr)**: Concept, firmware architecture, C DSP audio engine, physical modelling instruments, SANCTUARY reverb, graphics & boot animation, WebAssembly emulator, WebMIDI tooling, and site design.
 - **[Felucca](https://github.com/hugelton/Felucca)** by Leo Kuroshita / Hügelton Instruments: the FM-1
   hardware layer, USB-MIDI, the M-UPGRADE protocol and update loader, the package format, and the web update
   library (`web/vendor/` in the built site). GPL-3.0-only.
