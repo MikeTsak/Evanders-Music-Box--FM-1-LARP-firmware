@@ -731,7 +731,7 @@ void emb_render(int32_t *lr, uint32_t frames)
                 continue;
             }
             nvox++;
-            g = v->deck < 2u ? mul15(deck[v->deck].gain, deck[v->deck].tg[v->trk & 3u]) : 32767;
+            g = v->deck < 2u ? mul15(deck[v->deck].gain, deck[v->deck].tg[v->trk & 3u]) : (v->deck == 3u ? 6554 : 32767);
             if (v->deck == 3u)
                 voice_run(v, chime_bus, g);
             else
