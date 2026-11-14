@@ -320,3 +320,5 @@ the boss fight to a WAV, and `tools/build.py shots` writes screenshots.
 - Fonts on the web pages: Lilita One, Space Grotesk and Space Mono (SIL OFL), served by Google Fonts.
 
 Not affiliated with M-VAVE, Cuvave or JieLi. This is hobby firmware, flashed at your own risk.
+
+You can also try Evander's Music Box in the browser, no flashing needed, in the free community [FM-1 Emulator](https://fm1-emulator.atst.tools/).
